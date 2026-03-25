@@ -1,0 +1,13 @@
+{
+  "name": "video-converter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^5.0.0",
+    "fluent-ffmpeg": "^2.1.0"
+  }
+}

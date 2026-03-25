@@ -1,0 +1,30 @@
+{
+  "name": "lexical-editor-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "tools/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/demo",
+    "build": "npm run build --workspace=packages/editor",
+    "build:demo": "npm run build --workspace=apps/demo",
+    "test": "vitest run --workspace=packages/editor",
+    "test:watch": "vitest --workspace=packages/editor",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.4.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
