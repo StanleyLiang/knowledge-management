@@ -279,6 +279,56 @@
   @apply text-gray-400 text-xs;
 }
 
+/* Code Snippet */
+.le-code-snippet {
+  @apply my-2 border border-gray-200 rounded-lg overflow-hidden bg-gray-900 text-gray-100;
+}
+.le-code-snippet-header {
+  @apply flex items-center justify-between px-3 py-1.5 bg-gray-800 border-b border-gray-700;
+}
+.le-code-snippet-lang-select {
+  @apply bg-gray-700 text-gray-200 text-xs px-2 py-1 rounded border-none outline-none;
+}
+.le-code-snippet-lang-label {
+  @apply text-xs text-gray-400;
+}
+.le-code-snippet-copy {
+  @apply flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors;
+}
+.le-code-snippet-body {
+  @apply flex;
+}
+.le-code-snippet-lines {
+  @apply flex flex-col items-end pr-3 pl-3 py-3 text-xs text-gray-500 select-none bg-gray-800/50;
+}
+.le-code-snippet-line-num {
+  @apply leading-5;
+}
+.le-code-snippet-textarea {
+  @apply flex-1 p-3 bg-transparent text-gray-100 text-sm font-mono leading-5
+         resize-none outline-none border-none min-h-[60px];
+}
+.le-code-snippet-pre {
+  @apply flex-1 p-3 m-0 text-sm font-mono leading-5 overflow-x-auto;
+}
+
+/* Table insert form */
+.le-table-insert-form {
+  @apply p-3 flex flex-col gap-2;
+}
+.le-table-insert-row {
+  @apply flex items-center gap-2;
+}
+.le-table-insert-label {
+  @apply text-sm text-gray-600 w-16;
+}
+.le-table-insert-input {
+  @apply w-20 px-2 py-1 text-sm border border-gray-300 rounded;
+}
+.le-table-insert-btn {
+  @apply mt-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors;
+}
+
 /* Resize Handles */
 .le-resize-handle {
   @apply absolute w-3 h-3 bg-blue-500 rounded-full border-2 border-white z-10;

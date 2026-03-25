@@ -19,3 +19,11 @@ export const INSERT_VIDEO_COMMAND: LexicalCommand<{
 export const INSERT_ATTACHMENT_COMMAND: LexicalCommand<{
   url: string; fileName?: string; fileSize?: number; mimeType?: string
 }> = createCommand('INSERT_ATTACHMENT_COMMAND')
+
+export const INSERT_TABLE_COMMAND: LexicalCommand<{
+  rows: number; columns: number
+}> = createCommand('INSERT_TABLE_COMMAND')
+
+export const INSERT_CODE_SNIPPET_COMMAND: LexicalCommand<{
+  code?: string; language?: string
+}> = createCommand('INSERT_CODE_SNIPPET_COMMAND')

@@ -12,6 +12,7 @@ import { $createBookmarkNode } from '../nodes/BookmarkNode'
 import { $createImageNode } from '../nodes/ImageNode'
 import { $createVideoNode } from '../nodes/VideoNode'
 import { $createAttachmentNode } from '../nodes/AttachmentNode'
+import { $createCodeSnippetNode } from '../nodes/CodeSnippetNode'
 import {
   $createCollapsibleContainerNode,
   $createCollapsibleTitleNode,
@@ -24,6 +25,7 @@ import {
   INSERT_IMAGE_COMMAND,
   INSERT_VIDEO_COMMAND,
   INSERT_ATTACHMENT_COMMAND,
+  INSERT_CODE_SNIPPET_COMMAND,
 } from './InsertCommands'
 
 export function CustomNodesPlugin() {
@@ -114,6 +116,22 @@ export function CustomNodesPlugin() {
             const selection = $getSelection()
             if ($isRangeSelection(selection)) {
               selection.insertNodes([$createAttachmentNode(payload)])
+            }
+          })
+          return true
+        },
+        COMMAND_PRIORITY_EDITOR,
+      ),
+
+      editor.registerCommand(
+        INSERT_CODE_SNIPPET_COMMAND,
+        (payload) => {
+          editor.update(() => {
+            const selection = $getSelection()
+            if ($isRangeSelection(selection)) {
+              selection.insertNodes([
+                $createCodeSnippetNode(payload.code ?? '', payload.language ?? 'javascript'),
+              ])
             }
           })
           return true

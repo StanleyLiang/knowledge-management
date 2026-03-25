@@ -65,6 +65,7 @@ import {
   INSERT_IMAGE_COMMAND,
   INSERT_VIDEO_COMMAND,
   INSERT_ATTACHMENT_COMMAND,
+  INSERT_CODE_SNIPPET_COMMAND,
 } from '../../plugins/InsertCommands'
 import { useToolbarState, type BlockType } from '../../hooks/useToolbarState'
 import { Toggle } from '../ui/toggle'
@@ -72,6 +73,7 @@ import { Button } from '../ui/button'
 import { Separator } from '../ui/separator'
 import { Dropdown, DropdownItem } from '../ui/dropdown'
 import { Tooltip } from '../ui/tooltip'
+import { TableInsertDropdown } from './TableInsertDropdown'
 
 const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
   paragraph: 'Normal Text',
@@ -320,15 +322,7 @@ export function Toolbar() {
       </Tooltip>
 
       {/* Table dropdown */}
-      <Dropdown
-        trigger={
-          <Button variant="ghost" size="icon">
-            <Table size={16} />
-          </Button>
-        }
-      >
-        <div className="le-dropdown-item">Table insert (coming soon)</div>
-      </Dropdown>
+      <TableInsertDropdown />
 
       <Tooltip content="Create Link">
         <Button variant="ghost" size="icon" disabled>
@@ -394,7 +388,7 @@ export function Toolbar() {
         <DropdownItem onClick={() => setBlockType('quote')}>
           <Quote size={16} /> Quote
         </DropdownItem>
-        <DropdownItem onClick={() => {}}>
+        <DropdownItem onClick={() => editor.dispatchCommand(INSERT_CODE_SNIPPET_COMMAND, { code: '// Your code here\nconsole.log("Hello World");', language: 'javascript' })}>
           <Braces size={16} /> Code Snippet
         </DropdownItem>
         <DropdownItem onClick={() => {}}>

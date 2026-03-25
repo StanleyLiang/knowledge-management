@@ -11,16 +11,20 @@ import { LinkNode, AutoLinkNode } from '@lexical/link'
 import { ListPlugin } from '@lexical/react/LexicalListPlugin'
 import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin'
 import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin'
+import { TableCellNode, TableNode, TableRowNode } from '@lexical/table'
+import { TablePlugin as LexicalTablePlugin } from '@lexical/react/LexicalTablePlugin'
 
 import { defaultTheme } from './themes/defaultTheme'
 import { OnChangePlugin } from './plugins/OnChangePlugin'
 import { CustomNodesPlugin } from './plugins/CustomNodesPlugin'
+import { TablePlugin } from './plugins/TablePlugin'
 import { Toolbar } from './components/editor/Toolbar'
 import { DividerNode } from './nodes/DividerNode'
 import { BookmarkNode } from './nodes/BookmarkNode'
 import { ImageNode } from './nodes/ImageNode'
 import { VideoNode } from './nodes/VideoNode'
 import { AttachmentNode } from './nodes/AttachmentNode'
+import { CodeSnippetNode } from './nodes/CodeSnippetNode'
 import {
   CollapsibleContainerNode,
   CollapsibleTitleNode,
@@ -43,6 +47,10 @@ const EDITOR_NODES = [
   CollapsibleContainerNode,
   CollapsibleTitleNode,
   CollapsibleContentNode,
+  TableNode,
+  TableCellNode,
+  TableRowNode,
+  CodeSnippetNode,
 ]
 
 export function Editor({
@@ -89,6 +97,8 @@ export function Editor({
         <ListPlugin />
         <LinkPlugin />
         <CheckListPlugin />
+        <LexicalTablePlugin />
+        <TablePlugin />
         <CustomNodesPlugin />
         <OnChangePlugin onChange={onChange} />
       </div>
