@@ -18,6 +18,8 @@ import { defaultTheme } from './themes/defaultTheme'
 import { OnChangePlugin } from './plugins/OnChangePlugin'
 import { CustomNodesPlugin } from './plugins/CustomNodesPlugin'
 import { TablePlugin } from './plugins/TablePlugin'
+import { SlashCommandPlugin } from './plugins/SlashCommandPlugin'
+import { MarkdownPlugin } from './plugins/MarkdownPlugin'
 import { Toolbar } from './components/editor/Toolbar'
 import { DividerNode } from './nodes/DividerNode'
 import { BookmarkNode } from './nodes/BookmarkNode'
@@ -100,6 +102,8 @@ export function Editor({
         <LexicalTablePlugin />
         <TablePlugin />
         <CustomNodesPlugin />
+        <SlashCommandPlugin />
+        <MarkdownPlugin />
         <OnChangePlugin onChange={onChange} />
       </div>
     </LexicalComposer>

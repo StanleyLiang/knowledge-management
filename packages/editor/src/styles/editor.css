@@ -279,6 +279,19 @@
   @apply text-gray-400 text-xs;
 }
 
+/* Slash Command Menu */
+.le-slash-menu {
+  @apply min-w-[200px] max-h-[300px] overflow-y-auto bg-white border border-gray-200
+         rounded-lg shadow-lg py-1 z-50;
+}
+.le-slash-menu-item {
+  @apply w-full text-left px-3 py-2 text-sm flex items-center gap-2.5
+         hover:bg-gray-100 transition-colors;
+}
+.le-slash-menu-item-selected {
+  @apply bg-gray-100;
+}
+
 /* Code Snippet */
 .le-code-snippet {
   @apply my-2 border border-gray-200 rounded-lg overflow-hidden bg-gray-900 text-gray-100;
