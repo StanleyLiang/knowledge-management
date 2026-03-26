@@ -82,7 +82,7 @@ function ImageComponent({
     [editor, nodeKey],
   )
 
-  const { size, onDragStart, setWidth } = useResizable({
+  const { size, onDragStart, setWidth, setHeight } = useResizable({
     initialWidth,
     initialHeight,
     minWidth: 50,
@@ -170,9 +170,9 @@ function ImageComponent({
           <input
             type="number"
             value={Math.round(size.height)}
+            onChange={(e) => setHeight(parseInt(e.target.value, 10) || 50)}
             className="le-node-toolbar-input"
-            disabled
-            title="Height (auto)"
+            title="Height"
           />
           <div className="le-node-toolbar-sep" />
           <button
