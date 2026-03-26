@@ -107,6 +107,9 @@
 .le-editor-container {
   @apply relative w-full border border-gray-200 rounded-lg bg-white;
 }
+.le-editor-body {
+  @apply relative;
+}
 .le-editor-content {
   @apply min-h-[200px] p-4 outline-none;
 }

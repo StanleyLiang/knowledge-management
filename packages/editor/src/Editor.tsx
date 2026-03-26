@@ -99,17 +99,19 @@ export function Editor({
     <LexicalComposer initialConfig={initialConfig}>
       <div className="le-editor-container">
         <Toolbar />
-        <RichTextPlugin
-          contentEditable={
-            <ContentEditable className="le-editor-content" />
-          }
-          placeholder={
-            <div className="le-editor-placeholder">
-              {placeholder}
-            </div>
-          }
-          ErrorBoundary={LexicalErrorBoundary}
-        />
+        <div className="le-editor-body">
+          <RichTextPlugin
+            contentEditable={
+              <ContentEditable className="le-editor-content" />
+            }
+            placeholder={
+              <div className="le-editor-placeholder">
+                {placeholder}
+              </div>
+            }
+            ErrorBoundary={LexicalErrorBoundary}
+          />
+        </div>
         <HistoryPlugin />
         <ListPlugin />
         <LinkPlugin />
