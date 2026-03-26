@@ -110,6 +110,11 @@
 .le-editor-content {
   @apply min-h-[200px] p-4 outline-none;
 }
+/* Viewer container */
+.le-viewer-container {
+  @apply w-full bg-white;
+}
+
 .le-editor-placeholder {
   @apply absolute top-4 left-4 text-gray-400 pointer-events-none;
 }
