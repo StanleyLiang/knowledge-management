@@ -2,6 +2,10 @@
 export { Editor } from './Editor'
 export { Viewer } from './Viewer'
 
+// Standalone UI Components
+export { PresentationMode, PresentationButton } from './components/viewer/PresentationMode'
+export { PageTags } from './components/editor/PageTags'
+
 // Types
 export type {
   EditorProps,
@@ -26,6 +30,9 @@ export { ImageNode, $createImageNode, $isImageNode } from './nodes/ImageNode'
 export { VideoNode, $createVideoNode, $isVideoNode } from './nodes/VideoNode'
 export { AttachmentNode, $createAttachmentNode, $isAttachmentNode } from './nodes/AttachmentNode'
 export { CodeSnippetNode, $createCodeSnippetNode, $isCodeSnippetNode } from './nodes/CodeSnippetNode'
+export { MentionNode, $createMentionNode, $isMentionNode } from './nodes/MentionNode'
+export { MermaidNode, $createMermaidNode, $isMermaidNode } from './nodes/MermaidNode'
+export { LandmarkNode, $createLandmarkNode, $isLandmarkNode } from './nodes/LandmarkNode'
 export {
   CollapsibleContainerNode,
   CollapsibleTitleNode,
@@ -42,4 +49,6 @@ export {
   INSERT_ATTACHMENT_COMMAND,
   INSERT_TABLE_COMMAND,
   INSERT_CODE_SNIPPET_COMMAND,
+  INSERT_MERMAID_COMMAND,
+  INSERT_LANDMARK_COMMAND,
 } from './plugins/InsertCommands'

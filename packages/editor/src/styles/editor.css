@@ -320,6 +320,50 @@
   @apply text-xs text-gray-400 text-center py-1 border-t border-gray-100;
 }
 
+/* Presentation Mode */
+.le-presentation-overlay {
+  @apply fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center;
+}
+.le-presentation-controls {
+  @apply absolute top-4 right-4 flex items-center gap-3;
+}
+.le-presentation-counter {
+  @apply text-sm text-gray-500 font-mono;
+}
+.le-presentation-close {
+  @apply p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors;
+}
+.le-presentation-slide {
+  @apply max-w-4xl w-full px-12 py-8;
+}
+.le-presentation-title {
+  @apply text-5xl font-bold mb-8 text-gray-900;
+}
+.le-presentation-content {
+  @apply text-2xl leading-relaxed text-gray-700;
+}
+.le-presentation-content p {
+  @apply mb-4;
+}
+.le-presentation-content ul,
+.le-presentation-content ol {
+  @apply ml-8 mb-4;
+}
+.le-presentation-content li {
+  @apply mb-2;
+}
+.le-presentation-nav {
+  @apply absolute bottom-8 flex gap-4;
+}
+.le-presentation-nav-btn {
+  @apply p-3 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700
+         disabled:opacity-30 disabled:cursor-not-allowed transition-colors;
+}
+.le-presentation-trigger {
+  @apply flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600
+         border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors;
+}
+
 /* Table of Contents */
 .le-toc {
   @apply border-l-2 border-gray-200 pl-3 py-2 my-2;
