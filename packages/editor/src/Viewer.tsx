@@ -18,6 +18,7 @@ import { VideoNode } from './nodes/VideoNode'
 import { AttachmentNode } from './nodes/AttachmentNode'
 import { CodeSnippetNode } from './nodes/CodeSnippetNode'
 import { MentionNode } from './nodes/MentionNode'
+import { MermaidNode } from './nodes/MermaidNode'
 import {
   CollapsibleContainerNode,
   CollapsibleTitleNode,
@@ -45,6 +46,7 @@ const VIEWER_NODES = [
   TableCellNode,
   TableRowNode,
   MentionNode,
+  MermaidNode,
 ]
 
 export function Viewer({

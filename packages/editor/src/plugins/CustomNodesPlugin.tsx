@@ -13,6 +13,7 @@ import { $createImageNode } from '../nodes/ImageNode'
 import { $createVideoNode } from '../nodes/VideoNode'
 import { $createAttachmentNode } from '../nodes/AttachmentNode'
 import { $createCodeSnippetNode } from '../nodes/CodeSnippetNode'
+import { $createMermaidNode } from '../nodes/MermaidNode'
 import {
   $createCollapsibleContainerNode,
   $createCollapsibleTitleNode,
@@ -26,6 +27,7 @@ import {
   INSERT_VIDEO_COMMAND,
   INSERT_ATTACHMENT_COMMAND,
   INSERT_CODE_SNIPPET_COMMAND,
+  INSERT_MERMAID_COMMAND,
 } from './InsertCommands'
 
 export function CustomNodesPlugin() {
@@ -131,6 +133,22 @@ export function CustomNodesPlugin() {
             if ($isRangeSelection(selection)) {
               selection.insertNodes([
                 $createCodeSnippetNode(payload.code ?? '', payload.language ?? 'javascript'),
+              ])
+            }
+          })
+          return true
+        },
+        COMMAND_PRIORITY_EDITOR,
+      ),
+
+      editor.registerCommand(
+        INSERT_MERMAID_COMMAND,
+        (payload) => {
+          editor.update(() => {
+            const selection = $getSelection()
+            if ($isRangeSelection(selection)) {
+              selection.insertNodes([
+                $createMermaidNode(payload.source ?? 'graph TD\n    A[Start] --> B[End]'),
               ])
             }
           })

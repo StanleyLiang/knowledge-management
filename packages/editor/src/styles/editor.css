@@ -284,6 +284,42 @@
   @apply text-gray-400 text-xs;
 }
 
+/* Mermaid */
+.le-mermaid {
+  @apply my-3 border border-gray-200 rounded-lg overflow-hidden bg-white;
+}
+.le-mermaid-editing {
+  @apply p-3;
+}
+.le-mermaid-textarea {
+  @apply w-full p-3 text-sm font-mono bg-gray-50 border border-gray-300 rounded
+         resize-y outline-none focus:border-blue-500;
+}
+.le-mermaid-actions {
+  @apply flex gap-2 mt-2;
+}
+.le-mermaid-btn {
+  @apply px-3 py-1.5 text-sm rounded border border-gray-300 hover:bg-gray-50;
+}
+.le-mermaid-btn-primary {
+  @apply bg-blue-600 text-white border-blue-600 hover:bg-blue-700;
+}
+.le-mermaid-svg {
+  @apply p-4 flex justify-center;
+}
+.le-mermaid-svg svg {
+  @apply max-w-full h-auto;
+}
+.le-mermaid-error {
+  @apply p-3 text-sm text-red-600 bg-red-50;
+}
+.le-mermaid-loading {
+  @apply p-4 text-sm text-gray-500 text-center;
+}
+.le-mermaid-hint {
+  @apply text-xs text-gray-400 text-center py-1 border-t border-gray-100;
+}
+
 /* Emoji Menu */
 .le-emoji-menu {
   @apply min-w-[200px] max-h-[250px] overflow-y-auto bg-white border border-gray-200

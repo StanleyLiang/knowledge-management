@@ -46,6 +46,7 @@ import {
   INSERT_BOOKMARK_COMMAND,
   INSERT_CODE_SNIPPET_COMMAND,
   INSERT_TABLE_COMMAND,
+  INSERT_MERMAID_COMMAND,
 } from './InsertCommands'
 
 class SlashCommandOption extends MenuOption {
@@ -142,8 +143,10 @@ function getSlashCommandOptions(editor: ReturnType<typeof useLexicalComposerCont
         language: 'javascript',
       })
     }),
-    new SlashCommandOption('Mermaid', GitBranch, () => {
-      // Placeholder - Mermaid not yet implemented
+    new SlashCommandOption('Mermaid', GitBranch, (ed) => {
+      ed.dispatchCommand(INSERT_MERMAID_COMMAND, {
+        source: 'graph TD\n    A[Start] --> B[Process] --> C[End]',
+      })
     }),
     new SlashCommandOption('Bulleted List', List, (ed) => {
       ed.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)

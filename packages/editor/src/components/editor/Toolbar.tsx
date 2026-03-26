@@ -67,6 +67,7 @@ import {
   INSERT_VIDEO_COMMAND,
   INSERT_ATTACHMENT_COMMAND,
   INSERT_CODE_SNIPPET_COMMAND,
+  INSERT_MERMAID_COMMAND,
 } from '../../plugins/InsertCommands'
 import { useToolbarState, type BlockType } from '../../hooks/useToolbarState'
 import { Toggle } from '../ui/toggle'
@@ -389,7 +390,7 @@ export function Toolbar() {
         <DropdownItem onClick={() => editor.dispatchCommand(INSERT_CODE_SNIPPET_COMMAND, { code: '// Your code here\nconsole.log("Hello World");', language: 'javascript' })}>
           <Braces size={16} /> Code Snippet
         </DropdownItem>
-        <DropdownItem onClick={() => {}}>
+        <DropdownItem onClick={() => editor.dispatchCommand(INSERT_MERMAID_COMMAND, { source: 'graph TD\n    A[Start] --> B[Process] --> C[End]' })}>
           <GitBranch size={16} /> Mermaid
         </DropdownItem>
         <DropdownItem onClick={() => editor.dispatchCommand(INSERT_BOOKMARK_COMMAND, { title: 'Example', url: 'https://example.com' })}>

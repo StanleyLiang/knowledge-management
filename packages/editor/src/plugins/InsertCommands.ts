@@ -27,3 +27,7 @@ export const INSERT_TABLE_COMMAND: LexicalCommand<{
 export const INSERT_CODE_SNIPPET_COMMAND: LexicalCommand<{
   code?: string; language?: string
 }> = createCommand('INSERT_CODE_SNIPPET_COMMAND')
+
+export const INSERT_MERMAID_COMMAND: LexicalCommand<{
+  source?: string
+}> = createCommand('INSERT_MERMAID_COMMAND')
