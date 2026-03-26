@@ -127,7 +127,11 @@ function ImageComponent({
       className={`le-image-wrapper ${alignClass} ${isSelected && editable ? 'le-node-selected' : ''}`}
       data-lexical-node-key={nodeKey}
       onClick={() => editable && setIsSelected(true)}
-      onBlur={() => setIsSelected(false)}
+      onBlur={(e) => {
+        // Don't deselect if focus moved to a child element (e.g. toolbar input)
+        if (e.currentTarget.contains(e.relatedTarget as Node)) return
+        setIsSelected(false)
+      }}
       tabIndex={editable ? 0 : undefined}
     >
       {/* Floating Toolbar */}
