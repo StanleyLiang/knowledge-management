@@ -47,6 +47,7 @@ import {
   INSERT_CODE_SNIPPET_COMMAND,
   INSERT_TABLE_COMMAND,
   INSERT_MERMAID_COMMAND,
+  INSERT_LANDMARK_COMMAND,
 } from './InsertCommands'
 
 class SlashCommandOption extends MenuOption {
@@ -160,8 +161,8 @@ function getSlashCommandOptions(editor: ReturnType<typeof useLexicalComposerCont
         url: 'https://example.com',
       })
     }),
-    new SlashCommandOption('Landmark', MapPin, () => {
-      // Placeholder - Landmark not yet implemented
+    new SlashCommandOption('Landmark', MapPin, (ed) => {
+      ed.dispatchCommand(INSERT_LANDMARK_COMMAND, {})
     }),
   ]
 }

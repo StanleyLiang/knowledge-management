@@ -320,6 +320,39 @@
   @apply text-xs text-gray-400 text-center py-1 border-t border-gray-100;
 }
 
+/* Landmark */
+.le-landmark {
+  @apply my-3 border border-gray-200 rounded-lg overflow-hidden bg-white;
+}
+.le-landmark-editing {
+  @apply p-3;
+}
+.le-landmark-empty {
+  @apply flex items-center justify-center gap-2 p-8 text-gray-400;
+}
+.le-landmark-textarea {
+  @apply w-full p-3 text-sm font-mono bg-gray-50 border border-gray-300 rounded
+         resize-y outline-none focus:border-blue-500;
+}
+.le-landmark-actions {
+  @apply flex gap-2 mt-2;
+}
+.le-landmark-btn {
+  @apply px-3 py-1.5 text-sm rounded border border-gray-300 hover:bg-gray-50;
+}
+.le-landmark-btn-primary {
+  @apply bg-blue-600 text-white border-blue-600 hover:bg-blue-700;
+}
+.le-landmark-loading {
+  @apply p-4 text-sm text-gray-500 text-center;
+}
+.le-landmark-list {
+  @apply flex flex-wrap gap-1.5 p-3 border-t border-gray-100;
+}
+.le-landmark-tag {
+  @apply inline-flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded;
+}
+
 /* Emoji Menu */
 .le-emoji-menu {
   @apply min-w-[200px] max-h-[250px] overflow-y-auto bg-white border border-gray-200

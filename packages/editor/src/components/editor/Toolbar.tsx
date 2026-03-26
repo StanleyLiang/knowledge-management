@@ -68,6 +68,7 @@ import {
   INSERT_ATTACHMENT_COMMAND,
   INSERT_CODE_SNIPPET_COMMAND,
   INSERT_MERMAID_COMMAND,
+  INSERT_LANDMARK_COMMAND,
 } from '../../plugins/InsertCommands'
 import { useToolbarState, type BlockType } from '../../hooks/useToolbarState'
 import { Toggle } from '../ui/toggle'
@@ -396,7 +397,7 @@ export function Toolbar() {
         <DropdownItem onClick={() => editor.dispatchCommand(INSERT_BOOKMARK_COMMAND, { title: 'Example', url: 'https://example.com' })}>
           <Bookmark size={16} /> Bookmark
         </DropdownItem>
-        <DropdownItem onClick={() => {}}>
+        <DropdownItem onClick={() => editor.dispatchCommand(INSERT_LANDMARK_COMMAND, {})}>
           <MapPin size={16} /> Landmark
         </DropdownItem>
       </Dropdown>

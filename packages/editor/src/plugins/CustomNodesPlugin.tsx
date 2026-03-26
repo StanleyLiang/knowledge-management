@@ -14,6 +14,7 @@ import { $createVideoNode } from '../nodes/VideoNode'
 import { $createAttachmentNode } from '../nodes/AttachmentNode'
 import { $createCodeSnippetNode } from '../nodes/CodeSnippetNode'
 import { $createMermaidNode } from '../nodes/MermaidNode'
+import { $createLandmarkNode } from '../nodes/LandmarkNode'
 import {
   $createCollapsibleContainerNode,
   $createCollapsibleTitleNode,
@@ -28,6 +29,7 @@ import {
   INSERT_ATTACHMENT_COMMAND,
   INSERT_CODE_SNIPPET_COMMAND,
   INSERT_MERMAID_COMMAND,
+  INSERT_LANDMARK_COMMAND,
 } from './InsertCommands'
 
 export function CustomNodesPlugin() {
@@ -150,6 +152,24 @@ export function CustomNodesPlugin() {
               selection.insertNodes([
                 $createMermaidNode(payload.source ?? 'graph TD\n    A[Start] --> B[End]'),
               ])
+            }
+          })
+          return true
+        },
+        COMMAND_PRIORITY_EDITOR,
+      ),
+
+      editor.registerCommand(
+        INSERT_LANDMARK_COMMAND,
+        (payload) => {
+          editor.update(() => {
+            const selection = $getSelection()
+            if ($isRangeSelection(selection)) {
+              const items = payload.items ?? [
+                { id: '1', name: 'Taipei', latitude: 25.033, longitude: 121.565 },
+                { id: '2', name: 'Tokyo', latitude: 35.6762, longitude: 139.6503 },
+              ]
+              selection.insertNodes([$createLandmarkNode(items)])
             }
           })
           return true

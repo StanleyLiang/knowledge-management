@@ -31,3 +31,7 @@ export const INSERT_CODE_SNIPPET_COMMAND: LexicalCommand<{
 export const INSERT_MERMAID_COMMAND: LexicalCommand<{
   source?: string
 }> = createCommand('INSERT_MERMAID_COMMAND')
+
+export const INSERT_LANDMARK_COMMAND: LexicalCommand<{
+  items?: Array<{ id: string; name: string; latitude: number; longitude: number }>
+}> = createCommand('INSERT_LANDMARK_COMMAND')

@@ -25,6 +25,7 @@ import { MentionPlugin } from './plugins/MentionPlugin'
 import { EmojiPlugin } from './plugins/EmojiPlugin'
 import { MentionNode } from './nodes/MentionNode'
 import { MermaidNode } from './nodes/MermaidNode'
+import { LandmarkNode } from './nodes/LandmarkNode'
 import { Toolbar } from './components/editor/Toolbar'
 import { DividerNode } from './nodes/DividerNode'
 import { BookmarkNode } from './nodes/BookmarkNode'
@@ -60,6 +61,7 @@ const EDITOR_NODES = [
   CodeSnippetNode,
   MentionNode,
   MermaidNode,
+  LandmarkNode,
 ]
 
 export function Editor({

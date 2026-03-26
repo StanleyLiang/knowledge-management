@@ -19,6 +19,7 @@ import { AttachmentNode } from './nodes/AttachmentNode'
 import { CodeSnippetNode } from './nodes/CodeSnippetNode'
 import { MentionNode } from './nodes/MentionNode'
 import { MermaidNode } from './nodes/MermaidNode'
+import { LandmarkNode } from './nodes/LandmarkNode'
 import {
   CollapsibleContainerNode,
   CollapsibleTitleNode,
@@ -47,6 +48,7 @@ const VIEWER_NODES = [
   TableRowNode,
   MentionNode,
   MermaidNode,
+  LandmarkNode,
 ]
 
 export function Viewer({
