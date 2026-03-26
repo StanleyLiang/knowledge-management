@@ -1,5 +1,6 @@
 import {
   DecoratorNode,
+  $getNodeByKey,
   type DOMExportOutput,
   type LexicalEditor,
   type LexicalNode,
@@ -50,7 +51,7 @@ function VideoComponent({
   const updateNode = useCallback(
     (updater: (node: VideoNode) => void) => {
       editor.update(() => {
-        const node = editor._editorState._nodeMap.get(nodeKey)
+        const node = $getNodeByKey(nodeKey)
         if (node instanceof VideoNode) {
           updater(node.getWritable() as VideoNode)
         }
@@ -59,7 +60,7 @@ function VideoComponent({
     [editor, nodeKey],
   )
 
-  const { size, onDragStart, setWidth } = useResizable({
+  const { size, onDragStart, setWidth, setHeight } = useResizable({
     initialWidth,
     initialHeight,
     minWidth: 100,
@@ -95,7 +96,7 @@ function VideoComponent({
 
   const deleteNode = useCallback(() => {
     editor.update(() => {
-      const node = editor._editorState._nodeMap.get(nodeKey)
+      const node = $getNodeByKey(nodeKey)
       if (node) node.remove()
     })
   }, [editor, nodeKey])
@@ -105,25 +106,32 @@ function VideoComponent({
       className={`le-video-wrapper ${isSelected && editable ? 'le-node-selected' : ''}`}
       data-lexical-node-key={nodeKey}
       onClick={() => editable && setIsSelected(true)}
-      onBlur={() => setIsSelected(false)}
+      onBlur={(e) => {
+        if (e.currentTarget.contains(e.relatedTarget as Node)) return
+        setIsSelected(false)
+      }}
       tabIndex={editable ? 0 : undefined}
     >
       {isSelected && editable && (
         <FloatingNodeToolbar>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={Math.round(size.width)}
-            onChange={(e) => setWidth(parseInt(e.target.value, 10) || 100)}
+            onChange={(e) => { const v = parseInt(e.target.value, 10); if (v > 0) setWidth(v) }}
             className="le-node-toolbar-input"
             title="Width"
           />
           <span className="text-xs text-gray-400">×</span>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={Math.round(size.height)}
+            onChange={(e) => { const v = parseInt(e.target.value, 10); if (v > 0) setHeight(v) }}
             className="le-node-toolbar-input"
-            disabled
-            title="Height (auto)"
+            title="Height"
           />
           <div className="le-node-toolbar-sep" />
           <button className="le-node-toolbar-btn" onClick={deleteNode} title="Delete">
