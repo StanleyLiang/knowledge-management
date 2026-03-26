@@ -7,7 +7,19 @@ import {
   type SerializedLexicalNode,
   type Spread,
 } from 'lexical'
-import { type JSX } from 'react'
+import { useCallback, useState, type JSX } from 'react'
+import {
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Maximize2,
+  CaptionIcon,
+  Trash2,
+  ImageIcon,
+} from 'lucide-react'
+import { useResizable } from '../hooks/useResizable'
+import { ResizeHandles } from '../components/editor/ResizeHandles'
+import { FloatingNodeToolbar } from '../components/editor/FloatingNodeToolbar'
 
 export type ImageAlignment = 'left' | 'center' | 'right'
 
@@ -29,12 +41,14 @@ export type SerializedImageNode = Spread<
 function ImageComponent({
   src,
   altText,
-  width,
-  height,
+  width: initialWidth,
+  height: initialHeight,
   alignment,
   showCaption,
   caption,
   nodeKey,
+  editable,
+  editor,
 }: {
   src: string
   altText: string
@@ -44,7 +58,57 @@ function ImageComponent({
   showCaption: boolean
   caption: string
   nodeKey: NodeKey
+  editable: boolean
+  editor: LexicalEditor
 }) {
+  const [isSelected, setIsSelected] = useState(false)
+  const [captionText, setCaptionText] = useState(caption)
+
+  const updateNode = useCallback(
+    (updater: (node: ImageNode) => void) => {
+      editor.update(() => {
+        const node = editor._editorState._nodeMap.get(nodeKey)
+        if (node instanceof ImageNode) {
+          updater(node.getWritable() as ImageNode)
+        }
+      })
+    },
+    [editor, nodeKey],
+  )
+
+  const { size, onDragStart, setWidth } = useResizable({
+    initialWidth,
+    initialHeight,
+    minWidth: 50,
+    onResize: (w, h) => {
+      updateNode((node) => {
+        node.__width = Math.round(w)
+        node.__height = Math.round(h)
+      })
+    },
+  })
+
+  const setAlignment = useCallback(
+    (a: ImageAlignment) => {
+      updateNode((node) => { node.__alignment = a })
+    },
+    [updateNode],
+  )
+
+  const toggleCaption = useCallback(() => {
+    updateNode((node) => {
+      node.__showCaption = !node.__showCaption
+      if (node.__showCaption && !node.__caption) node.__caption = ''
+    })
+  }, [updateNode])
+
+  const deleteNode = useCallback(() => {
+    editor.update(() => {
+      const node = editor._editorState._nodeMap.get(nodeKey)
+      if (node) node.remove()
+    })
+  }, [editor, nodeKey])
+
   const alignClass =
     alignment === 'center'
       ? 'le-image-center'
@@ -53,18 +117,95 @@ function ImageComponent({
         : 'le-image-left'
 
   return (
-    <span className={`le-image-wrapper ${alignClass}`} data-lexical-node-key={nodeKey}>
+    <span
+      className={`le-image-wrapper ${alignClass} ${isSelected && editable ? 'le-node-selected' : ''}`}
+      data-lexical-node-key={nodeKey}
+      onClick={() => editable && setIsSelected(true)}
+      onBlur={() => setIsSelected(false)}
+      tabIndex={editable ? 0 : undefined}
+    >
+      {/* Floating Toolbar */}
+      {isSelected && editable && (
+        <FloatingNodeToolbar>
+          <button
+            className={`le-node-toolbar-btn ${alignment === 'left' ? 'le-node-toolbar-btn-active' : ''}`}
+            onClick={() => setAlignment('left')}
+            title="Align Left"
+          >
+            <AlignLeft size={14} />
+          </button>
+          <button
+            className={`le-node-toolbar-btn ${alignment === 'center' ? 'le-node-toolbar-btn-active' : ''}`}
+            onClick={() => setAlignment('center')}
+            title="Align Center"
+          >
+            <AlignCenter size={14} />
+          </button>
+          <button
+            className={`le-node-toolbar-btn ${alignment === 'right' ? 'le-node-toolbar-btn-active' : ''}`}
+            onClick={() => setAlignment('right')}
+            title="Align Right"
+          >
+            <AlignRight size={14} />
+          </button>
+          <div className="le-node-toolbar-sep" />
+          <input
+            type="number"
+            value={Math.round(size.width)}
+            onChange={(e) => setWidth(parseInt(e.target.value, 10) || 50)}
+            className="le-node-toolbar-input"
+            title="Width"
+          />
+          <span className="text-xs text-gray-400">×</span>
+          <input
+            type="number"
+            value={Math.round(size.height)}
+            className="le-node-toolbar-input"
+            disabled
+            title="Height (auto)"
+          />
+          <div className="le-node-toolbar-sep" />
+          <button
+            className={`le-node-toolbar-btn ${showCaption ? 'le-node-toolbar-btn-active' : ''}`}
+            onClick={toggleCaption}
+            title="Toggle Caption"
+          >
+            Aa
+          </button>
+          <button className="le-node-toolbar-btn" onClick={deleteNode} title="Delete">
+            <Trash2 size={14} />
+          </button>
+        </FloatingNodeToolbar>
+      )}
+
       <img
         src={src}
         alt={altText}
-        width={width}
-        height={height}
+        width={size.width}
+        height={size.height}
         loading="lazy"
         className="le-image"
         draggable={false}
       />
-      {showCaption && caption && (
-        <span className="le-image-caption">{caption}</span>
+
+      {/* Resize Handles */}
+      {isSelected && editable && <ResizeHandles onDragStart={onDragStart} />}
+
+      {/* Caption */}
+      {showCaption && (
+        editable ? (
+          <input
+            value={captionText}
+            onChange={(e) => {
+              setCaptionText(e.target.value)
+              updateNode((node) => { node.__caption = e.target.value })
+            }}
+            placeholder="Add a caption..."
+            className="le-image-caption-input"
+          />
+        ) : (
+          caption && <span className="le-image-caption">{caption}</span>
+        )
       )}
     </span>
   )
@@ -186,7 +327,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
     writable.__alignment = alignment
   }
 
-  decorate(_editor: LexicalEditor): JSX.Element {
+  decorate(editor: LexicalEditor): JSX.Element {
     return (
       <ImageComponent
         src={this.__src}
@@ -197,6 +338,8 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
         showCaption={this.__showCaption}
         caption={this.__caption}
         nodeKey={this.__key}
+        editable={editor._config.editable ?? true}
+        editor={editor}
       />
     )
   }

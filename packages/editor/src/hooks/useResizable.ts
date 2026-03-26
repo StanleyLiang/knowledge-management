@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState, useEffect } from 'react'
 
+export type HandlePosition = 'nw' | 'ne' | 'sw' | 'se'
+
 interface UseResizableOptions {
   initialWidth: number
   initialHeight: number
@@ -24,6 +26,7 @@ export function useResizable({
   const isDragging = useRef(false)
   const startPos = useRef({ x: 0, y: 0 })
   const startSize = useRef({ width: 0, height: 0 })
+  const handleRef = useRef<HandlePosition>('se')
 
   // Sync with external changes
   useEffect(() => {
@@ -31,18 +34,24 @@ export function useResizable({
   }, [initialWidth, initialHeight])
 
   const onDragStart = useCallback(
-    (e: React.MouseEvent) => {
+    (handle: HandlePosition) => (e: React.MouseEvent) => {
       e.preventDefault()
       e.stopPropagation()
       isDragging.current = true
+      handleRef.current = handle
       startPos.current = { x: e.clientX, y: e.clientY }
       startSize.current = { ...size }
 
       const onMouseMove = (moveEvent: MouseEvent) => {
         if (!isDragging.current) return
 
-        const deltaX = moveEvent.clientX - startPos.current.x
-        let newWidth = Math.max(minWidth, startSize.current.width + deltaX)
+        let dx = moveEvent.clientX - startPos.current.x
+        const dy = moveEvent.clientY - startPos.current.y
+
+        // Invert for left-side handles
+        if (handleRef.current === 'nw' || handleRef.current === 'sw') dx = -dx
+
+        let newWidth = Math.max(minWidth, startSize.current.width + dx)
         newWidth = Math.min(newWidth, maxWidth)
         const newHeight = Math.max(minHeight, newWidth / aspectRatio)
 

@@ -1,19 +1,25 @@
-import type { MouseEvent } from 'react'
+import type { HandlePosition } from '../../hooks/useResizable'
 
 interface ResizeHandlesProps {
-  onDragStart: (e: MouseEvent) => void
+  onDragStart: (handle: HandlePosition) => (e: React.MouseEvent) => void
 }
 
-const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const
+const HANDLES: { pos: HandlePosition; className: string; cursor: string }[] = [
+  { pos: 'nw', className: 'le-resize-handle-nw', cursor: 'nwse-resize' },
+  { pos: 'ne', className: 'le-resize-handle-ne', cursor: 'nesw-resize' },
+  { pos: 'sw', className: 'le-resize-handle-sw', cursor: 'nesw-resize' },
+  { pos: 'se', className: 'le-resize-handle-se', cursor: 'nwse-resize' },
+]
 
 export function ResizeHandles({ onDragStart }: ResizeHandlesProps) {
   return (
     <>
-      {CORNERS.map((corner) => (
+      {HANDLES.map(({ pos, className, cursor }) => (
         <div
-          key={corner}
-          className={`le-resize-handle le-resize-handle-${corner}`}
-          onMouseDown={onDragStart}
+          key={pos}
+          className={`le-resize-handle ${className}`}
+          style={{ cursor }}
+          onMouseDown={onDragStart(pos)}
         />
       ))}
     </>

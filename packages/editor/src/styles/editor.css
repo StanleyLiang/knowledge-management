@@ -260,6 +260,10 @@
 .le-image-caption {
   @apply block text-center text-sm text-gray-500 mt-1 italic;
 }
+.le-image-caption-input {
+  @apply block w-full text-center text-sm text-gray-500 mt-1 italic
+         border-none outline-none bg-transparent placeholder:text-gray-300;
+}
 
 /* Video */
 .le-video-wrapper {
@@ -615,21 +619,45 @@
   @apply mt-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors;
 }
 
+/* Node Floating Toolbar */
+.le-node-toolbar {
+  @apply absolute -top-10 left-1/2 -translate-x-1/2 z-20
+         flex items-center gap-1 px-2 py-1
+         bg-white border border-gray-200 rounded-lg shadow-lg;
+}
+.le-node-toolbar-btn {
+  @apply p-1 rounded hover:bg-gray-100 text-gray-600 transition-colors text-sm;
+}
+.le-node-toolbar-btn-active {
+  @apply bg-blue-100 text-blue-600;
+}
+.le-node-toolbar-input {
+  @apply w-14 px-1.5 py-0.5 text-xs border border-gray-300 rounded text-center;
+}
+.le-node-toolbar-sep {
+  @apply w-px h-5 bg-gray-200;
+}
+
+/* Selected node wrapper */
+.le-node-selected {
+  @apply relative ring-2 ring-blue-500 ring-offset-1 rounded;
+}
+
 /* Resize Handles */
 .le-resize-handle {
   @apply absolute w-3 h-3 bg-blue-500 rounded-full border-2 border-white z-10;
 }
-.le-resize-handle-top-left {
-  @apply -top-1.5 -left-1.5 cursor-nw-resize;
+.le-resize-handle-nw {
+  @apply -top-1.5 -left-1.5;
 }
-.le-resize-handle-top-right {
-  @apply -top-1.5 -right-1.5 cursor-ne-resize;
+.le-resize-handle-ne {
+  @apply -top-1.5 -right-1.5;
 }
-.le-resize-handle-bottom-left {
-  @apply -bottom-1.5 -left-1.5 cursor-sw-resize;
+.le-resize-handle-sw {
+  @apply -bottom-1.5 -left-1.5;
 }
-.le-resize-handle-bottom-right {
-  @apply -bottom-1.5 -right-1.5 cursor-se-resize;
+.le-resize-handle-se {
+  @apply -bottom-1.5 -right-1.5;
 }
 
 .le-toolbar-bg-icon {
