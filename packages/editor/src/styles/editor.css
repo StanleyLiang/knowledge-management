@@ -284,6 +284,58 @@
   @apply text-gray-400 text-xs;
 }
 
+/* Emoji Menu */
+.le-emoji-menu {
+  @apply min-w-[200px] max-h-[250px] overflow-y-auto bg-white border border-gray-200
+         rounded-lg shadow-lg py-1 z-50;
+}
+.le-emoji-menu-item {
+  @apply w-full text-left px-3 py-1.5 flex items-center gap-2
+         hover:bg-gray-100 transition-colors;
+}
+.le-emoji-menu-item-selected {
+  @apply bg-gray-100;
+}
+.le-emoji-char {
+  @apply text-lg;
+}
+.le-emoji-name {
+  @apply text-sm text-gray-600;
+}
+
+/* Mention */
+.le-mention {
+  @apply inline-block px-1 py-0.5 bg-blue-50 text-blue-700 rounded text-sm
+         font-medium cursor-pointer hover:bg-blue-100;
+}
+.le-mention-menu {
+  @apply min-w-[220px] max-h-[250px] overflow-y-auto bg-white border border-gray-200
+         rounded-lg shadow-lg py-1 z-50;
+}
+.le-mention-menu-item {
+  @apply w-full text-left px-3 py-2 flex items-center gap-2.5
+         hover:bg-gray-100 transition-colors;
+}
+.le-mention-menu-item-selected {
+  @apply bg-gray-100;
+}
+.le-mention-avatar {
+  @apply w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center
+         text-sm font-medium flex-shrink-0 overflow-hidden;
+}
+.le-mention-avatar img {
+  @apply w-full h-full object-cover;
+}
+.le-mention-info {
+  @apply flex flex-col;
+}
+.le-mention-name {
+  @apply text-sm font-medium text-gray-900;
+}
+.le-mention-dept {
+  @apply text-xs text-gray-500;
+}
+
 /* Color Picker */
 .le-color-picker {
   @apply p-2 w-[220px];

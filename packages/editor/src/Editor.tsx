@@ -21,6 +21,9 @@ import { TablePlugin } from './plugins/TablePlugin'
 import { SlashCommandPlugin } from './plugins/SlashCommandPlugin'
 import { MarkdownPlugin } from './plugins/MarkdownPlugin'
 import { FloatingLinkEditorPlugin } from './plugins/FloatingLinkEditorPlugin'
+import { MentionPlugin } from './plugins/MentionPlugin'
+import { EmojiPlugin } from './plugins/EmojiPlugin'
+import { MentionNode } from './nodes/MentionNode'
 import { Toolbar } from './components/editor/Toolbar'
 import { DividerNode } from './nodes/DividerNode'
 import { BookmarkNode } from './nodes/BookmarkNode'
@@ -54,11 +57,13 @@ const EDITOR_NODES = [
   TableCellNode,
   TableRowNode,
   CodeSnippetNode,
+  MentionNode,
 ]
 
 export function Editor({
   initialEditorState,
   onChange,
+  onMentionSearch,
   theme,
   placeholder = 'Start writing...',
   editable = true,
@@ -106,6 +111,8 @@ export function Editor({
         <SlashCommandPlugin />
         <MarkdownPlugin />
         <FloatingLinkEditorPlugin />
+        <MentionPlugin onSearch={onMentionSearch} />
+        <EmojiPlugin />
         <OnChangePlugin onChange={onChange} />
       </div>
     </LexicalComposer>
