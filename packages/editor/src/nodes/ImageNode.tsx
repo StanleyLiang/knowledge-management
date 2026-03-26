@@ -160,17 +160,21 @@ function ImageComponent({
           </button>
           <div className="le-node-toolbar-sep" />
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={Math.round(size.width)}
-            onChange={(e) => setWidth(parseInt(e.target.value, 10) || 50)}
+            onChange={(e) => { const v = parseInt(e.target.value, 10); if (v > 0) setWidth(v) }}
             className="le-node-toolbar-input"
             title="Width"
           />
           <span className="text-xs text-gray-400">×</span>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={Math.round(size.height)}
-            onChange={(e) => setHeight(parseInt(e.target.value, 10) || 50)}
+            onChange={(e) => { const v = parseInt(e.target.value, 10); if (v > 0) setHeight(v) }}
             className="le-node-toolbar-input"
             title="Height"
           />
