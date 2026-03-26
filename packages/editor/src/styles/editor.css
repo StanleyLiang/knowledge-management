@@ -86,7 +86,7 @@
 
 /* Link */
 .le-link {
-  @apply text-blue-600 underline;
+  @apply text-blue-600 underline cursor-pointer;
 }
 .le-link:hover {
   @apply text-blue-800;
