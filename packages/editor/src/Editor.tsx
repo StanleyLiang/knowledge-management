@@ -23,6 +23,9 @@ import { MarkdownPlugin } from './plugins/MarkdownPlugin'
 import { FloatingLinkEditorPlugin } from './plugins/FloatingLinkEditorPlugin'
 import { MentionPlugin } from './plugins/MentionPlugin'
 import { EmojiPlugin } from './plugins/EmojiPlugin'
+import { DragDropPlugin } from './plugins/DragDropPlugin'
+import { TableOfContentsPlugin } from './plugins/TableOfContentsPlugin'
+import { PageTags } from './components/editor/PageTags'
 import { MentionNode } from './nodes/MentionNode'
 import { MermaidNode } from './nodes/MermaidNode'
 import { LandmarkNode } from './nodes/LandmarkNode'
@@ -69,8 +72,10 @@ export function Editor({
   onChange,
   onMentionSearch,
   theme,
+  tags,
   placeholder = 'Start writing...',
   editable = true,
+  showTableOfContents = false,
 }: EditorProps) {
   const initialConfig = {
     namespace: 'LexicalEditor',
@@ -117,7 +122,10 @@ export function Editor({
         <FloatingLinkEditorPlugin />
         <MentionPlugin onSearch={onMentionSearch} />
         <EmojiPlugin />
+        <DragDropPlugin />
         <OnChangePlugin onChange={onChange} />
+        {showTableOfContents && <TableOfContentsPlugin />}
+        {tags && <PageTags value={tags.value} onChange={tags.onChange} suggestions={tags.suggestions} editable={editable} />}
       </div>
     </LexicalComposer>
   )
