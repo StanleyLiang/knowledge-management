@@ -279,7 +279,10 @@
 /* Attachment */
 .le-attachment {
   @apply inline-flex items-center gap-1.5 px-2 py-1 bg-gray-100 rounded
-         text-sm hover:bg-gray-200 transition-colors cursor-pointer;
+         text-sm hover:bg-gray-200 transition-colors cursor-pointer relative;
+}
+.le-attachment-selected {
+  @apply ring-2 ring-blue-500;
 }
 .le-attachment-icon {
   @apply text-gray-500 shrink-0;
@@ -617,6 +620,18 @@
 }
 .le-table-insert-btn {
   @apply mt-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors;
+}
+
+/* Table Action Bar */
+.le-table-action-bar {
+  @apply flex items-center gap-1 px-2 py-1.5 mb-1
+         bg-white border border-gray-200 rounded-lg shadow-sm;
+}
+.le-table-action-group {
+  @apply flex items-center gap-0.5;
+}
+.le-table-action-label {
+  @apply text-[10px] font-semibold text-gray-400 uppercase mr-0.5;
 }
 
 /* Node Floating Toolbar */

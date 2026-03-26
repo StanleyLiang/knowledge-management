@@ -7,7 +7,11 @@ import {
   type SerializedLexicalNode,
   type Spread,
 } from 'lexical'
-import { type JSX } from 'react'
+import { useCallback, useEffect, useRef, useState, type JSX } from 'react'
+import { AlignLeft, AlignCenter, AlignRight, Trash2 } from 'lucide-react'
+import { useResizable } from '../hooks/useResizable'
+import { ResizeHandles } from '../components/editor/ResizeHandles'
+import { FloatingNodeToolbar } from '../components/editor/FloatingNodeToolbar'
 
 export type VideoFormat = 'mp4' | 'hls'
 
@@ -25,30 +29,120 @@ export type SerializedVideoNode = Spread<
 
 function VideoComponent({
   src,
-  width,
-  height,
+  width: initialWidth,
+  height: initialHeight,
   format,
   nodeKey,
+  editable,
+  editor,
 }: {
   src: string
   width: number
   height: number
   format: VideoFormat
   nodeKey: NodeKey
+  editable: boolean
+  editor: LexicalEditor
 }) {
+  const [isSelected, setIsSelected] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  const updateNode = useCallback(
+    (updater: (node: VideoNode) => void) => {
+      editor.update(() => {
+        const node = editor._editorState._nodeMap.get(nodeKey)
+        if (node instanceof VideoNode) {
+          updater(node.getWritable() as VideoNode)
+        }
+      })
+    },
+    [editor, nodeKey],
+  )
+
+  const { size, onDragStart, setWidth } = useResizable({
+    initialWidth,
+    initialHeight,
+    minWidth: 100,
+    onResize: (w, h) => {
+      updateNode((node) => {
+        node.__width = Math.round(w)
+        node.__height = Math.round(h)
+      })
+    },
+  })
+
+  // HLS.js dynamic import
+  useEffect(() => {
+    if (format !== 'hls' || !videoRef.current) return
+
+    let hls: { destroy: () => void } | null = null
+    import('hls.js').then((HlsModule) => {
+      const Hls = HlsModule.default
+      if (Hls.isSupported() && videoRef.current) {
+        hls = new Hls()
+        hls.loadSource(src)
+        hls.attachMedia(videoRef.current)
+      } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
+        videoRef.current.src = src
+      }
+    }).catch(() => {
+      // HLS.js not available, fallback
+      if (videoRef.current) videoRef.current.src = src
+    })
+
+    return () => { hls?.destroy() }
+  }, [src, format])
+
+  const deleteNode = useCallback(() => {
+    editor.update(() => {
+      const node = editor._editorState._nodeMap.get(nodeKey)
+      if (node) node.remove()
+    })
+  }, [editor, nodeKey])
+
   return (
-    <span className="le-video-wrapper" data-lexical-node-key={nodeKey}>
+    <span
+      className={`le-video-wrapper ${isSelected && editable ? 'le-node-selected' : ''}`}
+      data-lexical-node-key={nodeKey}
+      onClick={() => editable && setIsSelected(true)}
+      onBlur={() => setIsSelected(false)}
+      tabIndex={editable ? 0 : undefined}
+    >
+      {isSelected && editable && (
+        <FloatingNodeToolbar>
+          <input
+            type="number"
+            value={Math.round(size.width)}
+            onChange={(e) => setWidth(parseInt(e.target.value, 10) || 100)}
+            className="le-node-toolbar-input"
+            title="Width"
+          />
+          <span className="text-xs text-gray-400">×</span>
+          <input
+            type="number"
+            value={Math.round(size.height)}
+            className="le-node-toolbar-input"
+            disabled
+            title="Height (auto)"
+          />
+          <div className="le-node-toolbar-sep" />
+          <button className="le-node-toolbar-btn" onClick={deleteNode} title="Delete">
+            <Trash2 size={14} />
+          </button>
+        </FloatingNodeToolbar>
+      )}
+
       <video
+        ref={videoRef}
         src={format === 'mp4' ? src : undefined}
-        width={width}
-        height={height}
+        width={size.width}
+        height={size.height}
         controls
         className="le-video"
         draggable={false}
       />
-      {format === 'hls' && (
-        <span className="le-video-hls-badge">HLS</span>
-      )}
+
+      {isSelected && editable && <ResizeHandles onDragStart={onDragStart} />}
     </span>
   )
 }
@@ -128,7 +222,7 @@ export class VideoNode extends DecoratorNode<JSX.Element> {
     writable.__height = height
   }
 
-  decorate(_editor: LexicalEditor): JSX.Element {
+  decorate(editor: LexicalEditor): JSX.Element {
     return (
       <VideoComponent
         src={this.__src}
@@ -136,6 +230,8 @@ export class VideoNode extends DecoratorNode<JSX.Element> {
         height={this.__height}
         format={this.__format}
         nodeKey={this.__key}
+        editable={editor._config.editable ?? true}
+        editor={editor}
       />
     )
   }

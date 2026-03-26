@@ -7,8 +7,9 @@ import {
   type SerializedLexicalNode,
   type Spread,
 } from 'lexical'
-import { FileText, FileImage, FileVideo, File } from 'lucide-react'
-import { type JSX } from 'react'
+import { FileText, FileImage, FileVideo, File, Download, Trash2 } from 'lucide-react'
+import { useCallback, useState, type JSX } from 'react'
+import { FloatingNodeToolbar } from '../components/editor/FloatingNodeToolbar'
 
 export type SerializedAttachmentNode = Spread<
   {
@@ -42,17 +43,59 @@ function AttachmentComponent({
   fileSize,
   mimeType,
   nodeKey,
+  editable,
+  editor,
 }: {
   url: string
   fileName: string
   fileSize: number
   mimeType: string
   nodeKey: NodeKey
+  editable: boolean
+  editor: LexicalEditor
 }) {
   const Icon = getFileIcon(mimeType)
+  const [isSelected, setIsSelected] = useState(false)
+
+  const handleDownload = useCallback(() => {
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName
+    a.click()
+  }, [url, fileName])
+
+  const deleteNode = useCallback(() => {
+    editor.update(() => {
+      const node = editor._editorState._nodeMap.get(nodeKey)
+      if (node) node.remove()
+    })
+  }, [editor, nodeKey])
 
   return (
-    <span className="le-attachment" data-lexical-node-key={nodeKey}>
+    <span
+      className={`le-attachment ${isSelected && editable ? 'le-attachment-selected' : ''}`}
+      data-lexical-node-key={nodeKey}
+      onClick={(e) => {
+        if (editable) {
+          setIsSelected(true)
+        } else {
+          handleDownload()
+        }
+      }}
+      onBlur={() => setIsSelected(false)}
+      tabIndex={0}
+      style={{ position: 'relative' }}
+    >
+      {isSelected && editable && (
+        <FloatingNodeToolbar>
+          <button className="le-node-toolbar-btn" onClick={handleDownload} title="Download">
+            <Download size={14} />
+          </button>
+          <button className="le-node-toolbar-btn" onClick={deleteNode} title="Delete">
+            <Trash2 size={14} />
+          </button>
+        </FloatingNodeToolbar>
+      )}
       <Icon size={16} className="le-attachment-icon" />
       <span className="le-attachment-name">{fileName}</span>
       {fileSize > 0 && (
@@ -128,7 +171,7 @@ export class AttachmentNode extends DecoratorNode<JSX.Element> {
     return true
   }
 
-  decorate(_editor: LexicalEditor): JSX.Element {
+  decorate(editor: LexicalEditor): JSX.Element {
     return (
       <AttachmentComponent
         url={this.__url}
@@ -136,6 +179,8 @@ export class AttachmentNode extends DecoratorNode<JSX.Element> {
         fileSize={this.__fileSize}
         mimeType={this.__mimeType}
         nodeKey={this.__key}
+        editable={editor._config.editable ?? true}
+        editor={editor}
       />
     )
   }

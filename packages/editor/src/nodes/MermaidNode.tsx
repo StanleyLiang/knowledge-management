@@ -7,8 +7,9 @@ import {
   type SerializedLexicalNode,
   type Spread,
 } from 'lexical'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { type JSX } from 'react'
+import { useCallback, useEffect, useRef, useState, type JSX } from 'react'
+import { Pencil, Trash2 } from 'lucide-react'
+import { FloatingNodeToolbar } from '../components/editor/FloatingNodeToolbar'
 
 export type SerializedMermaidNode = Spread<
   {
@@ -31,6 +32,7 @@ function MermaidComponent({
   editor: LexicalEditor
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const [isSelected, setIsSelected] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editSource, setEditSource] = useState(initialSource)
   const [error, setError] = useState<string | null>(null)
@@ -100,12 +102,32 @@ function MermaidComponent({
     )
   }
 
+  const deleteNode = useCallback(() => {
+    editor.update(() => {
+      const node = editor._editorState._nodeMap.get(nodeKey)
+      if (node) node.remove()
+    })
+  }, [editor, nodeKey])
+
   return (
     <div
-      className="le-mermaid"
+      className={`le-mermaid ${isSelected && editable ? 'le-node-selected' : ''}`}
       data-lexical-node-key={nodeKey}
+      onClick={() => editable && setIsSelected(true)}
+      onBlur={() => setIsSelected(false)}
       onDoubleClick={() => editable && setIsEditing(true)}
+      tabIndex={editable ? 0 : undefined}
     >
+      {isSelected && editable && !isEditing && (
+        <FloatingNodeToolbar>
+          <button className="le-node-toolbar-btn" onClick={() => setIsEditing(true)} title="Edit Source">
+            <Pencil size={14} />
+          </button>
+          <button className="le-node-toolbar-btn" onClick={deleteNode} title="Delete">
+            <Trash2 size={14} />
+          </button>
+        </FloatingNodeToolbar>
+      )}
       {error ? (
         <div className="le-mermaid-error">
           <span>⚠️ Mermaid Error:</span> {error}
@@ -118,8 +140,8 @@ function MermaidComponent({
       ) : (
         <div className="le-mermaid-loading">Loading diagram...</div>
       )}
-      {editable && !isEditing && (
-        <div className="le-mermaid-hint">Double-click to edit</div>
+      {editable && !isEditing && !isSelected && (
+        <div className="le-mermaid-hint">Click to select, double-click to edit</div>
       )}
     </div>
   )

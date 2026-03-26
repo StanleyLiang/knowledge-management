@@ -24,6 +24,7 @@ import { FloatingLinkEditorPlugin } from './plugins/FloatingLinkEditorPlugin'
 import { MentionPlugin } from './plugins/MentionPlugin'
 import { EmojiPlugin } from './plugins/EmojiPlugin'
 import { DragDropPlugin } from './plugins/DragDropPlugin'
+import { TableActionPlugin } from './plugins/TableActionPlugin'
 import { TableOfContentsPlugin } from './plugins/TableOfContentsPlugin'
 import { PageTags } from './components/editor/PageTags'
 import { MentionNode } from './nodes/MentionNode'
@@ -118,6 +119,7 @@ export function Editor({
         <CheckListPlugin />
         <LexicalTablePlugin />
         <TablePlugin />
+        <TableActionPlugin />
         <CustomNodesPlugin />
         <SlashCommandPlugin />
         <MarkdownPlugin />
