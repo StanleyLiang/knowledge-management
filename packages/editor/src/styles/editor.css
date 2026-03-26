@@ -657,7 +657,7 @@
 /* Node Floating Toolbar */
 .le-node-toolbar {
   @apply absolute -top-10 left-1/2 -translate-x-1/2 z-20
-         flex items-center gap-1 px-2 py-1
+         flex items-center gap-1 px-2 py-1 w-max whitespace-nowrap
          bg-white border border-gray-200 rounded-lg shadow-lg;
 }
 .le-node-toolbar-btn {
