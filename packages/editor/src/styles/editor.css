@@ -316,7 +316,7 @@
 
 /* Mermaid */
 .le-mermaid {
-  @apply my-3 border border-gray-200 rounded-lg overflow-hidden bg-white;
+  @apply relative my-3 border border-gray-200 rounded-lg overflow-hidden bg-white;
 }
 .le-mermaid-editing {
   @apply p-3;
@@ -335,10 +335,10 @@
   @apply bg-blue-600 text-white border-blue-600 hover:bg-blue-700;
 }
 .le-mermaid-svg {
-  @apply p-4 flex justify-center;
+  @apply p-4 flex justify-center overflow-hidden;
 }
 .le-mermaid-svg svg {
-  @apply max-w-full h-auto;
+  @apply w-full h-full;
 }
 .le-mermaid-error {
   @apply p-3 text-sm text-red-600 bg-red-50;
