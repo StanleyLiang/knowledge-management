@@ -1,5 +1,6 @@
 import {
   DecoratorNode,
+  $getNodeByKey,
   type DOMExportOutput,
   type LexicalEditor,
   type LexicalNode,
@@ -72,7 +73,7 @@ function ImageComponent({
   const updateNode = useCallback(
     (updater: (node: ImageNode) => void) => {
       editor.update(() => {
-        const node = editor._editorState._nodeMap.get(nodeKey)
+        const node = $getNodeByKey(nodeKey)
         if (node instanceof ImageNode) {
           updater(node.getWritable() as ImageNode)
         }
@@ -109,7 +110,7 @@ function ImageComponent({
 
   const deleteNode = useCallback(() => {
     editor.update(() => {
-      const node = editor._editorState._nodeMap.get(nodeKey)
+      const node = $getNodeByKey(nodeKey)
       if (node) node.remove()
     })
   }, [editor, nodeKey])
