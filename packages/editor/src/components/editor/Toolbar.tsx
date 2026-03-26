@@ -69,7 +69,9 @@ import {
   INSERT_CODE_SNIPPET_COMMAND,
   INSERT_MERMAID_COMMAND,
   INSERT_LANDMARK_COMMAND,
+  UPLOAD_IMAGE_COMMAND,
 } from '../../plugins/InsertCommands'
+import React from 'react'
 import { useToolbarState, type BlockType } from '../../hooks/useToolbarState'
 import { Toggle } from '../ui/toggle'
 import { Button } from '../ui/button'
@@ -94,6 +96,7 @@ const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
 
 export function Toolbar() {
   const { editor, state } = useToolbarState()
+  const imageInputRef = React.useRef<HTMLInputElement>(null)
 
   const formatText = (format: TextFormatType) => {
     editor.dispatchCommand(FORMAT_TEXT_COMMAND, format)
@@ -120,6 +123,21 @@ export function Toolbar() {
 
   return (
     <div className="le-toolbar">
+      {/* Hidden file input for image upload */}
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) {
+            editor.dispatchCommand(UPLOAD_IMAGE_COMMAND, file)
+            e.target.value = '' // reset so same file can be selected again
+          }
+        }}
+      />
+
       {/* Undo / Redo */}
       <Tooltip content="Undo">
         <Button
@@ -305,14 +323,7 @@ export function Toolbar() {
 
       {/* Insert items */}
       <Tooltip content="Image">
-        <Button variant="ghost" size="icon" onClick={() => {
-          editor.dispatchCommand(INSERT_IMAGE_COMMAND, {
-            src: 'https://placehold.co/400x300/e2e8f0/64748b?text=Image',
-            altText: 'Placeholder image',
-            width: 400,
-            height: 300,
-          })
-        }}>
+        <Button variant="ghost" size="icon" onClick={() => imageInputRef.current?.click()}>
           <Image size={16} />
         </Button>
       </Tooltip>

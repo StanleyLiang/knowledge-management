@@ -22,6 +22,7 @@ import { ResizeHandles } from '../components/editor/ResizeHandles'
 import { FloatingNodeToolbar } from '../components/editor/FloatingNodeToolbar'
 
 export type ImageAlignment = 'left' | 'center' | 'right'
+export type ImageStatus = 'ready' | 'uploading' | 'converting' | 'error'
 
 export type SerializedImageNode = Spread<
   {
@@ -46,6 +47,8 @@ function ImageComponent({
   alignment,
   showCaption,
   caption,
+  status,
+  errorMessage,
   nodeKey,
   editable,
   editor,
@@ -57,6 +60,8 @@ function ImageComponent({
   alignment: ImageAlignment
   showCaption: boolean
   caption: string
+  status: ImageStatus
+  errorMessage: string
   nodeKey: NodeKey
   editable: boolean
   editor: LexicalEditor
@@ -178,13 +183,37 @@ function ImageComponent({
         </FloatingNodeToolbar>
       )}
 
+      {/* Upload status overlay */}
+      {status !== 'ready' && (
+        <div className="le-image-status-overlay" style={{ width: size.width, height: size.height }}>
+          {status === 'uploading' && (
+            <div className="le-image-status-content">
+              <div className="le-image-spinner" />
+              <span>Uploading...</span>
+            </div>
+          )}
+          {status === 'converting' && (
+            <div className="le-image-status-content">
+              <div className="le-image-spinner" />
+              <span>Processing...</span>
+            </div>
+          )}
+          {status === 'error' && (
+            <div className="le-image-status-content le-image-status-error">
+              <span>⚠️ {errorMessage || 'Upload failed'}</span>
+              <button className="le-image-retry-btn">Retry</button>
+            </div>
+          )}
+        </div>
+      )}
+
       <img
         src={src}
         alt={altText}
         width={size.width}
         height={size.height}
         loading="lazy"
-        className="le-image"
+        className={`le-image ${status !== 'ready' ? 'le-image-loading' : ''}`}
         draggable={false}
       />
 
@@ -218,6 +247,8 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
   __height: number
   __alignment: ImageAlignment
   __showCaption: boolean
+  __status: ImageStatus
+  __errorMessage: string
   __caption: string
 
   static getType(): string {
@@ -225,7 +256,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
   }
 
   static clone(node: ImageNode): ImageNode {
-    return new ImageNode(
+    const n = new ImageNode(
       node.__src,
       node.__altText,
       node.__width,
@@ -235,6 +266,9 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
       node.__caption,
       node.__key,
     )
+    n.__status = node.__status
+    n.__errorMessage = node.__errorMessage
+    return n
   }
 
   constructor(
@@ -255,6 +289,13 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
     this.__alignment = alignment
     this.__showCaption = showCaption
     this.__caption = caption
+    this.__status = 'ready'
+    this.__errorMessage = ''
+  }
+
+  setStatus(status: ImageStatus): void {
+    const writable = this.getWritable()
+    writable.__status = status
   }
 
   static importJSON(serializedNode: SerializedImageNode): ImageNode {
@@ -337,6 +378,8 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
         alignment={this.__alignment}
         showCaption={this.__showCaption}
         caption={this.__caption}
+        status={this.__status}
+        errorMessage={this.__errorMessage}
         nodeKey={this.__key}
         editable={editor._config.editable ?? true}
         editor={editor}

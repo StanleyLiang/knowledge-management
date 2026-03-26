@@ -23,6 +23,7 @@ import { MarkdownPlugin } from './plugins/MarkdownPlugin'
 import { FloatingLinkEditorPlugin } from './plugins/FloatingLinkEditorPlugin'
 import { MentionPlugin } from './plugins/MentionPlugin'
 import { EmojiPlugin } from './plugins/EmojiPlugin'
+import { ImageUploadPlugin } from './plugins/ImageUploadPlugin'
 import { DragDropPlugin } from './plugins/DragDropPlugin'
 import { TableActionPlugin } from './plugins/TableActionPlugin'
 import { TableOfContentsPlugin } from './plugins/TableOfContentsPlugin'
@@ -71,6 +72,7 @@ const EDITOR_NODES = [
 export function Editor({
   initialEditorState,
   onChange,
+  onUpload,
   onMentionSearch,
   theme,
   tags,
@@ -121,6 +123,7 @@ export function Editor({
         <TablePlugin />
         <TableActionPlugin />
         <CustomNodesPlugin />
+        <ImageUploadPlugin onUpload={onUpload} />
         <SlashCommandPlugin />
         <MarkdownPlugin />
         <FloatingLinkEditorPlugin />

@@ -257,6 +257,26 @@
 .le-image-left {
   @apply block text-left;
 }
+/* Image upload status */
+.le-image-status-overlay {
+  @apply absolute inset-0 flex items-center justify-center bg-gray-100/80 z-10 rounded;
+}
+.le-image-status-content {
+  @apply flex flex-col items-center gap-2 text-sm text-gray-600;
+}
+.le-image-status-error {
+  @apply text-red-600;
+}
+.le-image-spinner {
+  @apply w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin;
+}
+.le-image-retry-btn {
+  @apply px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200;
+}
+.le-image-loading {
+  @apply opacity-40;
+}
+
 .le-image-caption {
   @apply block text-center text-sm text-gray-500 mt-1 italic;
 }

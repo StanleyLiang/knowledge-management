@@ -35,3 +35,5 @@ export const INSERT_MERMAID_COMMAND: LexicalCommand<{
 export const INSERT_LANDMARK_COMMAND: LexicalCommand<{
   items?: Array<{ id: string; name: string; latitude: number; longitude: number }>
 }> = createCommand('INSERT_LANDMARK_COMMAND')
+
+export const UPLOAD_IMAGE_COMMAND: LexicalCommand<File> = createCommand('UPLOAD_IMAGE_COMMAND')
