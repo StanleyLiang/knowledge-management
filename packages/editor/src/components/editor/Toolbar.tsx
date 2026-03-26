@@ -15,6 +15,7 @@ import {
   INSERT_UNORDERED_LIST_COMMAND,
 } from '@lexical/list'
 import { $getSelection, $isRangeSelection } from 'lexical'
+import { TOGGLE_LINK_COMMAND } from '@lexical/link'
 import {
   Undo2,
   Redo2,
@@ -74,6 +75,7 @@ import { Separator } from '../ui/separator'
 import { Dropdown, DropdownItem } from '../ui/dropdown'
 import { Tooltip } from '../ui/tooltip'
 import { TableInsertDropdown } from './TableInsertDropdown'
+import { TextColorPicker, TextBgColorPicker } from './ColorPicker'
 
 const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
   paragraph: 'Normal Text',
@@ -211,17 +213,9 @@ export function Toolbar() {
 
       <Separator />
 
-      {/* Text Color / BG Color — placeholder buttons */}
-      <Tooltip content="Text Color">
-        <Button variant="ghost" size="icon">
-          <Type size={16} />
-        </Button>
-      </Tooltip>
-      <Tooltip content="Background Color">
-        <Button variant="ghost" size="icon">
-          <Type size={16} className="le-toolbar-bg-icon" />
-        </Button>
-      </Tooltip>
+      {/* Text Color / BG Color */}
+      <TextColorPicker />
+      <TextBgColorPicker />
 
       <Separator />
 
@@ -325,7 +319,11 @@ export function Toolbar() {
       <TableInsertDropdown />
 
       <Tooltip content="Create Link">
-        <Button variant="ghost" size="icon" disabled>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => editor.dispatchCommand(TOGGLE_LINK_COMMAND, 'https://')}
+        >
           <Link size={16} />
         </Button>
       </Tooltip>

@@ -284,6 +284,46 @@
   @apply text-gray-400 text-xs;
 }
 
+/* Color Picker */
+.le-color-picker {
+  @apply p-2 w-[220px];
+}
+.le-color-picker-reset {
+  @apply w-full text-left text-sm text-gray-600 hover:bg-gray-100 px-2 py-1.5 rounded mb-2;
+}
+.le-color-picker-grid {
+  @apply grid grid-cols-10 gap-0.5;
+}
+.le-color-picker-swatch {
+  @apply w-5 h-5 rounded-sm border border-gray-200 cursor-pointer
+         hover:scale-110 hover:border-gray-400 transition-transform;
+}
+
+/* Floating Link Editor */
+.le-floating-link-editor {
+  @apply absolute z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-2
+         flex items-center gap-1;
+}
+.le-floating-link-edit {
+  @apply flex items-center gap-1;
+}
+.le-floating-link-input {
+  @apply px-2 py-1 text-sm border border-gray-300 rounded w-[250px] outline-none
+         focus:border-blue-500 focus:ring-1 focus:ring-blue-500;
+}
+.le-floating-link-view {
+  @apply flex items-center gap-2;
+}
+.le-floating-link-url {
+  @apply text-sm text-blue-600 hover:underline flex items-center gap-1 max-w-[250px] truncate;
+}
+.le-floating-link-btn {
+  @apply p-1 rounded hover:bg-gray-100 text-gray-600 transition-colors;
+}
+.le-floating-link-btn-danger {
+  @apply hover:bg-red-50 hover:text-red-600;
+}
+
 /* Slash Command Menu */
 .le-slash-menu {
   @apply min-w-[200px] max-h-[300px] overflow-y-auto bg-white border border-gray-200

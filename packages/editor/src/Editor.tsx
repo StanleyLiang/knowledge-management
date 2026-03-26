@@ -20,6 +20,7 @@ import { CustomNodesPlugin } from './plugins/CustomNodesPlugin'
 import { TablePlugin } from './plugins/TablePlugin'
 import { SlashCommandPlugin } from './plugins/SlashCommandPlugin'
 import { MarkdownPlugin } from './plugins/MarkdownPlugin'
+import { FloatingLinkEditorPlugin } from './plugins/FloatingLinkEditorPlugin'
 import { Toolbar } from './components/editor/Toolbar'
 import { DividerNode } from './nodes/DividerNode'
 import { BookmarkNode } from './nodes/BookmarkNode'
@@ -104,6 +105,7 @@ export function Editor({
         <CustomNodesPlugin />
         <SlashCommandPlugin />
         <MarkdownPlugin />
+        <FloatingLinkEditorPlugin />
         <OnChangePlugin onChange={onChange} />
       </div>
     </LexicalComposer>
