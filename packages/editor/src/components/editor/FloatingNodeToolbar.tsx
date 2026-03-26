@@ -10,7 +10,10 @@ interface FloatingNodeToolbarProps {
  */
 export function FloatingNodeToolbar({ children }: FloatingNodeToolbarProps) {
   return (
-    <div className="le-node-toolbar">
+    <div
+      className="le-node-toolbar"
+      onMouseDown={(e) => e.preventDefault()}
+    >
       {children}
     </div>
   )
