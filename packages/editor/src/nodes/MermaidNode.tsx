@@ -11,7 +11,12 @@ import {
 import { useCallback, useEffect, useRef, useState, type JSX } from 'react'
 import { createPortal } from 'react-dom'
 import { Pencil, Trash2, X } from 'lucide-react'
+import { lazy, Suspense } from 'react'
 import { FloatingNodeToolbar } from '../components/editor/FloatingNodeToolbar'
+
+const CodeMirrorEditor = lazy(() =>
+  import('../components/editor/CodeMirrorEditor').then((m) => ({ default: m.CodeMirrorEditor })),
+)
 import { useResizable } from '../hooks/useResizable'
 import { ResizeHandles } from '../components/editor/ResizeHandles'
 
@@ -86,13 +91,14 @@ function MermaidEditor({
         </div>
         <div className="le-mermaid-portal-body">
           <div className="le-mermaid-portal-editor">
-            <textarea
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="le-mermaid-portal-textarea"
-              spellCheck={false}
-              autoFocus
-            />
+            <Suspense fallback={<div className="le-mermaid-loading">Loading editor...</div>}>
+              <CodeMirrorEditor
+                value={code}
+                onChange={setCode}
+                className="le-mermaid-portal-codemirror"
+                autoFocus
+              />
+            </Suspense>
           </div>
           <div className="le-mermaid-portal-preview">
             {previewError ? (

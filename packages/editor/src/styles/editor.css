@@ -364,6 +364,12 @@
   @apply flex-1 p-4 text-sm font-mono bg-gray-50 resize-none outline-none
          border-none focus:bg-white transition-colors;
 }
+.le-mermaid-portal-codemirror {
+  @apply flex-1 overflow-hidden;
+}
+.le-mermaid-portal-codemirror .cm-editor {
+  height: 100%;
+}
 .le-mermaid-portal-preview {
   @apply flex-1 p-4 overflow-auto flex items-center justify-center bg-white;
 }
