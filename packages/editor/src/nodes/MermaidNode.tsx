@@ -256,8 +256,8 @@ export class MermaidNode extends DecoratorNode<JSX.Element> {
     return false
   }
 
-  isInline(): false {
-    return false
+  isInline(): true {
+    return true
   }
 
   getSource(): string { return this.__source }
