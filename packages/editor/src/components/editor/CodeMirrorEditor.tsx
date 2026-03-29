@@ -3,7 +3,6 @@ import { EditorState } from '@codemirror/state'
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view'
 import { defaultKeymap, indentWithTab } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
-import { oneDark } from '@codemirror/theme-one-dark'
 import {
   syntaxHighlighting,
   defaultHighlightStyle,
@@ -41,8 +40,7 @@ export function CodeMirrorEditor({
         bracketMatching(),
         foldGutter(),
         markdown(),
-        oneDark,
-        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+        syntaxHighlighting(defaultHighlightStyle),
         keymap.of([...defaultKeymap, indentWithTab]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
