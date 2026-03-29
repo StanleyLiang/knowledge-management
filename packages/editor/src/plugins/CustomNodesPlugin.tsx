@@ -149,13 +149,9 @@ export function CustomNodesPlugin() {
           editor.update(() => {
             const selection = $getSelection()
             if ($isRangeSelection(selection)) {
-              const mermaidNode = $createMermaidNode(
-                payload.source ?? 'graph TD\n    A[Start] --> B[End]',
-              )
-              const paragraphBefore = $createParagraphNode()
-              const paragraphAfter = $createParagraphNode()
-              selection.insertNodes([paragraphBefore, mermaidNode, paragraphAfter])
-              paragraphAfter.selectStart()
+              selection.insertNodes([
+                $createMermaidNode(payload.source ?? 'graph TD\n    A[Start] --> B[End]'),
+              ])
             }
           })
           return true

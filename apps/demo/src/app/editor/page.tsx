@@ -218,6 +218,7 @@ const DEMO_STATE = {
       {
         type: 'mermaid', version: 1,
         source: 'graph LR\n    A[Editor] --> B[Serialization]\n    B --> C[JSON State]\n    C --> D[Viewer]\n    A --> E[Toolbar]\n    E --> F[Formatting]',
+        width: 600, height: 300,
       },
 
       // ── H2: Bookmark ──

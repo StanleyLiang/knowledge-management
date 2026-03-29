@@ -247,9 +247,9 @@ export class MermaidNode extends DecoratorNode<JSX.Element> {
   }
 
   createDOM(): HTMLElement {
-    const div = document.createElement('div')
-    div.style.display = 'contents'
-    return div
+    const span = document.createElement('span')
+    span.style.display = 'inline-block'
+    return span
   }
 
   updateDOM(): false {
