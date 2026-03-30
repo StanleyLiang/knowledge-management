@@ -182,6 +182,8 @@ function CodeSnippetComponent({
 
         if (cursorAtEnd && val.endsWith('\n\n')) {
           e.preventDefault()
+          // Blur textarea so Lexical can take over focus/selection
+          ta.blur()
           // Trim trailing empty lines from code
           const trimmed = val.replace(/\n+$/, '')
           editor.update(() => {
