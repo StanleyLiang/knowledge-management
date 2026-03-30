@@ -16,6 +16,7 @@ import {
   LINK,
   type ElementTransformer,
 } from '@lexical/markdown'
+import { $createParagraphNode } from 'lexical'
 import {
   $createCodeSnippetNode,
   $isCodeSnippetNode,
@@ -36,8 +37,11 @@ const CODE_SNIPPET_TRANSFORMER: ElementTransformer = {
   replace: (parentNode, _children, match) => {
     const language = match[1] || 'plaintext'
     const codeNode = $createCodeSnippetNode('', language)
-    parentNode.replace(codeNode)
-    // Note: DecoratorNode doesn't support selectEnd(), user clicks into the textarea
+    const paragraphAfter = $createParagraphNode()
+    parentNode.insertAfter(codeNode)
+    codeNode.insertAfter(paragraphAfter)
+    parentNode.remove()
+    paragraphAfter.selectStart()
   },
   type: 'element',
 }
