@@ -192,6 +192,7 @@ function CodeSnippetComponent({
             <textarea
               value={initialCode}
               onChange={(e) => handleCodeChange(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
               className="le-code-snippet-textarea"
               spellCheck={false}
             />
