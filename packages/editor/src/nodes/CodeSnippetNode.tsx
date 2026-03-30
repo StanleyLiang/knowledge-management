@@ -8,6 +8,7 @@ import {
   type SerializedLexicalNode,
   type Spread,
 } from 'lexical'
+import { $createParagraphNode } from 'lexical'
 import { useState, useCallback, useEffect, useRef, type JSX } from 'react'
 import { Copy, Check } from 'lucide-react'
 
@@ -119,6 +120,8 @@ function CodeSnippetComponent({
   editor: LexicalEditor
 }) {
   const [copied, setCopied] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const selectionRef = useRef<number | null>(null)
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(initialCode).then(() => {
@@ -141,12 +144,59 @@ function CodeSnippetComponent({
 
   const handleCodeChange = useCallback(
     (newCode: string) => {
+      // Save cursor position before Lexical update
+      if (textareaRef.current) {
+        selectionRef.current = textareaRef.current.selectionStart
+      }
       editor.update(() => {
         const node = $getNodeByKey(nodeKey)
         if (node instanceof CodeSnippetNode) {
           node.setCode(newCode)
         }
       })
+    },
+    [editor, nodeKey],
+  )
+
+  // Restore cursor position after re-render
+  useEffect(() => {
+    if (selectionRef.current !== null && textareaRef.current) {
+      const pos = selectionRef.current
+      textareaRef.current.selectionStart = pos
+      textareaRef.current.selectionEnd = pos
+      selectionRef.current = null
+    }
+  }, [initialCode])
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // Stop all key events from reaching Lexical
+      e.stopPropagation()
+
+      // Escape code block: if code ends with 2+ empty lines and Enter is pressed at the end
+      if (e.key === 'Enter') {
+        const ta = textareaRef.current
+        if (!ta) return
+        const val = ta.value
+        const cursorAtEnd = ta.selectionStart === val.length
+
+        if (cursorAtEnd && val.endsWith('\n\n')) {
+          e.preventDefault()
+          // Trim trailing empty lines from code
+          const trimmed = val.replace(/\n+$/, '')
+          editor.update(() => {
+            const node = $getNodeByKey(nodeKey)
+            if (node instanceof CodeSnippetNode) {
+              node.setCode(trimmed)
+              // Insert paragraph after and select it
+              const paragraph = $createParagraphNode()
+              node.insertAfter(paragraph)
+              paragraph.selectStart()
+            }
+          })
+          return
+        }
+      }
     },
     [editor, nodeKey],
   )
@@ -190,9 +240,10 @@ function CodeSnippetComponent({
           <HighlightedCode code={initialCode} language={initialLanguage} />
           {editable && (
             <textarea
+              ref={textareaRef}
               value={initialCode}
               onChange={(e) => handleCodeChange(e.target.value)}
-              onKeyDown={(e) => e.stopPropagation()}
+              onKeyDown={handleKeyDown}
               className="le-code-snippet-textarea"
               spellCheck={false}
             />
