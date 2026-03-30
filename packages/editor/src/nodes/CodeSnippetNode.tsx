@@ -1,5 +1,6 @@
 import {
   DecoratorNode,
+  $getNodeByKey,
   type DOMExportOutput,
   type LexicalEditor,
   type LexicalNode,
@@ -7,9 +8,8 @@ import {
   type SerializedLexicalNode,
   type Spread,
 } from 'lexical'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef, type JSX } from 'react'
 import { Copy, Check } from 'lucide-react'
-import { type JSX } from 'react'
 
 export type SerializedCodeSnippetNode = Spread<
   {
@@ -21,7 +21,7 @@ export type SerializedCodeSnippetNode = Spread<
   SerializedLexicalNode
 >
 
-const DEFAULT_LANGUAGES = [
+export const DEFAULT_LANGUAGES = [
   { id: 'javascript', label: 'JavaScript' },
   { id: 'typescript', label: 'TypeScript' },
   { id: 'python', label: 'Python' },
@@ -38,6 +38,73 @@ const DEFAULT_LANGUAGES = [
   { id: 'plaintext', label: 'Plain Text' },
 ]
 
+/* ── Prism lazy loader ── */
+let prismLoaded = false
+async function loadPrism(): Promise<typeof import('prismjs')> {
+  const Prism = (await import('prismjs')).default
+  if (!prismLoaded) {
+    // Load common languages
+    await Promise.allSettled([
+      import('prismjs/components/prism-typescript'),
+      import('prismjs/components/prism-python'),
+      import('prismjs/components/prism-java'),
+      import('prismjs/components/prism-go'),
+      import('prismjs/components/prism-rust'),
+      import('prismjs/components/prism-bash'),
+      import('prismjs/components/prism-json'),
+      import('prismjs/components/prism-yaml'),
+      import('prismjs/components/prism-sql'),
+      import('prismjs/components/prism-markdown'),
+      import('prismjs/components/prism-css'),
+    ])
+    prismLoaded = true
+  }
+  return Prism
+}
+
+/* ── Highlighted Code Display ── */
+function HighlightedCode({ code, language }: { code: string; language: string }) {
+  const ref = useRef<HTMLElement>(null)
+  const [html, setHtml] = useState<string>('')
+
+  useEffect(() => {
+    let cancelled = false
+    loadPrism().then((Prism) => {
+      if (cancelled) return
+      const grammar = Prism.languages[language] || Prism.languages['plaintext']
+      if (grammar) {
+        setHtml(Prism.highlight(code, grammar, language))
+      } else {
+        setHtml(escapeHtml(code))
+      }
+    })
+    return () => { cancelled = true }
+  }, [code, language])
+
+  if (!html) {
+    return (
+      <pre className="le-code-snippet-pre">
+        <code>{code}</code>
+      </pre>
+    )
+  }
+
+  return (
+    <pre className="le-code-snippet-pre">
+      <code
+        ref={ref}
+        className={`language-${language}`}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </pre>
+  )
+}
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+/* ── Component ── */
 function CodeSnippetComponent({
   code: initialCode,
   language: initialLanguage,
@@ -60,28 +127,24 @@ function CodeSnippetComponent({
     })
   }, [initialCode])
 
-  const handleCodeChange = useCallback(
-    (newCode: string) => {
+  const handleLanguageChange = useCallback(
+    (newLang: string) => {
       editor.update(() => {
-        const node = editor.getEditorState().read(() => {
-          const editorState = editor.getEditorState()
-          let targetNode: CodeSnippetNode | null = null
-          editorState.read(() => {
-            // Find the node by key
-          })
-          return targetNode
-        })
+        const node = $getNodeByKey(nodeKey)
+        if (node instanceof CodeSnippetNode) {
+          node.setLanguage(newLang)
+        }
       })
     },
     [editor, nodeKey],
   )
 
-  const handleLanguageChange = useCallback(
-    (newLang: string) => {
+  const handleCodeChange = useCallback(
+    (newCode: string) => {
       editor.update(() => {
-        const node = $getCodeSnippetNodeByKey(editor, nodeKey)
-        if (node) {
-          node.setLanguage(newLang)
+        const node = $getNodeByKey(nodeKey)
+        if (node instanceof CodeSnippetNode) {
+          node.setCode(newCode)
         }
       })
     },
@@ -123,46 +186,29 @@ function CodeSnippetComponent({
             </span>
           ))}
         </div>
-        {editable ? (
-          <textarea
-            value={initialCode}
-            onChange={(e) => {
-              editor.update(() => {
-                const node = $getCodeSnippetNodeByKey(editor, nodeKey)
-                if (node) {
-                  node.setCode(e.target.value)
-                }
-              })
-            }}
-            className="le-code-snippet-textarea"
-            spellCheck={false}
-          />
-        ) : (
-          <pre className="le-code-snippet-pre">
-            <code>{initialCode}</code>
-          </pre>
-        )}
+        <div className="le-code-snippet-code-wrapper">
+          <HighlightedCode code={initialCode} language={initialLanguage} />
+          {editable && (
+            <textarea
+              value={initialCode}
+              onChange={(e) => handleCodeChange(e.target.value)}
+              className="le-code-snippet-textarea"
+              spellCheck={false}
+            />
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
-function $getCodeSnippetNodeByKey(
-  editor: LexicalEditor,
-  key: NodeKey,
-): CodeSnippetNode | null {
-  const node = editor._editorState._nodeMap.get(key)
-  if (node instanceof CodeSnippetNode) return node as CodeSnippetNode
-  return null
-}
+/* ── Node class ── */
 
 export class CodeSnippetNode extends DecoratorNode<JSX.Element> {
   __code: string
   __language: string
 
-  static getType(): string {
-    return 'code-snippet'
-  }
+  static getType(): string { return 'code-snippet' }
 
   static clone(node: CodeSnippetNode): CodeSnippetNode {
     return new CodeSnippetNode(node.__code, node.__language, node.__key)
@@ -179,12 +225,7 @@ export class CodeSnippetNode extends DecoratorNode<JSX.Element> {
   }
 
   exportJSON(): SerializedCodeSnippetNode {
-    return {
-      type: 'code-snippet',
-      version: 1,
-      code: this.__code,
-      language: this.__language,
-    }
+    return { type: 'code-snippet', version: 1, code: this.__code, language: this.__language }
   }
 
   exportDOM(): DOMExportOutput {
@@ -202,26 +243,14 @@ export class CodeSnippetNode extends DecoratorNode<JSX.Element> {
     return div
   }
 
-  updateDOM(): false {
-    return false
-  }
-
-  isInline(): false {
-    return false
-  }
+  updateDOM(): false { return false }
+  isInline(): false { return false }
 
   getCode(): string { return this.__code }
   getLanguage(): string { return this.__language }
 
-  setCode(code: string): void {
-    const writable = this.getWritable()
-    writable.__code = code
-  }
-
-  setLanguage(language: string): void {
-    const writable = this.getWritable()
-    writable.__language = language
-  }
+  setCode(code: string): void { this.getWritable().__code = code }
+  setLanguage(language: string): void { this.getWritable().__language = language }
 
   decorate(editor: LexicalEditor): JSX.Element {
     return (
@@ -236,15 +265,10 @@ export class CodeSnippetNode extends DecoratorNode<JSX.Element> {
   }
 }
 
-export function $createCodeSnippetNode(
-  code: string = '',
-  language: string = 'javascript',
-): CodeSnippetNode {
+export function $createCodeSnippetNode(code: string = '', language: string = 'javascript'): CodeSnippetNode {
   return new CodeSnippetNode(code, language)
 }
 
-export function $isCodeSnippetNode(
-  node: LexicalNode | null | undefined,
-): node is CodeSnippetNode {
+export function $isCodeSnippetNode(node: LexicalNode | null | undefined): node is CodeSnippetNode {
   return node instanceof CodeSnippetNode
 }

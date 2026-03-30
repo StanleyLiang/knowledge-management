@@ -627,36 +627,73 @@
 
 /* Code Snippet */
 .le-code-snippet {
-  @apply my-2 border border-gray-200 rounded-lg overflow-hidden bg-gray-900 text-gray-100;
+  @apply my-2 border border-gray-200 rounded-lg overflow-hidden bg-gray-50 text-gray-900;
 }
 .le-code-snippet-header {
-  @apply flex items-center justify-between px-3 py-1.5 bg-gray-800 border-b border-gray-700;
+  @apply flex items-center justify-between px-3 py-1.5 bg-gray-100 border-b border-gray-200;
 }
 .le-code-snippet-lang-select {
-  @apply bg-gray-700 text-gray-200 text-xs px-2 py-1 rounded border-none outline-none;
+  @apply bg-white text-gray-700 text-xs px-2 py-1 rounded border border-gray-300 outline-none;
 }
 .le-code-snippet-lang-label {
-  @apply text-xs text-gray-400;
+  @apply text-xs text-gray-500;
 }
 .le-code-snippet-copy {
-  @apply flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors;
+  @apply flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 transition-colors;
 }
 .le-code-snippet-body {
   @apply flex;
 }
 .le-code-snippet-lines {
-  @apply flex flex-col items-end pr-3 pl-3 py-3 text-xs text-gray-500 select-none bg-gray-800/50;
+  @apply flex flex-col items-end pr-3 pl-3 py-3 text-xs text-gray-400 select-none
+         bg-gray-100/60 border-r border-gray-200;
 }
 .le-code-snippet-line-num {
   @apply leading-5;
 }
+.le-code-snippet-code-wrapper {
+  @apply relative flex-1 min-h-[60px];
+}
 .le-code-snippet-textarea {
-  @apply flex-1 p-3 bg-transparent text-gray-100 text-sm font-mono leading-5
-         resize-none outline-none border-none min-h-[60px];
+  @apply absolute inset-0 w-full h-full p-3 bg-transparent text-transparent text-sm font-mono leading-5
+         resize-none outline-none border-none z-10;
+  caret-color: #1f2937;
 }
 .le-code-snippet-pre {
-  @apply flex-1 p-3 m-0 text-sm font-mono leading-5 overflow-x-auto;
+  @apply p-3 m-0 text-sm font-mono leading-5 overflow-x-auto whitespace-pre-wrap;
+  word-break: break-all;
 }
+
+/* Prism token colors (light theme) */
+.le-code-snippet .token.comment,
+.le-code-snippet .token.prolog,
+.le-code-snippet .token.doctype,
+.le-code-snippet .token.cdata { color: #6a737d; }
+.le-code-snippet .token.punctuation { color: #24292e; }
+.le-code-snippet .token.property,
+.le-code-snippet .token.tag,
+.le-code-snippet .token.boolean,
+.le-code-snippet .token.number,
+.le-code-snippet .token.constant,
+.le-code-snippet .token.symbol,
+.le-code-snippet .token.deleted { color: #005cc5; }
+.le-code-snippet .token.selector,
+.le-code-snippet .token.attr-name,
+.le-code-snippet .token.string,
+.le-code-snippet .token.char,
+.le-code-snippet .token.builtin,
+.le-code-snippet .token.inserted { color: #22863a; }
+.le-code-snippet .token.operator,
+.le-code-snippet .token.entity,
+.le-code-snippet .token.url { color: #d73a49; }
+.le-code-snippet .token.atrule,
+.le-code-snippet .token.attr-value,
+.le-code-snippet .token.keyword { color: #d73a49; }
+.le-code-snippet .token.function,
+.le-code-snippet .token.class-name { color: #6f42c1; }
+.le-code-snippet .token.regex,
+.le-code-snippet .token.important,
+.le-code-snippet .token.variable { color: #e36209; }
 
 /* Table insert form */
 .le-table-insert-form {
