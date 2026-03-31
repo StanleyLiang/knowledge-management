@@ -18,6 +18,7 @@ import { defaultTheme } from './themes/defaultTheme'
 import { OnChangePlugin } from './plugins/OnChangePlugin'
 import { CustomNodesPlugin } from './plugins/CustomNodesPlugin'
 import { TablePlugin } from './plugins/TablePlugin'
+import { TableActionToolbar } from './components/editor/TableActionToolbar'
 import { SlashCommandPlugin } from './plugins/SlashCommandPlugin'
 import { MarkdownPlugin } from './plugins/MarkdownPlugin'
 import { FloatingLinkEditorPlugin } from './plugins/FloatingLinkEditorPlugin'
@@ -121,6 +122,7 @@ export function Editor({
         <CheckListPlugin />
         <LexicalTablePlugin />
         <TablePlugin />
+        <TableActionToolbar />
         <TableActionPlugin />
         <CustomNodesPlugin />
         <ImageUploadPlugin onUpload={onUpload} />

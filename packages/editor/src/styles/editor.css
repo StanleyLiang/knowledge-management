@@ -109,6 +109,36 @@
   @apply bg-blue-100;
 }
 
+/* Table Action Toolbar */
+.le-table-action-toolbar {
+  @apply absolute flex items-center gap-1 bg-white border border-gray-200
+         rounded-lg shadow-md px-1.5 py-1 z-50;
+}
+.le-table-toolbar-dropdown {
+  @apply relative;
+}
+.le-table-toolbar-btn {
+  @apply flex items-center gap-1 px-2 py-1 text-xs text-gray-700
+         rounded hover:bg-gray-100 transition-colors whitespace-nowrap;
+}
+.le-table-toolbar-btn-label {
+  @apply text-xs;
+}
+.le-table-toolbar-btn-danger {
+  @apply text-red-600 hover:bg-red-50;
+}
+.le-table-toolbar-sep {
+  @apply w-px h-5 bg-gray-200 mx-0.5;
+}
+.le-table-toolbar-menu {
+  @apply absolute top-full left-0 mt-1 bg-white border border-gray-200
+         rounded-lg shadow-lg py-1 min-w-[160px] z-50;
+}
+.le-table-toolbar-menu-item {
+  @apply w-full text-left px-3 py-1.5 text-xs text-gray-700
+         hover:bg-gray-100 transition-colors;
+}
+
 /* Editor container */
 .le-editor-container {
   @apply relative w-full border border-gray-200 rounded-lg bg-white;
