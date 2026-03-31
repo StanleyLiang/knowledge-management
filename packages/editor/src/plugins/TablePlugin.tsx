@@ -18,6 +18,21 @@ import { INSERT_TABLE_COMMAND } from './InsertCommands'
 export function TablePlugin() {
   const [editor] = useLexicalComposerContext()
 
+  // Suppress known Lexical table DOM reconciliation error
+  // https://github.com/facebook/lexical/issues/5543
+  useEffect(() => {
+    const handler = (event: ErrorEvent) => {
+      if (
+        event.message?.includes('removeChild') &&
+        event.message?.includes('not a child')
+      ) {
+        event.preventDefault()
+      }
+    }
+    window.addEventListener('error', handler)
+    return () => window.removeEventListener('error', handler)
+  }, [])
+
   useEffect(() => {
     return editor.registerCommand(
       INSERT_TABLE_COMMAND,
