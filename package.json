@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=apps/demo",
+    "dev:video-demo": "npm run dev --workspace=apps/video-converter-demo",
     "build": "npm run build --workspace=packages/editor",
     "build:demo": "npm run build --workspace=apps/demo",
     "test": "vitest run --workspace=packages/editor",

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video Converter Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    .badge-pending   { @apply bg-gray-700 text-gray-400; }
+    .badge-active    { @apply bg-amber-600 text-white animate-pulse; }
+    .badge-completed { @apply bg-green-600 text-white; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+  <div class="max-w-4xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <h1 class="text-2xl font-bold mb-1">Video Converter Demo</h1>
+    <p class="text-gray-400 text-sm mb-8">上傳 MP4 → 漸進式 HLS 轉檔 → 即時播放</p>
+
+    <!-- Upload Section -->
+    <div id="upload-section" class="bg-gray-900 rounded-xl p-6 mb-6">
+      <label class="block mb-3 text-sm font-medium">選擇 MP4 檔案</label>
+      <div class="flex gap-3 items-center">
+        <input type="file" id="file-input" accept="video/mp4"
+          class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:cursor-pointer hover:file:bg-blue-500" />
+        <button id="upload-btn" onclick="startUpload()" disabled
+          class="px-6 py-2 bg-blue-600 rounded-lg font-medium whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-500 transition">
+          上傳
+        </button>
+      </div>
+      <!-- Upload progress -->
+      <div id="upload-progress" class="mt-4 hidden">
+        <div class="flex justify-between text-xs text-gray-400 mb-1">
+          <span>上傳中...</span>
+          <span id="upload-percent">0%</span>
+        </div>
+        <div class="w-full bg-gray-800 rounded-full h-2">
+          <div id="upload-bar" class="bg-blue-500 h-2 rounded-full transition-all" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conversion Status -->
+    <div id="status-section" class="bg-gray-900 rounded-xl p-6 mb-6 hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">轉檔進度</h2>
+        <span id="status-text" class="text-sm text-gray-400">等待中...</span>
+      </div>
+
+      <!-- Variant Badges -->
+      <div id="variant-badges" class="flex gap-2 mb-4">
+        <span data-variant="360p" class="badge-pending px-3 py-1 rounded-full text-xs font-semibold">360p</span>
+        <span data-variant="480p" class="badge-pending px-3 py-1 rounded-full text-xs font-semibold">480p</span>
+        <span data-variant="720p" class="badge-pending px-3 py-1 rounded-full text-xs font-semibold">720p</span>
+        <span data-variant="1080p" class="badge-pending px-3 py-1 rounded-full text-xs font-semibold">1080p</span>
+      </div>
+
+      <!-- Conversion progress -->
+      <div id="convert-progress">
+        <div class="flex justify-between text-xs text-gray-400 mb-1">
+          <span id="convert-label">-</span>
+          <span id="convert-percent">0%</span>
+        </div>
+        <div class="w-full bg-gray-800 rounded-full h-2">
+          <div id="convert-bar" class="bg-amber-500 h-2 rounded-full transition-all" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Player -->
+    <div id="player-section" class="bg-gray-900 rounded-xl p-6 mb-6 hidden">
+      <h2 class="text-lg font-semibold mb-3">播放器</h2>
+      <video id="video" controls class="w-full rounded-lg bg-black"></video>
+      <div id="player-info" class="mt-2 text-xs text-gray-500"></div>
+    </div>
+
+    <!-- Event Log -->
+    <div class="bg-gray-900 rounded-xl p-6">
+      <h2 class="text-lg font-semibold mb-3">事件紀錄</h2>
+      <pre id="log" class="bg-gray-950 rounded-lg p-4 text-xs text-gray-400 max-h-48 overflow-y-auto font-mono"></pre>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { connect, JSONCodec } from 'https://esm.sh/nats.ws@1.30.0';
+
+    const jc = JSONCodec();
+    let hlsInstance = null;
+    let playerStarted = false;
+    let currentHlsUrl = null;
+    let lastKnownVariantCount = 0;
+
+    // --- Helpers ---
+
+    function log(msg) {
+      const el = document.getElementById('log');
+      const ts = new Date().toLocaleTimeString();
+      el.textContent = `[${ts}] ${msg}\n` + el.textContent;
+    }
+
+    function $(id) { return document.getElementById(id); }
+
+    // --- File input ---
+
+    $('file-input').addEventListener('change', (e) => {
+      $('upload-btn').disabled = !e.target.files.length;
+    });
+
+    // --- Upload ---
+
+    window.startUpload = async function () {
+      const file = $('file-input').files[0];
+      if (!file) return;
+
+      $('upload-btn').disabled = true;
+      $('upload-progress').classList.remove('hidden');
+      log(`開始上傳: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`);
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const { jobId, hlsUrl } = await uploadWithProgress(formData);
+        log(`上傳完成, jobId: ${jobId}`);
+        currentHlsUrl = hlsUrl;
+
+        // Show status section
+        $('status-section').classList.remove('hidden');
+        $('status-text').textContent = '已排入轉檔佇列...';
+
+        // Connect to NATS and subscribe
+        await subscribeToStatus(jobId);
+      } catch (err) {
+        log(`上傳失敗: ${err.message}`);
+        $('upload-btn').disabled = false;
+      }
+    };
+
+    function uploadWithProgress(formData) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            $('upload-bar').style.width = pct + '%';
+            $('upload-percent').textContent = pct + '%';
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(JSON.parse(xhr.responseText));
+          } else {
+            reject(new Error(`HTTP ${xhr.status}: ${xhr.responseText}`));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.open('POST', '/api/upload');
+        xhr.send(formData);
+      });
+    }
+
+    // --- NATS Subscription ---
+
+    async function subscribeToStatus(jobId) {
+      const configRes = await fetch('/api/config');
+      const config = await configRes.json();
+
+      log(`連接 NATS WebSocket: ${config.natsWsUrl}`);
+      const nc = await connect({ servers: config.natsWsUrl });
+      log('NATS 已連線');
+
+      const subject = `video.convert.status.${jobId}`;
+      const sub = nc.subscribe(subject);
+      log(`已訂閱: ${subject}`);
+
+      for await (const msg of sub) {
+        const status = jc.decode(msg.data);
+        handleStatus(status);
+
+        if (status.status === 'completed' || status.status === 'failed' || status.status === 'cancelled') {
+          sub.unsubscribe();
+          await nc.drain();
+          log('NATS 已斷開');
+          break;
+        }
+      }
+    }
+
+    // --- Status Handler ---
+
+    function handleStatus(s) {
+      log(`[${s.status}] variant=${s.currentVariant || '-'}, completed=[${(s.completedVariants || []).join(',')}], progress=${s.progress ?? '-'}%`);
+
+      // Update status text
+      const statusMap = {
+        downloading: '下載原始檔案中...',
+        converting: s.currentVariant ? `轉檔 ${s.currentVariant}...` : '轉檔中...',
+        uploading: `上傳 ${s.currentVariant || ''}...`,
+        completed: '✅ 全部完成',
+        failed: `❌ 失敗: ${s.error}`,
+        cancelled: '⚠️ 已取消',
+      };
+      $('status-text').textContent = statusMap[s.status] || s.status;
+
+      // Update variant badges
+      const completed = s.completedVariants || [];
+      document.querySelectorAll('#variant-badges span').forEach((badge) => {
+        const name = badge.dataset.variant;
+        if (completed.includes(name)) {
+          badge.className = 'badge-completed px-3 py-1 rounded-full text-xs font-semibold';
+        } else if (name === s.currentVariant && (s.status === 'converting' || s.status === 'uploading')) {
+          badge.className = 'badge-active px-3 py-1 rounded-full text-xs font-semibold';
+        } else {
+          badge.className = 'badge-pending px-3 py-1 rounded-full text-xs font-semibold';
+        }
+      });
+
+      // Update progress bar
+      if (s.status === 'converting' && s.currentVariant) {
+        $('convert-label').textContent = `正在轉檔 ${s.currentVariant}`;
+        const pct = Math.max(0, Math.min(100, s.progress || 0));
+        $('convert-bar').style.width = pct + '%';
+        $('convert-percent').textContent = pct + '%';
+      } else if (s.status === 'completed') {
+        $('convert-bar').style.width = '100%';
+        $('convert-bar').classList.remove('bg-amber-500');
+        $('convert-bar').classList.add('bg-green-500');
+        $('convert-percent').textContent = '100%';
+        $('convert-label').textContent = '完成';
+      }
+
+      // Start or update HLS player
+      if (completed.length > 0 && currentHlsUrl) {
+        if (!playerStarted) {
+          startPlayer(currentHlsUrl);
+          playerStarted = true;
+        } else if (completed.length > lastKnownVariantCount) {
+          // New variant available — reload manifest to pick up higher quality
+          reloadManifest(currentHlsUrl);
+        }
+        lastKnownVariantCount = completed.length;
+      }
+    }
+
+    // --- HLS Player ---
+
+    function startPlayer(hlsUrl) {
+      $('player-section').classList.remove('hidden');
+      const video = $('video');
+
+      if (Hls.isSupported()) {
+        hlsInstance = new Hls({ debug: false });
+        hlsInstance.loadSource(hlsUrl + '?t=' + Date.now());
+        hlsInstance.attachMedia(video);
+
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
+          log(`HLS manifest loaded: ${data.levels.length} quality level(s)`);
+          $('player-info').textContent = `${data.levels.length} 個解析度可用`;
+          video.play().catch(() => {});
+        });
+
+        hlsInstance.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => {
+          const level = hlsInstance.levels[data.level];
+          if (level) {
+            $('player-info').textContent = `播放中: ${level.height}p (${(level.bitrate / 1000).toFixed(0)} kbps)`;
+          }
+        });
+
+        hlsInstance.on(Hls.Events.ERROR, (_e, data) => {
+          if (data.fatal) {
+            log(`HLS error: ${data.details}`);
+            hlsInstance.recoverMediaError();
+          }
+        });
+
+        log('HLS 播放器已啟動');
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Safari native
+        video.src = hlsUrl;
+        video.play().catch(() => {});
+        log('使用 Safari 原生 HLS');
+      }
+    }
+
+    function reloadManifest(hlsUrl) {
+      if (!hlsInstance) return;
+
+      const video = $('video');
+      const currentTime = video.currentTime;
+      const wasPlaying = !video.paused;
+
+      hlsInstance.loadSource(hlsUrl + '?t=' + Date.now());
+
+      hlsInstance.once(Hls.Events.MANIFEST_PARSED, (_e, data) => {
+        log(`Manifest 已重載: ${data.levels.length} 個解析度`);
+        $('player-info').textContent = `${data.levels.length} 個解析度可用`;
+        video.currentTime = currentTime;
+        if (wasPlaying) video.play().catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

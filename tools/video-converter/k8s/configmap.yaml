@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: video-converter-config
+  labels:
+    app: video-converter
+data:
+  NATS_URL: "nats://nats.nats.svc.cluster.local:4222"
+  NATS_STREAM: "VIDEO_CONVERT"
+  NATS_SUBJECT: "video.convert"
+  NATS_DURABLE_NAME: "video-converter"
+  S3_ENDPOINT: "http://minio.minio.svc.cluster.local:9000"
+  S3_REGION: "us-east-1"
+  S3_FORCE_PATH_STYLE: "true"
+  TEMP_DIR: "/tmp/video-converter"
+  HEALTH_PORT: "8080"
+  SHUTDOWN_TIMEOUT_MS: "30000"
+  VARIANT_TIMEOUT_MS: "300000"
+  STREAM_MAX_AGE_SECONDS: "86400"
+  ACK_WAIT_MS: "300000"
+  MAX_DELIVER: "3"
+  HLS_SEGMENT_DURATION: "10"
