@@ -139,6 +139,23 @@
          hover:bg-gray-100 transition-colors;
 }
 
+/* Table drag handles */
+.le-table-drag-handle {
+  @apply absolute flex items-center justify-center text-gray-300
+         hover:text-gray-600 hover:bg-gray-100 rounded cursor-grab
+         transition-colors z-40;
+}
+.le-table-drag-handle-row {
+  @apply w-5;
+}
+.le-table-drag-handle-col {
+  @apply h-5;
+}
+.le-table-drop-indicator {
+  @apply absolute bg-blue-500 z-50 pointer-events-none;
+  border-radius: 1px;
+}
+
 /* Editor container */
 .le-editor-container {
   @apply relative w-full border border-gray-200 rounded-lg bg-white;
