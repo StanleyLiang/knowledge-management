@@ -30,6 +30,10 @@ import {
   ChevronDown,
   Merge,
   SplitSquareHorizontal,
+  Paintbrush,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
 } from 'lucide-react'
 
 interface DropdownItem {
@@ -245,6 +249,50 @@ export function TableActionToolbar() {
     })
   }, [editor])
 
+  const setCellBgColor = useCallback(
+    (color: string) => {
+      editor.update(() => {
+        const selection = $getSelection()
+        let cells: TableCellNode[] = []
+        if ($isTableSelection(selection)) {
+          cells = selection.getNodes().filter((n) => $isTableCellNode(n)) as TableCellNode[]
+        } else if ($isRangeSelection(selection)) {
+          const cell = $findCellNode(selection.anchor.getNode())
+          if (cell) cells = [cell as TableCellNode]
+        }
+        for (const cell of cells) {
+          cell.setBackgroundColor(color)
+        }
+      })
+    },
+    [editor],
+  )
+
+  const setCellAlign = useCallback(
+    (align: 'left' | 'center' | 'right') => {
+      editor.update(() => {
+        const selection = $getSelection()
+        let cells: TableCellNode[] = []
+        if ($isTableSelection(selection)) {
+          cells = selection.getNodes().filter((n) => $isTableCellNode(n)) as TableCellNode[]
+        } else if ($isRangeSelection(selection)) {
+          const cell = $findCellNode(selection.anchor.getNode())
+          if (cell) cells = [cell as TableCellNode]
+        }
+        for (const cell of cells) {
+          // Set format on all paragraphs in cell
+          const children = cell.getChildren()
+          for (const child of children) {
+            if ('setFormat' in child && typeof child.setFormat === 'function') {
+              child.setFormat(align)
+            }
+          }
+        }
+      })
+    },
+    [editor],
+  )
+
   const deleteTable = useCallback(() => {
     editor.update(() => {
       const selection = $getSelection()
@@ -305,6 +353,29 @@ export function TableActionToolbar() {
         </button>
       )}
       {(canMerge || canSplit) && <div className="le-table-toolbar-sep" />}
+      <ToolbarDropdown
+        icon={Paintbrush}
+        label="BG"
+        items={[
+          { label: '⬜ None', action: () => setCellBgColor('') },
+          { label: '🔵 Blue', action: () => setCellBgColor('#dbeafe') },
+          { label: '🟢 Green', action: () => setCellBgColor('#dcfce7') },
+          { label: '🟡 Yellow', action: () => setCellBgColor('#fef9c3') },
+          { label: '🔴 Red', action: () => setCellBgColor('#fee2e2') },
+          { label: '🟣 Purple', action: () => setCellBgColor('#f3e8ff') },
+          { label: '⚫ Gray', action: () => setCellBgColor('#f3f4f6') },
+        ]}
+      />
+      <ToolbarDropdown
+        icon={AlignLeft}
+        label="Align"
+        items={[
+          { label: 'Align Left', action: () => setCellAlign('left') },
+          { label: 'Align Center', action: () => setCellAlign('center') },
+          { label: 'Align Right', action: () => setCellAlign('right') },
+        ]}
+      />
+      <div className="le-table-toolbar-sep" />
       <button className="le-table-toolbar-btn" onClick={toggleHeader} title="Toggle Header Row">
         <span className="le-table-toolbar-btn-label">Header</span>
       </button>
