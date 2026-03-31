@@ -87,26 +87,25 @@ function computeHandles(
 export function TableDragReorderPlugin() {
   const [editor] = useLexicalComposerContext()
   const [handles, setHandles] = useState<HandleInfo[]>([])
-  const [dragging, setDragging] = useState<{
-    type: 'row' | 'column'
-    index: number
-    tableKey: string
-  } | null>(null)
-  const [dropIndex, setDropIndex] = useState<number | null>(null)
   const [indicatorPos, setIndicatorPos] = useState<{
     top: number; left: number; width: number; height: number
   } | null>(null)
 
+  // Use refs for drag state so mouseup handler always sees latest values
+  const draggingRef = useRef<{
+    type: 'row' | 'column'
+    index: number
+    tableKey: string
+  } | null>(null)
+  const dropIndexRef = useRef<number | null>(null)
+
   // Recompute handles on editor update + scroll + resize
   useEffect(() => {
     const update = () => setHandles(computeHandles(editor))
-
     const unregister = editor.registerUpdateListener(update)
     window.addEventListener('scroll', update, true)
     window.addEventListener('resize', update)
-    // Initial
     update()
-
     return () => {
       unregister()
       window.removeEventListener('scroll', update, true)
@@ -114,32 +113,24 @@ export function TableDragReorderPlugin() {
     }
   }, [editor])
 
-  const handleDragStart = useCallback(
-    (type: 'row' | 'column', index: number, tableKey: string, e: React.MouseEvent) => {
-      e.preventDefault()
-      setDragging({ type, index, tableKey })
-      setDropIndex(index)
-    },
-    [],
-  )
-
-  // Drag move + drop
+  // Global mousemove/mouseup for drag
   useEffect(() => {
-    if (!dragging) return
-
     const rootEl = editor.getRootElement()
     if (!rootEl) return
-    const table = rootEl.querySelector('table')
-    if (!table) return
-    const portalParent = rootEl.parentElement
-    if (!portalParent) return
 
     const handleMouseMove = (e: MouseEvent) => {
+      const drag = draggingRef.current
+      if (!drag) return
+
+      const table = rootEl.querySelector('table')
+      if (!table) return
+      const portalParent = rootEl.parentElement
+      if (!portalParent) return
       const parentRect = portalParent.getBoundingClientRect()
 
-      if (dragging.type === 'row') {
+      if (drag.type === 'row') {
         const rows = table.rows
-        let closest = dragging.index
+        let closest = drag.index
         let minDist = Infinity
         for (let i = 0; i < rows.length; i++) {
           const rect = rows[i].getBoundingClientRect()
@@ -147,7 +138,7 @@ export function TableDragReorderPlugin() {
           const dist = Math.abs(e.clientY - mid)
           if (dist < minDist) { minDist = dist; closest = i }
         }
-        setDropIndex(closest)
+        dropIndexRef.current = closest
 
         const targetRect = rows[Math.min(closest, rows.length - 1)].getBoundingClientRect()
         const y = e.clientY < targetRect.top + targetRect.height / 2
@@ -161,7 +152,7 @@ export function TableDragReorderPlugin() {
       } else {
         const firstRow = table.rows[0]
         if (!firstRow) return
-        let closest = dragging.index
+        let closest = drag.index
         let minDist = Infinity
         for (let i = 0; i < firstRow.cells.length; i++) {
           const rect = firstRow.cells[i].getBoundingClientRect()
@@ -169,7 +160,7 @@ export function TableDragReorderPlugin() {
           const dist = Math.abs(e.clientX - mid)
           if (dist < minDist) { minDist = dist; closest = i }
         }
-        setDropIndex(closest)
+        dropIndexRef.current = closest
 
         const targetRect = firstRow.cells[Math.min(closest, firstRow.cells.length - 1)].getBoundingClientRect()
         const tableRect = table.getBoundingClientRect()
@@ -185,38 +176,36 @@ export function TableDragReorderPlugin() {
     }
 
     const handleMouseUp = () => {
-      if (dragging && dropIndex !== null && dropIndex !== dragging.index) {
+      const drag = draggingRef.current
+      const drop = dropIndexRef.current
+
+      if (drag && drop !== null && drop !== drag.index) {
         editor.update(() => {
-          const tableNode = $getNodeByKey(dragging.tableKey)
+          const tableNode = $getNodeByKey(drag.tableKey)
           if (!tableNode || !$isTableNode(tableNode)) return
 
-          if (dragging.type === 'column') {
-            $moveTableColumn(tableNode as TableNode, dragging.index, dropIndex)
+          if (drag.type === 'column') {
+            $moveTableColumn(tableNode as TableNode, drag.index, drop)
           } else {
-            // Move row
+            // Move row: simple approach using insertBefore/insertAfter
             const rows = tableNode.getChildren()
-            if (dragging.index < rows.length && dropIndex < rows.length) {
-              const rowToMove = rows[dragging.index]
-              if ($isTableRowNode(rowToMove)) {
-                rowToMove.remove()
-                const updatedRows = tableNode.getChildren()
-                const insertIdx = dropIndex > dragging.index ? dropIndex - 1 : dropIndex
-                if (insertIdx === 0) {
-                  const first = tableNode.getFirstChild()
-                  if (first) first.insertBefore(rowToMove)
-                  else tableNode.append(rowToMove)
-                } else if (insertIdx <= updatedRows.length - 1) {
-                  updatedRows[insertIdx - 1].insertAfter(rowToMove)
-                } else {
-                  tableNode.append(rowToMove)
-                }
-              }
+            const fromRow = rows[drag.index]
+            const toRow = rows[drop]
+            if (!fromRow || !toRow || !$isTableRowNode(fromRow)) return
+
+            if (drop < drag.index) {
+              // Moving up: insert before target
+              toRow.insertBefore(fromRow)
+            } else {
+              // Moving down: insert after target
+              toRow.insertAfter(fromRow)
             }
           }
         })
       }
-      setDragging(null)
-      setDropIndex(null)
+
+      draggingRef.current = null
+      dropIndexRef.current = null
       setIndicatorPos(null)
     }
 
@@ -226,7 +215,16 @@ export function TableDragReorderPlugin() {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [editor, dragging, dropIndex])
+  }, [editor])
+
+  const handleDragStart = useCallback(
+    (type: 'row' | 'column', index: number, tableKey: string, e: React.MouseEvent) => {
+      e.preventDefault()
+      draggingRef.current = { type, index, tableKey }
+      dropIndexRef.current = index
+    },
+    [],
+  )
 
   const rootEl = editor.getRootElement()
   const portalTarget = rootEl?.parentElement

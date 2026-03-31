@@ -21,7 +21,8 @@ export function TableColumnResizePlugin() {
     function getTableAndColIndex(
       e: MouseEvent,
     ): { tableEl: HTMLTableElement; colIndex: number } | null {
-      const target = e.target as HTMLElement
+      const target = e.target instanceof Element ? e.target : (e.target as Node).parentElement
+      if (!target) return null
       const cell = target.closest('td, th') as HTMLTableCellElement | null
       if (!cell) return null
       const table = cell.closest('table') as HTMLTableElement | null
