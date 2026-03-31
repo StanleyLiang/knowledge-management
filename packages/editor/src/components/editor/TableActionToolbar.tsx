@@ -10,12 +10,15 @@ import {
   $isTableCellNode,
   $isTableNode,
   $isTableRowNode,
+  $isTableSelection,
   $findTableNode,
   $findCellNode,
   $insertTableRow__EXPERIMENTAL,
   $insertTableColumn__EXPERIMENTAL,
   $deleteTableRow__EXPERIMENTAL,
   $deleteTableColumn__EXPERIMENTAL,
+  $mergeCells,
+  $unmergeCell,
   TableCellHeaderStates,
   type TableCellNode,
   type TableNode,
@@ -25,6 +28,8 @@ import {
   Columns3,
   Trash2,
   ChevronDown,
+  Merge,
+  SplitSquareHorizontal,
 } from 'lucide-react'
 
 interface DropdownItem {
@@ -90,27 +95,49 @@ export function TableActionToolbar() {
   const [editor] = useLexicalComposerContext()
   const [show, setShow] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
+  const [canMerge, setCanMerge] = useState(false)
+  const [canSplit, setCanSplit] = useState(false)
   const toolbarRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
       editorState.read(() => {
         const selection = $getSelection()
-        if (!$isRangeSelection(selection)) {
-          setShow(false)
-          return
+
+        let cellNode: TableCellNode | null = null
+        let tableNode: TableNode | null = null
+        let hasMultiCellSelection = false
+
+        if ($isRangeSelection(selection)) {
+          const anchorNode = selection.anchor.getNode()
+          cellNode = $findCellNode(anchorNode)
+        } else if ($isTableSelection(selection)) {
+          hasMultiCellSelection = true
+          const nodes = selection.getNodes()
+          const firstCell = nodes.find((n) => $isTableCellNode(n))
+          if (firstCell && $isTableCellNode(firstCell)) {
+            cellNode = firstCell as TableCellNode
+          }
         }
-        const anchorNode = selection.anchor.getNode()
-        const cellNode = $findCellNode(anchorNode)
+
         if (!cellNode) {
           setShow(false)
+          setCanMerge(false)
+          setCanSplit(false)
           return
         }
-        const tableNode = $findTableNode(cellNode)
+
+        tableNode = $findTableNode(cellNode)
         if (!tableNode) {
           setShow(false)
           return
         }
+
+        // Check merge/split availability
+        setCanMerge(hasMultiCellSelection)
+        const colspan = cellNode.getColSpan?.() ?? 1
+        const rowspan = cellNode.getRowSpan?.() ?? 1
+        setCanSplit(colspan > 1 || rowspan > 1)
 
         // Position toolbar above the table
         const tableElement = editor.getElementByKey(tableNode.getKey())
@@ -200,6 +227,24 @@ export function TableActionToolbar() {
     })
   }, [editor])
 
+  const mergeCells = useCallback(() => {
+    editor.update(() => {
+      const selection = $getSelection()
+      if ($isTableSelection(selection)) {
+        const cells = selection.getNodes().filter((n) => $isTableCellNode(n)) as TableCellNode[]
+        if (cells.length > 1) {
+          $mergeCells(cells)
+        }
+      }
+    })
+  }, [editor])
+
+  const splitCell = useCallback(() => {
+    editor.update(() => {
+      $unmergeCell()
+    })
+  }, [editor])
+
   const deleteTable = useCallback(() => {
     editor.update(() => {
       const selection = $getSelection()
@@ -247,6 +292,19 @@ export function TableActionToolbar() {
         ]}
       />
       <div className="le-table-toolbar-sep" />
+      {canMerge && (
+        <button className="le-table-toolbar-btn" onClick={mergeCells} title="Merge Cells">
+          <Merge size={14} />
+          <span className="le-table-toolbar-btn-label">Merge</span>
+        </button>
+      )}
+      {canSplit && (
+        <button className="le-table-toolbar-btn" onClick={splitCell} title="Split Cell">
+          <SplitSquareHorizontal size={14} />
+          <span className="le-table-toolbar-btn-label">Split</span>
+        </button>
+      )}
+      {(canMerge || canSplit) && <div className="le-table-toolbar-sep" />}
       <button className="le-table-toolbar-btn" onClick={toggleHeader} title="Toggle Header Row">
         <span className="le-table-toolbar-btn-label">Header</span>
       </button>
