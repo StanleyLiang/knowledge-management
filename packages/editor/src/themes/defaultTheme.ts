@@ -37,4 +37,6 @@ export const defaultTheme: EditorThemeClasses = {
   tableCell: 'le-table-cell',
   tableCellHeader: 'le-table-cell-header',
   tableRow: 'le-table-row',
+  tableSelection: 'le-table-selection',
+  tableCellSelected: 'le-table-cell-selected',
 }

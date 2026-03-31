@@ -102,6 +102,12 @@
 .le-table-cell-header {
   @apply bg-gray-100 font-bold;
 }
+.le-table-selection *::selection {
+  background-color: transparent;
+}
+.le-table-cell-selected {
+  @apply bg-blue-100;
+}
 
 /* Editor container */
 .le-editor-container {

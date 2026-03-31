@@ -119,7 +119,7 @@ export function Editor({
         <ListPlugin />
         <LinkPlugin />
         <CheckListPlugin />
-        <LexicalTablePlugin />
+        <LexicalTablePlugin hasHorizontalScroll />
         <TablePlugin />
         <TableActionPlugin />
         <CustomNodesPlugin />
