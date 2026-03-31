@@ -170,57 +170,57 @@ export function TableActionToolbar() {
     })
   }, [editor])
 
-  /** Helper: get current cell's row/col index and table node */
-  const getCellContext = useCallback((): {
-    tableNode: TableNode; cellNode: TableCellNode; rowIndex: number; colIndex: number
-  } | null => {
-    let result: ReturnType<typeof getCellContext> = null
-    editor.getEditorState().read(() => {
-      const selection = $getSelection()
-      let cellNode: TableCellNode | null = null
-      if ($isRangeSelection(selection)) {
-        cellNode = $findCellNode(selection.anchor.getNode()) as TableCellNode | null
-      } else if ($isTableSelection(selection)) {
-        const nodes = selection.getNodes()
-        const first = nodes.find((n) => $isTableCellNode(n))
-        if (first) cellNode = first as TableCellNode
-      }
-      if (!cellNode) return
-      const tableNode = $findTableNode(cellNode) as TableNode | null
-      if (!tableNode) return
-
-      const row = cellNode.getParent()
-      if (!$isTableRowNode(row)) return
-      const rowIndex = tableNode.getChildren().indexOf(row)
-      const colIndex = row.getChildren().indexOf(cellNode)
-
-      result = { tableNode, cellNode, rowIndex, colIndex }
-    })
-    return result
-  }, [editor])
-
+  /** Run guard check inside read() to keep node access in valid scope */
   const guardedRowOp = useCallback(
     (op: 'insert' | 'delete', fn: () => void) => {
-      const ctx = getCellContext()
-      if (ctx) {
-        const blocked = checkRowOperation(ctx.tableNode, ctx.rowIndex, op)
-        if (blocked) { toast.warning(blocked); return }
-      }
+      let blocked: string | null = null
+      editor.getEditorState().read(() => {
+        const selection = $getSelection()
+        let cellNode: TableCellNode | null = null
+        if ($isRangeSelection(selection)) {
+          cellNode = $findCellNode(selection.anchor.getNode()) as TableCellNode | null
+        } else if ($isTableSelection(selection)) {
+          const first = selection.getNodes().find((n) => $isTableCellNode(n))
+          if (first) cellNode = first as TableCellNode
+        }
+        if (!cellNode) return
+        const tableNode = $findTableNode(cellNode) as TableNode | null
+        if (!tableNode) return
+        const row = cellNode.getParent()
+        if (!$isTableRowNode(row)) return
+        const rowIndex = tableNode.getChildren().indexOf(row)
+        blocked = checkRowOperation(tableNode, rowIndex, op)
+      })
+      if (blocked) { toast.warning(blocked); return }
       fn()
     },
-    [getCellContext],
+    [editor],
   )
 
   const guardedColOp = useCallback(
     (op: 'insert' | 'delete', fn: () => void) => {
-      const ctx = getCellContext()
-      if (ctx) {
-        const blocked = checkColumnOperation(ctx.tableNode, ctx.colIndex, op)
-        if (blocked) { toast.warning(blocked); return }
-      }
+      let blocked: string | null = null
+      editor.getEditorState().read(() => {
+        const selection = $getSelection()
+        let cellNode: TableCellNode | null = null
+        if ($isRangeSelection(selection)) {
+          cellNode = $findCellNode(selection.anchor.getNode()) as TableCellNode | null
+        } else if ($isTableSelection(selection)) {
+          const first = selection.getNodes().find((n) => $isTableCellNode(n))
+          if (first) cellNode = first as TableCellNode
+        }
+        if (!cellNode) return
+        const tableNode = $findTableNode(cellNode) as TableNode | null
+        if (!tableNode) return
+        const row = cellNode.getParent()
+        if (!$isTableRowNode(row)) return
+        const colIndex = row.getChildren().indexOf(cellNode)
+        blocked = checkColumnOperation(tableNode, colIndex, op)
+      })
+      if (blocked) { toast.warning(blocked); return }
       fn()
     },
-    [getCellContext],
+    [editor],
   )
 
   const insertRowAbove = useCallback(() => {
