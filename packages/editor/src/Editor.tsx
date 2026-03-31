@@ -86,11 +86,6 @@ export function Editor({
     nodes: EDITOR_NODES,
     editable,
     onError: (error: Error) => {
-      // Known Lexical table DOM reconciliation issue - safe to ignore
-      // See: https://github.com/facebook/lexical/issues/5543
-      if (error.message?.includes('removeChild')) {
-        return
-      }
       console.error('[LexicalEditor]', error)
     },
     ...(initialEditorState
@@ -124,7 +119,7 @@ export function Editor({
         <ListPlugin />
         <LinkPlugin />
         <CheckListPlugin />
-        <LexicalTablePlugin hasCellMerge={false} />
+        <LexicalTablePlugin />
         <TablePlugin />
         <TableActionPlugin />
         <CustomNodesPlugin />

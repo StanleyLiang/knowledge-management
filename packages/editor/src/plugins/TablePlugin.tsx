@@ -18,19 +18,23 @@ import { INSERT_TABLE_COMMAND } from './InsertCommands'
 export function TablePlugin() {
   const [editor] = useLexicalComposerContext()
 
-  // Suppress known Lexical table DOM reconciliation error
+  // Patch removeChild to suppress known Lexical table DOM reconciliation error.
+  // LexicalTablePlugin inserts/removes action-bar elements that React doesn't
+  // know about, causing "removeChild: not a child" when React tries to unmount.
   // https://github.com/facebook/lexical/issues/5543
   useEffect(() => {
-    const handler = (event: ErrorEvent) => {
-      if (
-        event.message?.includes('removeChild') &&
-        event.message?.includes('not a child')
-      ) {
-        event.preventDefault()
+    const orig = Node.prototype.removeChild
+    // @ts-expect-error — monkey-patching DOM API
+    Node.prototype.removeChild = function <T extends Node>(child: T): T {
+      if (child.parentNode !== this) {
+        // Silently return if the child isn't actually ours (Lexical moved it)
+        return child
       }
+      return orig.call(this, child) as T
     }
-    window.addEventListener('error', handler)
-    return () => window.removeEventListener('error', handler)
+    return () => {
+      Node.prototype.removeChild = orig
+    }
   }, [])
 
   useEffect(() => {
