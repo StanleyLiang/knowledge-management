@@ -52,6 +52,7 @@
     "prop-types": "15.8.1",
     "react-i18next": "^15.0.0",
     "react-simple-maps": "^3.0.0",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.0.0"
   },
   "devDependencies": {

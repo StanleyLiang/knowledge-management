@@ -23,6 +23,11 @@ import {
   type TableCellNode,
   type TableNode,
 } from '@lexical/table'
+import { toast } from '../ui/toast'
+import {
+  checkRowOperation,
+  checkColumnOperation,
+} from '../../utils/tableMergeGuard'
 import {
   Rows3,
   Columns3,
@@ -165,41 +170,82 @@ export function TableActionToolbar() {
     })
   }, [editor])
 
-  const insertRowAbove = useCallback(() => {
-    editor.update(() => {
-      $insertTableRow__EXPERIMENTAL(false)
+  /** Helper: get current cell's row/col index and table node */
+  const getCellContext = useCallback((): {
+    tableNode: TableNode; cellNode: TableCellNode; rowIndex: number; colIndex: number
+  } | null => {
+    let result: ReturnType<typeof getCellContext> = null
+    editor.getEditorState().read(() => {
+      const selection = $getSelection()
+      let cellNode: TableCellNode | null = null
+      if ($isRangeSelection(selection)) {
+        cellNode = $findCellNode(selection.anchor.getNode()) as TableCellNode | null
+      } else if ($isTableSelection(selection)) {
+        const nodes = selection.getNodes()
+        const first = nodes.find((n) => $isTableCellNode(n))
+        if (first) cellNode = first as TableCellNode
+      }
+      if (!cellNode) return
+      const tableNode = $findTableNode(cellNode) as TableNode | null
+      if (!tableNode) return
+
+      const row = cellNode.getParent()
+      if (!$isTableRowNode(row)) return
+      const rowIndex = tableNode.getChildren().indexOf(row)
+      const colIndex = row.getChildren().indexOf(cellNode)
+
+      result = { tableNode, cellNode, rowIndex, colIndex }
     })
+    return result
   }, [editor])
+
+  const guardedRowOp = useCallback(
+    (op: 'insert' | 'delete', fn: () => void) => {
+      const ctx = getCellContext()
+      if (ctx) {
+        const blocked = checkRowOperation(ctx.tableNode, ctx.rowIndex, op)
+        if (blocked) { toast.warning(blocked); return }
+      }
+      fn()
+    },
+    [getCellContext],
+  )
+
+  const guardedColOp = useCallback(
+    (op: 'insert' | 'delete', fn: () => void) => {
+      const ctx = getCellContext()
+      if (ctx) {
+        const blocked = checkColumnOperation(ctx.tableNode, ctx.colIndex, op)
+        if (blocked) { toast.warning(blocked); return }
+      }
+      fn()
+    },
+    [getCellContext],
+  )
+
+  const insertRowAbove = useCallback(() => {
+    guardedRowOp('insert', () => editor.update(() => $insertTableRow__EXPERIMENTAL(false)))
+  }, [editor, guardedRowOp])
 
   const insertRowBelow = useCallback(() => {
-    editor.update(() => {
-      $insertTableRow__EXPERIMENTAL(true)
-    })
-  }, [editor])
+    guardedRowOp('insert', () => editor.update(() => $insertTableRow__EXPERIMENTAL(true)))
+  }, [editor, guardedRowOp])
 
   const deleteRow = useCallback(() => {
-    editor.update(() => {
-      $deleteTableRow__EXPERIMENTAL()
-    })
-  }, [editor])
+    guardedRowOp('delete', () => editor.update(() => $deleteTableRow__EXPERIMENTAL()))
+  }, [editor, guardedRowOp])
 
   const insertColumnLeft = useCallback(() => {
-    editor.update(() => {
-      $insertTableColumn__EXPERIMENTAL(false)
-    })
-  }, [editor])
+    guardedColOp('insert', () => editor.update(() => $insertTableColumn__EXPERIMENTAL(false)))
+  }, [editor, guardedColOp])
 
   const insertColumnRight = useCallback(() => {
-    editor.update(() => {
-      $insertTableColumn__EXPERIMENTAL(true)
-    })
-  }, [editor])
+    guardedColOp('insert', () => editor.update(() => $insertTableColumn__EXPERIMENTAL(true)))
+  }, [editor, guardedColOp])
 
   const deleteColumn = useCallback(() => {
-    editor.update(() => {
-      $deleteTableColumn__EXPERIMENTAL()
-    })
-  }, [editor])
+    guardedColOp('delete', () => editor.update(() => $deleteTableColumn__EXPERIMENTAL()))
+  }, [editor, guardedColOp])
 
   const toggleHeader = useCallback(() => {
     editor.update(() => {

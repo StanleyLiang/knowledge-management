@@ -12,6 +12,8 @@ import {
   type TableNode,
 } from '@lexical/table'
 import { GripVertical } from 'lucide-react'
+import { toast } from '../components/ui/toast'
+import { checkRowOperation, checkColumnOperation, tableHasMergedCells } from '../utils/tableMergeGuard'
 
 interface HandleInfo {
   type: 'row' | 'column'
@@ -180,28 +182,39 @@ export function TableDragReorderPlugin() {
       const drop = dropIndexRef.current
 
       if (drag && drop !== null && drop !== drag.index) {
-        editor.update(() => {
+        // Check merge guard before executing move
+        let blocked = false
+        editor.getEditorState().read(() => {
           const tableNode = $getNodeByKey(drag.tableKey)
           if (!tableNode || !$isTableNode(tableNode)) return
-
-          if (drag.type === 'column') {
-            $moveTableColumn(tableNode as TableNode, drag.index, drop)
-          } else {
-            // Move row: simple approach using insertBefore/insertAfter
-            const rows = tableNode.getChildren()
-            const fromRow = rows[drag.index]
-            const toRow = rows[drop]
-            if (!fromRow || !toRow || !$isTableRowNode(fromRow)) return
-
-            if (drop < drag.index) {
-              // Moving up: insert before target
-              toRow.insertBefore(fromRow)
-            } else {
-              // Moving down: insert after target
-              toRow.insertAfter(fromRow)
-            }
+          if (tableHasMergedCells(tableNode as TableNode)) {
+            blocked = true
           }
         })
+
+        if (blocked) {
+          toast.warning('Please unmerge cells first')
+        } else {
+          editor.update(() => {
+            const tableNode = $getNodeByKey(drag.tableKey)
+            if (!tableNode || !$isTableNode(tableNode)) return
+
+            if (drag.type === 'column') {
+              $moveTableColumn(tableNode as TableNode, drag.index, drop)
+            } else {
+              const rows = tableNode.getChildren()
+              const fromRow = rows[drag.index]
+              const toRow = rows[drop]
+              if (!fromRow || !toRow || !$isTableRowNode(fromRow)) return
+
+              if (drop < drag.index) {
+                toRow.insertBefore(fromRow)
+              } else {
+                toRow.insertAfter(fromRow)
+              }
+            }
+          })
+        }
       }
 
       draggingRef.current = null

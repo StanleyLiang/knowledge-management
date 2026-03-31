@@ -46,6 +46,7 @@ import {
   CollapsibleTitleNode,
   CollapsibleContentNode,
 } from './nodes/CollapsibleNodes'
+import { Toaster } from './components/ui/toast'
 import type { EditorProps } from './types'
 
 const EDITOR_NODES = [
@@ -140,6 +141,7 @@ export function Editor({
         {showTableOfContents && <TableOfContentsPlugin />}
         {tags && <PageTags value={tags.value} onChange={tags.onChange} suggestions={tags.suggestions} editable={editable} />}
       </div>
+      <Toaster position="bottom-center" />
     </LexicalComposer>
   )
 }
