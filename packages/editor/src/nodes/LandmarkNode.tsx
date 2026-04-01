@@ -66,7 +66,7 @@ function LandmarkMapModal({
         <div className="le-landmark-modal-body">
           <Suspense fallback={<div className="le-landmark-loading">Loading map...</div>}>
             <ComposableMap
-              projectionConfig={{ center: [longitude, latitude], scale: 800 }}
+              projectionConfig={{ center: [longitude, latitude], scale: 2000 }}
               style={{ width: '100%', height: 'auto' }}
             >
               <Geographies geography={GEO_URL}>

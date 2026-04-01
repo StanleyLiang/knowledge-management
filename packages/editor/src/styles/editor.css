@@ -573,7 +573,7 @@
 }
 .le-landmark-modal {
   @apply bg-white rounded-xl shadow-2xl flex flex-col
-         w-[400px] max-h-[85vh] overflow-hidden;
+         w-[560px] max-h-[90vh] overflow-hidden;
 }
 .le-landmark-modal-header {
   @apply flex items-center justify-between px-4 py-3 border-b border-gray-200;
