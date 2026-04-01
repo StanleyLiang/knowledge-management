@@ -23,8 +23,9 @@ export async function POST(request: NextRequest) {
     }
 
     const jobId = crypto.randomUUID()
-    const filename = file.name || 'video.mp4'
-    const key = `uploads/${jobId}/${filename}`
+    // Use jobId as filename to avoid encoding issues with non-ASCII chars
+    const ext = (file.name || 'video.mp4').split('.').pop() || 'mp4'
+    const key = `uploads/${jobId}.${ext}`
 
     // 1. Upload to MinIO
     const buffer = Buffer.from(await file.arrayBuffer())

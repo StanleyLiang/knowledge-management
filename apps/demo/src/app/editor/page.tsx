@@ -286,32 +286,58 @@ export default function EditorPage() {
         }
 
         const { jobId, hlsUrl } = await res.json()
+        console.log('[video-upload] Job created:', jobId, 'HLS URL:', hlsUrl)
 
         // 2. Switch to converting status
         onStatusChange('converting')
 
         // 3. Subscribe to NATS WebSocket for conversion status
+        //    Note: there may be a race condition where the worker finishes before
+        //    the WS subscription is ready. To handle this, we also poll the HLS URL.
         return new Promise<MediaUploadResult>((resolve, reject) => {
+          let resolved = false
+
+          const done = (result: MediaUploadResult) => {
+            if (resolved) return
+            resolved = true
+            cleanup()
+            clearInterval(pollTimer)
+            resolve(result)
+          }
+
+          const fail = (err: Error) => {
+            if (resolved) return
+            resolved = true
+            cleanup()
+            clearInterval(pollTimer)
+            reject(err)
+          }
+
+          // NATS WS subscription for real-time updates
           const cleanup = subscribeToJobStatus(jobId, (status) => {
+            console.log('[video-upload] NATS status:', status.status, status.currentVariant)
             if (status.status === 'completed') {
-              cleanup()
-              resolve({
-                url: hlsUrl,
-                format: 'hls',
-                jobId,
-              })
+              done({ url: hlsUrl, format: 'hls', jobId })
             } else if (status.status === 'failed') {
-              cleanup()
-              reject(new Error(status.error || 'Conversion failed'))
+              fail(new Error(status.error || 'Conversion failed'))
             }
-            // Other statuses (downloading, converting, uploading) — keep waiting
           })
 
+          // Fallback: poll the HLS URL every 3s in case NATS subscription missed the event
+          const pollTimer = setInterval(async () => {
+            try {
+              const check = await fetch(hlsUrl, { method: 'HEAD' })
+              if (check.ok) {
+                console.log('[video-upload] HLS URL available via polling')
+                done({ url: hlsUrl, format: 'hls', jobId })
+              }
+            } catch {
+              // Not ready yet
+            }
+          }, 3000)
+
           // Timeout: 10 minutes
-          setTimeout(() => {
-            cleanup()
-            reject(new Error('Conversion timed out (10 minutes)'))
-          }, 10 * 60 * 1000)
+          setTimeout(() => fail(new Error('Conversion timed out (10 minutes)')), 10 * 60 * 1000)
         })
       }
 
