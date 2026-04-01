@@ -19,6 +19,7 @@ import { OnChangePlugin } from './plugins/OnChangePlugin'
 import { CustomNodesPlugin } from './plugins/CustomNodesPlugin'
 import { TablePlugin } from './plugins/TablePlugin'
 import { VideoUploadPlugin } from './plugins/VideoUploadPlugin'
+import { VideoConvertPlugin } from './plugins/VideoConvertPlugin'
 import { TableActionToolbar } from './components/editor/TableActionToolbar'
 import { TableColumnResizePlugin } from './plugins/TableColumnResizePlugin'
 import { TableDragReorderPlugin } from './plugins/TableDragReorderPlugin'
@@ -84,6 +85,7 @@ export function Editor({
   placeholder = 'Start writing...',
   editable = true,
   showTableOfContents = false,
+  videoConvert,
 }: EditorProps) {
   const initialConfig = {
     namespace: 'LexicalEditor',
@@ -133,6 +135,7 @@ export function Editor({
         <CustomNodesPlugin />
         <ImageUploadPlugin onUpload={onUpload} />
         <VideoUploadPlugin onUpload={onUpload} />
+        {videoConvert && <VideoConvertPlugin {...videoConvert} />}
         <SlashCommandPlugin />
         <MarkdownPlugin />
         <FloatingLinkEditorPlugin />

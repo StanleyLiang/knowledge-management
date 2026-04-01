@@ -221,6 +221,7 @@ export class VideoNode extends DecoratorNode<JSX.Element> {
   __format: VideoFormat
   __status: VideoStatus
   __errorMessage: string
+  __jobId: string
 
   static getType(): string { return 'video' }
 
@@ -228,6 +229,7 @@ export class VideoNode extends DecoratorNode<JSX.Element> {
     const n = new VideoNode(node.__src, node.__width, node.__height, node.__format, node.__key)
     n.__status = node.__status
     n.__errorMessage = node.__errorMessage
+    n.__jobId = node.__jobId
     return n
   }
 
@@ -239,9 +241,12 @@ export class VideoNode extends DecoratorNode<JSX.Element> {
     this.__format = format
     this.__status = 'ready'
     this.__errorMessage = ''
+    this.__jobId = ''
   }
 
   setStatus(status: VideoStatus): void { this.getWritable().__status = status }
+  setJobId(jobId: string): void { this.getWritable().__jobId = jobId }
+  getJobId(): string { return this.__jobId }
   setErrorMessage(msg: string): void { this.getWritable().__errorMessage = msg }
   setSrc(src: string): void { this.getWritable().__src = src }
   setFormat(format: VideoFormat): void { this.getWritable().__format = format }

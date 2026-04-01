@@ -72,7 +72,7 @@ export function VideoUploadPlugin({
             })
           })
 
-          // Success — update node with final URL
+          // Update node with upload result
           editor.update(() => {
             const node = editor._editorState._nodeMap.get(nodeKey)
             if (node instanceof VideoNode) {
@@ -81,7 +81,15 @@ export function VideoUploadPlugin({
               writable.__format = result.format ?? 'mp4'
               if (result.width) writable.__width = result.width
               if (result.height) writable.__height = result.height
-              writable.__status = 'ready'
+
+              if (result.jobId) {
+                // Has jobId → conversion pending, let VideoConvertPlugin handle status
+                writable.__jobId = result.jobId
+                writable.__status = 'converting'
+              } else {
+                // No jobId → upload complete, ready to play
+                writable.__status = 'ready'
+              }
             }
           })
         } else {

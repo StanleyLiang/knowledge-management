@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react'
 import { Editor } from '@lexical-editor/editor'
 import type { SerializedEditorState } from 'lexical'
 import type { MediaUploadResult, MediaStatus, MediaType } from '@lexical-editor/editor'
-import { subscribeToJobStatus } from '../../lib/nats-browser'
 
 // Helper to create a text node
 const t = (text: string, format = 0, style = '') => ({
@@ -288,57 +287,9 @@ export default function EditorPage() {
         const { jobId, hlsUrl } = await res.json()
         console.log('[video-upload] Job created:', jobId, 'HLS URL:', hlsUrl)
 
-        // 2. Switch to converting status
-        onStatusChange('converting')
-
-        // 3. Subscribe to NATS WebSocket for conversion status
-        //    Note: there may be a race condition where the worker finishes before
-        //    the WS subscription is ready. To handle this, we also poll the HLS URL.
-        return new Promise<MediaUploadResult>((resolve, reject) => {
-          let resolved = false
-
-          const done = (result: MediaUploadResult) => {
-            if (resolved) return
-            resolved = true
-            cleanup()
-            clearInterval(pollTimer)
-            resolve(result)
-          }
-
-          const fail = (err: Error) => {
-            if (resolved) return
-            resolved = true
-            cleanup()
-            clearInterval(pollTimer)
-            reject(err)
-          }
-
-          // NATS WS subscription for real-time updates
-          const cleanup = subscribeToJobStatus(jobId, (status) => {
-            console.log('[video-upload] NATS status:', status.status, status.currentVariant)
-            if (status.status === 'completed') {
-              done({ url: hlsUrl, format: 'hls', jobId })
-            } else if (status.status === 'failed') {
-              fail(new Error(status.error || 'Conversion failed'))
-            }
-          })
-
-          // Fallback: poll the HLS URL every 3s in case NATS subscription missed the event
-          const pollTimer = setInterval(async () => {
-            try {
-              const check = await fetch(hlsUrl, { method: 'HEAD' })
-              if (check.ok) {
-                console.log('[video-upload] HLS URL available via polling')
-                done({ url: hlsUrl, format: 'hls', jobId })
-              }
-            } catch {
-              // Not ready yet
-            }
-          }, 3000)
-
-          // Timeout: 10 minutes
-          setTimeout(() => fail(new Error('Conversion timed out (10 minutes)')), 10 * 60 * 1000)
-        })
+        // 2. Return immediately — VideoConvertPlugin handles the rest
+        //    Plugin subscribes to NATS WS + polls for completion
+        return { url: hlsUrl, format: 'hls', jobId }
       }
 
       // image / attachment: convert to data URL (default fallback)
@@ -361,6 +312,11 @@ export default function EditorPage() {
         placeholder="Start writing..."
         onChange={setEditorState}
         onUpload={handleUpload}
+        videoConvert={{
+          natsWsUrl: 'ws://localhost:9222',
+          statusSubjectPrefix: 'video.convert.status',
+          pollInterval: 3000,
+        }}
       />
 
       <details className="mt-6">

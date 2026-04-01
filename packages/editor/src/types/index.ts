@@ -69,6 +69,15 @@ export interface LandmarkConfig {
   displayMode?: 'map' | 'text'
 }
 
+export interface VideoConvertConfig {
+  /** NATS WebSocket URL for subscribing to conversion status */
+  natsWsUrl: string
+  /** Subject prefix for status updates (default: 'video.convert.status') */
+  statusSubjectPrefix?: string
+  /** Fallback polling interval in ms (default: 3000). Set 0 to disable. */
+  pollInterval?: number
+}
+
 export interface EditorProps {
   initialEditorState?: SerializedEditorState | string
   onChange?: (editorState: SerializedEditorState) => void
@@ -87,6 +96,7 @@ export interface EditorProps {
   editable?: boolean
   placeholder?: string
   showTableOfContents?: boolean
+  videoConvert?: VideoConvertConfig
 }
 
 export interface ViewerProps {
