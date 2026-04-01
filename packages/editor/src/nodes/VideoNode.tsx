@@ -103,9 +103,7 @@ function VideoComponent({
         hlsRef.current = hls
         hls.loadSource(src)
         hls.attachMedia(videoRef.current)
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          videoRef.current?.play().catch(() => {})
-        })
+        // No autoplay — user clicks play manually
       } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
         videoRef.current.src = src
       }
