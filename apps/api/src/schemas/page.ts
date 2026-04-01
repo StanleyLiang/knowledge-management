@@ -16,3 +16,8 @@ export const SpaceIdParam = Type.Object({
 export const PageIdParam = Type.Object({
   id: Type.String(),
 })
+
+export const VersionIdParam = Type.Object({
+  id: Type.String(),
+  versionId: Type.String(),
+})

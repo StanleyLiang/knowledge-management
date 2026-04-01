@@ -590,6 +590,20 @@
 .le-landmark-modal-coords {
   @apply px-4 py-2 text-xs text-gray-500 text-center border-t border-gray-100;
 }
+.le-landmark-taiwan-map {
+  @apply w-full;
+}
+.le-landmark-taiwan-svg {
+  @apply w-full;
+  height: 500px;
+}
+.le-landmark-taiwan-svg svg {
+  width: 100% !important;
+  height: 100% !important;
+}
+.le-landmark-taiwan-area {
+  @apply px-4 py-1.5 text-xs text-blue-600 bg-blue-50 text-center;
+}
 .le-landmark-loading {
   @apply p-4 text-sm text-gray-500 text-center;
 }

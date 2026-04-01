@@ -3,7 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Editor } from '@lexical-editor/editor'
 import type { SerializedEditorState } from 'lexical'
+import { Globe, Loader2 } from 'lucide-react'
 import { api } from '@/lib/api'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import type { Page } from '@/lib/types'
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
@@ -13,6 +16,7 @@ export function PageEditor({ pageId }: { pageId: string }) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState<SerializedEditorState | null>(null)
   const [status, setStatus] = useState<SaveStatus>('idle')
+  const [publishing, setPublishing] = useState(false)
   const [loading, setLoading] = useState(true)
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(null)
   const pendingRef = useRef<{ title?: string; content?: Record<string, unknown> }>({})
@@ -58,19 +62,67 @@ export function PageEditor({ pageId }: { pageId: string }) {
     scheduleSave({ content: editorState as unknown as Record<string, unknown> })
   }
 
+  async function handlePublish() {
+    // Flush any pending save first
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current)
+      await save()
+    }
+    setPublishing(true)
+    try {
+      const updated = await api.pages.publish(pageId)
+      setPage(updated)
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  async function handleUnpublish() {
+    setPublishing(true)
+    try {
+      const updated = await api.pages.unpublish(pageId)
+      setPage({ ...updated, publishedVersion: null })
+    } finally {
+      setPublishing(false)
+    }
+  }
+
   if (loading || !page) {
     return <div className="animate-pulse p-8 text-muted-foreground">Loading...</div>
   }
 
+  const isPublished = page.status === 'PUBLISHED'
+
   return (
     <div>
-      <div className="flex items-center justify-end mb-2 px-1">
-        <span className="text-xs text-muted-foreground">
-          {status === 'saving' && 'Saving...'}
-          {status === 'saved' && 'Saved'}
-          {status === 'error' && 'Error saving'}
-          {status === 'idle' && content && 'Unsaved changes'}
-        </span>
+      <div className="flex items-center justify-between mb-2 px-1">
+        <div className="flex items-center gap-2">
+          <Badge variant={isPublished ? 'default' : 'secondary'}>
+            {isPublished ? 'Published' : 'Draft'}
+          </Badge>
+          {isPublished && page.publishedVersion && (
+            <span className="text-xs text-muted-foreground">
+              v{page.publishedVersion.version}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground">
+            {status === 'saving' && 'Saving...'}
+            {status === 'saved' && 'Saved'}
+            {status === 'error' && 'Error saving'}
+            {status === 'idle' && content && 'Unsaved changes'}
+          </span>
+          {isPublished ? (
+            <Button variant="outline" size="sm" onClick={handleUnpublish} disabled={publishing}>
+              Unpublish
+            </Button>
+          ) : null}
+          <Button size="sm" onClick={handlePublish} disabled={publishing}>
+            {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+            {publishing ? 'Publishing...' : 'Publish'}
+          </Button>
+        </div>
       </div>
       <div className="border rounded-lg bg-white">
         <Editor

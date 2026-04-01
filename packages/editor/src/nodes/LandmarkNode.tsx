@@ -8,10 +8,9 @@ import {
   type SerializedLexicalNode,
   type Spread,
 } from 'lexical'
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useState, type JSX } from 'react'
 import { createPortal } from 'react-dom'
 import { MapPin, X } from 'lucide-react'
-import { type JSX } from 'react'
 import type { LandmarkItem } from '../types'
 
 const ComposableMap = lazy(() =>
@@ -26,6 +25,14 @@ const Geography = lazy(() =>
 const Marker = lazy(() =>
   import('react-simple-maps').then((m) => ({ default: m.Marker })),
 )
+
+// Taiwan counties TopoJSON (taiwan-atlas, 144KB)
+const TAIWAN_COUNTIES_URL = 'https://cdn.jsdelivr.net/npm/taiwan-atlas/counties-10t.json'
+
+/** Check if coordinates fall within Taiwan's bounding box */
+function isInTaiwan(lat: number, lng: number): boolean {
+  return lat >= 21.8 && lat <= 25.4 && lng >= 119.3 && lng <= 122.1
+}
 
 // Country boundaries (50m resolution)
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json'
@@ -43,6 +50,143 @@ export type SerializedLandmarkNode = Spread<
   SerializedLexicalNode
 >
 
+/* ── Taiwan Map (react-simple-maps + taiwan-atlas) ── */
+function TaiwanMapView({
+  name,
+  latitude,
+  longitude,
+}: {
+  name: string
+  latitude: number
+  longitude: number
+}) {
+  const [hoveredCounty, setHoveredCounty] = useState<string>('')
+
+  return (
+    <Suspense fallback={<div className="le-landmark-loading">Loading Taiwan map...</div>}>
+      <ComposableMap
+        projection="geoMercator"
+        projectionConfig={{ center: [121, 23.5], scale: 6000 }}
+        style={{ width: '100%', height: 'auto', background: '#EFF6FF' }}
+      >
+        <Geographies geography={TAIWAN_COUNTIES_URL}>
+          {({ geographies }: { geographies: Array<{ rsmKey: string; properties: { COUNTYNAME?: string } }> }) =>
+            geographies.map((geo) => (
+              <Geography
+                key={geo.rsmKey}
+                geography={geo}
+                fill={hoveredCounty === geo.rsmKey ? '#BFDBFE' : '#E8F0FE'}
+                stroke="#93C5FD"
+                strokeWidth={0.5}
+                onMouseEnter={() => setHoveredCounty(geo.rsmKey)}
+                onMouseLeave={() => setHoveredCounty('')}
+                style={{
+                  default: { outline: 'none' },
+                  hover: { fill: '#BFDBFE', outline: 'none', cursor: 'pointer' },
+                  pressed: { outline: 'none' },
+                }}
+              />
+            ))
+          }
+        </Geographies>
+        <Marker coordinates={[longitude, latitude]}>
+          <circle r={16} fill="#3B82F6" fillOpacity={0.15} />
+          <circle r={6} fill="#3B82F6" stroke="#FFFFFF" strokeWidth={2} />
+          <text
+            textAnchor="middle"
+            y={-14}
+            style={{ fontSize: 9, fontWeight: 700, fill: '#1E40AF' }}
+          >
+            {name}
+          </text>
+        </Marker>
+      </ComposableMap>
+    </Suspense>
+  )
+}
+
+/* ── World Map (react-simple-maps) ── */
+function WorldMapView({
+  name,
+  latitude,
+  longitude,
+}: {
+  name: string
+  latitude: number
+  longitude: number
+}) {
+  return (
+    <Suspense fallback={<div className="le-landmark-loading">Loading map...</div>}>
+      <ComposableMap
+        projectionConfig={{ center: [longitude, latitude], scale: 4000 }}
+        style={{ width: '100%', height: 'auto', background: '#EFF6FF' }}
+      >
+        <defs>
+          <linearGradient id="land-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#F1F5F9" />
+            <stop offset="100%" stopColor="#E2E8F0" />
+          </linearGradient>
+          <filter id="land-shadow" x="-2%" y="-2%" width="104%" height="104%">
+            <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#94A3B8" floodOpacity="0.25" />
+          </filter>
+          <radialGradient id="marker-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <Geographies geography={GEO_URL}>
+          {({ geographies }: { geographies: Array<{ rsmKey: string }> }) =>
+            geographies.map((geo) => (
+              <Geography
+                key={geo.rsmKey}
+                geography={geo}
+                fill="url(#land-gradient)"
+                stroke="#CBD5E1"
+                strokeWidth={0.3}
+                style={{
+                  default: { filter: 'url(#land-shadow)' },
+                  hover: { fill: '#DBEAFE' },
+                  pressed: { fill: '#BFDBFE' },
+                }}
+              />
+            ))
+          }
+        </Geographies>
+        <Geographies geography={ADMIN1_GEO_URL}>
+          {({ geographies }: { geographies: Array<{ rsmKey: string }> }) =>
+            geographies.map((geo) => (
+              <Geography
+                key={geo.rsmKey}
+                geography={geo}
+                fill="transparent"
+                stroke="#93C5FD"
+                strokeWidth={0.4}
+                style={{
+                  default: { outline: 'none' },
+                  hover: { fill: '#DBEAFE', outline: 'none' },
+                  pressed: { outline: 'none' },
+                }}
+              />
+            ))
+          }
+        </Geographies>
+        <Marker coordinates={[longitude, latitude]}>
+          <circle r={24} fill="url(#marker-glow)" />
+          <circle r={10} fill="#3B82F6" stroke="#FFFFFF" strokeWidth={3} />
+          <circle r={3} fill="#FFFFFF" />
+          <text
+            textAnchor="middle"
+            y={-20}
+            style={{ fontSize: 13, fontWeight: 700, fill: '#1E40AF' }}
+          >
+            {name}
+          </text>
+        </Marker>
+      </ComposableMap>
+    </Suspense>
+  )
+}
+
 /* ── Map Modal (portrait) ── */
 function LandmarkMapModal({
   name,
@@ -55,6 +199,8 @@ function LandmarkMapModal({
   longitude: number
   onClose: () => void
 }) {
+  const taiwan = isInTaiwan(latitude, longitude)
+
   return createPortal(
     <div className="le-landmark-modal-overlay" onClick={onClose}>
       <div className="le-landmark-modal" onClick={(e) => e.stopPropagation()}>
@@ -67,84 +213,11 @@ function LandmarkMapModal({
           </button>
         </div>
         <div className="le-landmark-modal-body">
-          <Suspense fallback={<div className="le-landmark-loading">Loading map...</div>}>
-            <ComposableMap
-              projectionConfig={{ center: [longitude, latitude], scale: 4000 }}
-              style={{ width: '100%', height: 'auto', background: '#EFF6FF' }}
-            >
-              <defs>
-                <linearGradient id="land-gradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#F1F5F9" />
-                  <stop offset="100%" stopColor="#E2E8F0" />
-                </linearGradient>
-                <filter id="land-shadow" x="-2%" y="-2%" width="104%" height="104%">
-                  <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#94A3B8" floodOpacity="0.25" />
-                </filter>
-                <radialGradient id="marker-glow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
-                </radialGradient>
-              </defs>
-              <Geographies geography={GEO_URL}>
-                {({ geographies }: { geographies: Array<{ rsmKey: string }> }) =>
-                  geographies.map((geo) => (
-                    <Geography
-                      key={geo.rsmKey}
-                      geography={geo}
-                      fill="url(#land-gradient)"
-                      stroke="#CBD5E1"
-                      strokeWidth={0.3}
-                      style={{
-                        default: { filter: 'url(#land-shadow)' },
-                        hover: { fill: '#DBEAFE' },
-                        pressed: { fill: '#BFDBFE' },
-                      }}
-                    />
-                  ))
-                }
-              </Geographies>
-              {/* Admin-1 states/provinces borders overlay */}
-              <Geographies geography={ADMIN1_GEO_URL}>
-                {({ geographies }: { geographies: Array<{ rsmKey: string }> }) =>
-                  geographies.map((geo) => (
-                    <Geography
-                      key={geo.rsmKey}
-                      geography={geo}
-                      fill="transparent"
-                      stroke="#93C5FD"
-                      strokeWidth={0.4}
-                      style={{
-                        default: { outline: 'none' },
-                        hover: { fill: '#DBEAFE', outline: 'none' },
-                        pressed: { outline: 'none' },
-                      }}
-                    />
-                  ))
-                }
-              </Geographies>
-              <Marker coordinates={[longitude, latitude]}>
-                {/* Glow ring */}
-                <circle r={24} fill="url(#marker-glow)" />
-                {/* Outer ring */}
-                <circle r={10} fill="#3B82F6" stroke="#FFFFFF" strokeWidth={3} />
-                {/* Inner dot */}
-                <circle r={3} fill="#FFFFFF" />
-                {/* Label */}
-                <text
-                  textAnchor="middle"
-                  y={-20}
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 700,
-                    fill: '#1E40AF',
-                    textShadow: '0 1px 2px rgba(255,255,255,0.8)',
-                  }}
-                >
-                  {name}
-                </text>
-              </Marker>
-            </ComposableMap>
-          </Suspense>
+          {taiwan ? (
+            <TaiwanMapView name={name} latitude={latitude} longitude={longitude} />
+          ) : (
+            <WorldMapView name={name} latitude={latitude} longitude={longitude} />
+          )}
           <div className="le-landmark-modal-coords">
             {latitude.toFixed(4)}, {longitude.toFixed(4)}
           </div>

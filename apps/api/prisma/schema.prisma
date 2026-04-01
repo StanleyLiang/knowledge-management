@@ -19,19 +19,35 @@ model Space {
 }
 
 model Page {
-  id        String     @id @default(cuid())
-  title     String     @default("Untitled")
-  content   Json?      @db.JsonB
-  status    PageStatus @default(DRAFT)
-  spaceId   String     @map("space_id")
-  space     Space      @relation(fields: [spaceId], references: [id], onDelete: Cascade)
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
+  id                 String        @id @default(cuid())
+  title              String        @default("Untitled")
+  content            Json?         @db.JsonB
+  status             PageStatus    @default(DRAFT)
+  publishedVersionId String?       @map("published_version_id")
+  spaceId            String        @map("space_id")
+  space              Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  versions           PageVersion[]
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
 
   @@index([spaceId])
   @@map("pages")
 }
 
+model PageVersion {
+  id        String   @id @default(cuid())
+  pageId    String   @map("page_id")
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  version   Int
+  title     String
+  content   Json     @db.JsonB
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([pageId])
+  @@map("page_versions")
+}
+
 enum PageStatus {
   DRAFT
+  PUBLISHED
 }

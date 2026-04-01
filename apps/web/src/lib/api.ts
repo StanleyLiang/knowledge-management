@@ -1,4 +1,4 @@
-import type { Space, SpaceWithPages, PageSummary, Page, CreateSpaceInput, UpdatePageInput } from './types'
+import type { Space, SpaceWithPages, PageSummary, Page, PageVersion, PageVersionSummary, CreateSpaceInput, UpdatePageInput } from './types'
 
 const BASE_URL = typeof window === 'undefined'
   ? (process.env.API_URL || 'http://localhost:3001') + '/api'
@@ -36,5 +36,15 @@ export const api = {
       request<Page>(`/pages/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     delete: (id: string) =>
       request<{ success: boolean }>(`/pages/${id}`, { method: 'DELETE' }),
+    publish: (id: string) =>
+      request<Page>(`/pages/${id}/publish`, { method: 'POST' }),
+    unpublish: (id: string) =>
+      request<Page>(`/pages/${id}/unpublish`, { method: 'POST' }),
+    versions: (id: string) =>
+      request<PageVersionSummary[]>(`/pages/${id}/versions`),
+    getVersion: (id: string, versionId: string) =>
+      request<PageVersion>(`/pages/${id}/versions/${versionId}`),
+    restore: (id: string, versionId: string) =>
+      request<Page>(`/pages/${id}/restore/${versionId}`, { method: 'POST' }),
   },
 }

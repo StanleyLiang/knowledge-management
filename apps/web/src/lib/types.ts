@@ -16,12 +16,31 @@ export interface PageSummary {
   title: string
   status: string
   spaceId: string
+  publishedVersionId: string | null
   createdAt: string
   updatedAt: string
 }
 
+export interface PageVersion {
+  id: string
+  pageId: string
+  version: number
+  title: string
+  content: Record<string, unknown>
+  createdAt: string
+}
+
+export interface PageVersionSummary {
+  id: string
+  pageId: string
+  version: number
+  title: string
+  createdAt: string
+}
+
 export interface Page extends PageSummary {
   content: Record<string, unknown> | null
+  publishedVersion: PageVersion | null
 }
 
 export interface CreateSpaceInput {

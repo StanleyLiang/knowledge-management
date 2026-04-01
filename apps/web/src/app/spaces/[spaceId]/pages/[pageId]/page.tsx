@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft, Pencil, History } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { PageViewer } from '@/components/pages/PageViewer'
@@ -30,12 +30,20 @@ export default async function ViewPagePage({
           <ArrowLeft className="h-4 w-4" />
           Back to Pages
         </Link>
-        <Link href={`/spaces/${spaceId}/pages/${pageId}/edit`}>
-          <Button variant="outline" size="sm">
-            <Pencil className="h-4 w-4" />
-            Edit
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href={`/spaces/${spaceId}/pages/${pageId}/history`}>
+            <Button variant="outline" size="sm">
+              <History className="h-4 w-4" />
+              History
+            </Button>
+          </Link>
+          <Link href={`/spaces/${spaceId}/pages/${pageId}/edit`}>
+            <Button variant="outline" size="sm">
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Button>
+          </Link>
+        </div>
       </div>
       <PageViewer page={page} />
     </div>
