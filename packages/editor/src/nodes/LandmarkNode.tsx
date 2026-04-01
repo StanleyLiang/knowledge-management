@@ -27,7 +27,8 @@ const Marker = lazy(() =>
   import('react-simple-maps').then((m) => ({ default: m.Marker })),
 )
 
-const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
+// 50m resolution for finer detail at high zoom
+const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json'
 
 export type SerializedLandmarkNode = Spread<
   {
@@ -66,28 +67,57 @@ function LandmarkMapModal({
         <div className="le-landmark-modal-body">
           <Suspense fallback={<div className="le-landmark-loading">Loading map...</div>}>
             <ComposableMap
-              projectionConfig={{ center: [longitude, latitude], scale: 2000 }}
-              style={{ width: '100%', height: 'auto' }}
+              projectionConfig={{ center: [longitude, latitude], scale: 4000 }}
+              style={{ width: '100%', height: 'auto', background: '#EFF6FF' }}
             >
+              <defs>
+                <linearGradient id="land-gradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#F1F5F9" />
+                  <stop offset="100%" stopColor="#E2E8F0" />
+                </linearGradient>
+                <filter id="land-shadow" x="-2%" y="-2%" width="104%" height="104%">
+                  <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#94A3B8" floodOpacity="0.25" />
+                </filter>
+                <radialGradient id="marker-glow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
+                </radialGradient>
+              </defs>
               <Geographies geography={GEO_URL}>
                 {({ geographies }: { geographies: Array<{ rsmKey: string }> }) =>
                   geographies.map((geo) => (
                     <Geography
                       key={geo.rsmKey}
                       geography={geo}
-                      fill="#E2E8F0"
+                      fill="url(#land-gradient)"
                       stroke="#CBD5E1"
-                      strokeWidth={0.5}
+                      strokeWidth={0.3}
+                      style={{
+                        default: { filter: 'url(#land-shadow)' },
+                        hover: { fill: '#DBEAFE' },
+                        pressed: { fill: '#BFDBFE' },
+                      }}
                     />
                   ))
                 }
               </Geographies>
               <Marker coordinates={[longitude, latitude]}>
-                <circle r={8} fill="#3B82F6" stroke="#FFFFFF" strokeWidth={2} />
+                {/* Glow ring */}
+                <circle r={24} fill="url(#marker-glow)" />
+                {/* Outer ring */}
+                <circle r={10} fill="#3B82F6" stroke="#FFFFFF" strokeWidth={3} />
+                {/* Inner dot */}
+                <circle r={3} fill="#FFFFFF" />
+                {/* Label */}
                 <text
                   textAnchor="middle"
-                  y={-16}
-                  style={{ fontSize: 12, fontWeight: 600, fill: '#1E293B' }}
+                  y={-20}
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    fill: '#1E40AF',
+                    textShadow: '0 1px 2px rgba(255,255,255,0.8)',
+                  }}
                 >
                   {name}
                 </text>

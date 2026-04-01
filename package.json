@@ -8,9 +8,13 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=apps/demo",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:api": "npm run dev --workspace=apps/api",
     "dev:video-demo": "npm run dev --workspace=apps/video-converter-demo",
     "build": "npm run build --workspace=packages/editor",
     "build:demo": "npm run build --workspace=apps/demo",
+    "build:web": "npm run build --workspace=apps/web",
+    "build:api": "npm run build --workspace=apps/api",
     "test": "vitest run --workspace=packages/editor",
     "test:watch": "vitest --workspace=packages/editor",
     "lint": "eslint .",
