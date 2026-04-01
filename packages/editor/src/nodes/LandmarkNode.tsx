@@ -27,8 +27,10 @@ const Marker = lazy(() =>
   import('react-simple-maps').then((m) => ({ default: m.Marker })),
 )
 
-// 50m resolution for finer detail at high zoom
+// Country boundaries (50m resolution)
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json'
+// Admin-1 states/provinces boundaries (50m, Natural Earth — 2.3MB, lazy loaded)
+const ADMIN1_GEO_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_1_states_provinces.geojson'
 
 export type SerializedLandmarkNode = Spread<
   {
@@ -96,6 +98,25 @@ function LandmarkMapModal({
                         default: { filter: 'url(#land-shadow)' },
                         hover: { fill: '#DBEAFE' },
                         pressed: { fill: '#BFDBFE' },
+                      }}
+                    />
+                  ))
+                }
+              </Geographies>
+              {/* Admin-1 states/provinces borders overlay */}
+              <Geographies geography={ADMIN1_GEO_URL}>
+                {({ geographies }: { geographies: Array<{ rsmKey: string }> }) =>
+                  geographies.map((geo) => (
+                    <Geography
+                      key={geo.rsmKey}
+                      geography={geo}
+                      fill="transparent"
+                      stroke="#93C5FD"
+                      strokeWidth={0.4}
+                      style={{
+                        default: { outline: 'none' },
+                        hover: { fill: '#DBEAFE', outline: 'none' },
+                        pressed: { outline: 'none' },
                       }}
                     />
                   ))

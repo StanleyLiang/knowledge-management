@@ -7,6 +7,14 @@
       "runtimeArgs": ["run", "dev"],
       "port": 3000,
       "cwd": "apps/demo"
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3002,
+      "cwd": "apps/web",
+      "autoPort": true
     }
   ]
 }

@@ -77,7 +77,7 @@ export function PageEditor({ pageId }: { pageId: string }) {
           title={title}
           onTitleChange={handleTitleChange}
           titlePlaceholder="Untitled"
-          initialEditorState={page.content ? JSON.stringify(page.content) : undefined}
+          initialEditorState={page.content && (page.content.root as Record<string, unknown>)?.version ? JSON.stringify(page.content) : undefined}
           onChange={handleContentChange}
           placeholder="Start writing..."
         />

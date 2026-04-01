@@ -31,5 +31,8 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "lightningcss-darwin-arm64": "^1.32.0"
   }
 }
