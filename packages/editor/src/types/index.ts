@@ -78,25 +78,33 @@ export interface VideoConvertConfig {
   pollInterval?: number
 }
 
-export interface EditorProps {
-  initialEditorState?: SerializedEditorState | string
-  onChange?: (editorState: SerializedEditorState) => void
-  onUpload?: OnUpload
+export interface PluginConfig {
+  upload?: { onUpload: OnUpload }
+  download?: { onDownload: OnDownload }
   decorateUrl?: DecorateUrl
-  onDownload?: OnDownload
-  onMentionSearch?: (query: string) => Promise<MentionSearchResult[]>
-  onMentionHover?: (mentionId: string) => Promise<MentionSearchResult>
-  onPageSearch?: (query: string) => Promise<Array<{ id: string; title: string }>>
-  theme?: Partial<EditorThemeClasses>
-  i18nResources?: Record<string, Record<string, string>>
+  videoConvert?: VideoConvertConfig
+  mention?: {
+    onSearch: (query: string) => Promise<MentionSearchResult[]>
+    onHover?: (mentionId: string) => Promise<MentionSearchResult>
+  }
+  pageSearch?: {
+    onSearch: (query: string) => Promise<Array<{ id: string; title: string }>>
+  }
   codeSnippet?: CodeSnippetConfig
   landmark?: LandmarkConfig
   tags?: TagsConfig
+  tableOfContents?: boolean
   colorPresets?: string[]
+}
+
+export interface EditorProps {
+  initialEditorState?: SerializedEditorState | string
+  onChange?: (editorState: SerializedEditorState) => void
+  theme?: Partial<EditorThemeClasses>
+  i18nResources?: Record<string, Record<string, string>>
   editable?: boolean
   placeholder?: string
-  showTableOfContents?: boolean
-  videoConvert?: VideoConvertConfig
+  plugins?: PluginConfig
 }
 
 export interface ViewerProps {

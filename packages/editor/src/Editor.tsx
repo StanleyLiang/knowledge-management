@@ -78,15 +78,18 @@ const EDITOR_NODES = [
 export function Editor({
   initialEditorState,
   onChange,
-  onUpload,
-  onMentionSearch,
   theme,
-  tags,
-  placeholder = 'Start writing...',
   editable = true,
-  showTableOfContents = false,
-  videoConvert,
+  placeholder = 'Start writing...',
+  plugins = {},
 }: EditorProps) {
+  const {
+    upload,
+    videoConvert,
+    mention,
+    tags,
+    tableOfContents,
+  } = plugins
   const initialConfig = {
     namespace: 'LexicalEditor',
     theme: { ...defaultTheme, ...theme },
@@ -133,17 +136,17 @@ export function Editor({
         <TableDragReorderPlugin />
         <TableActionPlugin />
         <CustomNodesPlugin />
-        <ImageUploadPlugin onUpload={onUpload} />
-        <VideoUploadPlugin onUpload={onUpload} />
+        <ImageUploadPlugin onUpload={upload?.onUpload} />
+        <VideoUploadPlugin onUpload={upload?.onUpload} />
         {videoConvert && <VideoConvertPlugin {...videoConvert} />}
         <SlashCommandPlugin />
         <MarkdownPlugin />
         <FloatingLinkEditorPlugin />
-        <MentionPlugin onSearch={onMentionSearch} />
+        <MentionPlugin onSearch={mention?.onSearch} />
         <EmojiPlugin />
         <DragDropPlugin />
         <OnChangePlugin onChange={onChange} />
-        {showTableOfContents && <TableOfContentsPlugin />}
+        {tableOfContents && <TableOfContentsPlugin />}
         {tags && <PageTags value={tags.value} onChange={tags.onChange} suggestions={tags.suggestions} editable={editable} />}
       </div>
       <Toaster position="bottom-center" />

@@ -10,6 +10,7 @@ export { PageTags } from './components/editor/PageTags'
 export type {
   EditorProps,
   ViewerProps,
+  PluginConfig,
   OnUpload,
   DecorateUrl,
   OnDownload,

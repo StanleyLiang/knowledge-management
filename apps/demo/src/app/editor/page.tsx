@@ -311,11 +311,13 @@ export default function EditorPage() {
         initialEditorState={JSON.stringify(DEMO_STATE)}
         placeholder="Start writing..."
         onChange={setEditorState}
-        onUpload={handleUpload}
-        videoConvert={{
-          natsWsUrl: 'ws://localhost:9222',
-          statusSubjectPrefix: 'video.convert.status',
-          pollInterval: 3000,
+        plugins={{
+          upload: { onUpload: handleUpload },
+          videoConvert: {
+            natsWsUrl: 'ws://localhost:9222',
+            statusSubjectPrefix: 'video.convert.status',
+            pollInterval: 3000,
+          },
         }}
       />
 
