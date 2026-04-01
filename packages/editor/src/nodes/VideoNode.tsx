@@ -9,12 +9,13 @@ import {
   type Spread,
 } from 'lexical'
 import { useCallback, useEffect, useRef, useState, type JSX } from 'react'
-import { AlignLeft, AlignCenter, AlignRight, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { useResizable } from '../hooks/useResizable'
 import { ResizeHandles } from '../components/editor/ResizeHandles'
 import { FloatingNodeToolbar } from '../components/editor/FloatingNodeToolbar'
 
 export type VideoFormat = 'mp4' | 'hls'
+export type VideoStatus = 'ready' | 'uploading' | 'converting' | 'error'
 
 export type SerializedVideoNode = Spread<
   {
@@ -33,6 +34,8 @@ function VideoComponent({
   width: initialWidth,
   height: initialHeight,
   format,
+  status,
+  errorMessage,
   nodeKey,
   editable,
   editor,
@@ -41,6 +44,8 @@ function VideoComponent({
   width: number
   height: number
   format: VideoFormat
+  status: VideoStatus
+  errorMessage: string
   nodeKey: NodeKey
   editable: boolean
   editor: LexicalEditor
@@ -74,6 +79,7 @@ function VideoComponent({
 
   // HLS.js dynamic import
   useEffect(() => {
+    if (status !== 'ready') return
     if (format !== 'hls' || !videoRef.current) return
 
     let hls: { destroy: () => void } | null = null
@@ -87,12 +93,11 @@ function VideoComponent({
         videoRef.current.src = src
       }
     }).catch(() => {
-      // HLS.js not available, fallback
       if (videoRef.current) videoRef.current.src = src
     })
 
     return () => { hls?.destroy() }
-  }, [src, format])
+  }, [src, format, status])
 
   const deleteNode = useCallback(() => {
     editor.update(() => {
@@ -112,7 +117,7 @@ function VideoComponent({
       }}
       tabIndex={editable ? 0 : undefined}
     >
-      {isSelected && editable && (
+      {isSelected && editable && status === 'ready' && (
         <FloatingNodeToolbar>
           <input
             type="text"
@@ -140,17 +145,41 @@ function VideoComponent({
         </FloatingNodeToolbar>
       )}
 
+      {/* Status overlay */}
+      {status !== 'ready' && (
+        <div className="le-video-status-overlay" style={{ width: size.width, height: size.height }}>
+          {status === 'uploading' && (
+            <div className="le-video-status-content">
+              <div className="le-video-spinner" />
+              <span>Uploading...</span>
+            </div>
+          )}
+          {status === 'converting' && (
+            <div className="le-video-status-content">
+              <div className="le-video-spinner" />
+              <span>Converting...</span>
+            </div>
+          )}
+          {status === 'error' && (
+            <div className="le-video-status-content le-video-status-error">
+              <span>⚠️ {errorMessage || 'Upload failed'}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Video player — show preview during upload, real player when ready */}
       <video
         ref={videoRef}
         src={format === 'mp4' ? src : undefined}
         width={size.width}
         height={size.height}
-        controls
-        className="le-video"
+        controls={status === 'ready'}
+        className={`le-video ${status !== 'ready' ? 'le-video-loading' : ''}`}
         draggable={false}
       />
 
-      {isSelected && editable && <ResizeHandles onDragStart={onDragStart} />}
+      {isSelected && editable && status === 'ready' && <ResizeHandles onDragStart={onDragStart} />}
     </span>
   )
 }
@@ -160,13 +189,16 @@ export class VideoNode extends DecoratorNode<JSX.Element> {
   __width: number
   __height: number
   __format: VideoFormat
+  __status: VideoStatus
+  __errorMessage: string
 
-  static getType(): string {
-    return 'video'
-  }
+  static getType(): string { return 'video' }
 
   static clone(node: VideoNode): VideoNode {
-    return new VideoNode(node.__src, node.__width, node.__height, node.__format, node.__key)
+    const n = new VideoNode(node.__src, node.__width, node.__height, node.__format, node.__key)
+    n.__status = node.__status
+    n.__errorMessage = node.__errorMessage
+    return n
   }
 
   constructor(src: string, width: number, height: number, format: VideoFormat = 'mp4', key?: NodeKey) {
@@ -175,7 +207,14 @@ export class VideoNode extends DecoratorNode<JSX.Element> {
     this.__width = width
     this.__height = height
     this.__format = format
+    this.__status = 'ready'
+    this.__errorMessage = ''
   }
+
+  setStatus(status: VideoStatus): void { this.getWritable().__status = status }
+  setErrorMessage(msg: string): void { this.getWritable().__errorMessage = msg }
+  setSrc(src: string): void { this.getWritable().__src = src }
+  setFormat(format: VideoFormat): void { this.getWritable().__format = format }
 
   static importJSON(serializedNode: SerializedVideoNode): VideoNode {
     return $createVideoNode({
@@ -212,23 +251,11 @@ export class VideoNode extends DecoratorNode<JSX.Element> {
     return span
   }
 
-  updateDOM(): false {
-    return false
-  }
+  updateDOM(): false { return false }
+  isInline(): true { return true }
 
-  isInline(): true {
-    return true
-  }
-
-  setWidth(width: number): void {
-    const writable = this.getWritable()
-    writable.__width = width
-  }
-
-  setHeight(height: number): void {
-    const writable = this.getWritable()
-    writable.__height = height
-  }
+  setWidth(width: number): void { this.getWritable().__width = width }
+  setHeight(height: number): void { this.getWritable().__height = height }
 
   decorate(editor: LexicalEditor): JSX.Element {
     return (
@@ -237,6 +264,8 @@ export class VideoNode extends DecoratorNode<JSX.Element> {
         width={this.__width}
         height={this.__height}
         format={this.__format}
+        status={this.__status}
+        errorMessage={this.__errorMessage}
         nodeKey={this.__key}
         editable={editor._config.editable ?? true}
         editor={editor}

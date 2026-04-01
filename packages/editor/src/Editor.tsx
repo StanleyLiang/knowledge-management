@@ -18,6 +18,7 @@ import { defaultTheme } from './themes/defaultTheme'
 import { OnChangePlugin } from './plugins/OnChangePlugin'
 import { CustomNodesPlugin } from './plugins/CustomNodesPlugin'
 import { TablePlugin } from './plugins/TablePlugin'
+import { VideoUploadPlugin } from './plugins/VideoUploadPlugin'
 import { TableActionToolbar } from './components/editor/TableActionToolbar'
 import { TableColumnResizePlugin } from './plugins/TableColumnResizePlugin'
 import { TableDragReorderPlugin } from './plugins/TableDragReorderPlugin'
@@ -131,6 +132,7 @@ export function Editor({
         <TableActionPlugin />
         <CustomNodesPlugin />
         <ImageUploadPlugin onUpload={onUpload} />
+        <VideoUploadPlugin onUpload={onUpload} />
         <SlashCommandPlugin />
         <MarkdownPlugin />
         <FloatingLinkEditorPlugin />

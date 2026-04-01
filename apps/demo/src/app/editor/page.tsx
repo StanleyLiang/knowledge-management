@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Editor } from '@lexical-editor/editor'
 import type { SerializedEditorState } from 'lexical'
+import type { MediaUploadResult, MediaStatus, MediaType } from '@lexical-editor/editor'
+import { subscribeToJobStatus } from '../../lib/nats-browser'
 
 // Helper to create a text node
 const t = (text: string, format = 0, style = '') => ({
@@ -265,6 +267,66 @@ const DEMO_STATE = {
 export default function EditorPage() {
   const [editorState, setEditorState] = useState<SerializedEditorState | null>(null)
 
+  const handleUpload = useCallback(
+    async (
+      file: File,
+      type: MediaType,
+      onStatusChange: (status: MediaStatus) => void,
+    ): Promise<MediaUploadResult> => {
+      if (type === 'video') {
+        // 1. Upload to MinIO via API route
+        onStatusChange('uploading')
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const res = await fetch('/api/upload', { method: 'POST', body: formData })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: 'Upload failed' }))
+          throw new Error(err.error || 'Upload failed')
+        }
+
+        const { jobId, hlsUrl } = await res.json()
+
+        // 2. Switch to converting status
+        onStatusChange('converting')
+
+        // 3. Subscribe to NATS WebSocket for conversion status
+        return new Promise<MediaUploadResult>((resolve, reject) => {
+          const cleanup = subscribeToJobStatus(jobId, (status) => {
+            if (status.status === 'completed') {
+              cleanup()
+              resolve({
+                url: hlsUrl,
+                format: 'hls',
+                jobId,
+              })
+            } else if (status.status === 'failed') {
+              cleanup()
+              reject(new Error(status.error || 'Conversion failed'))
+            }
+            // Other statuses (downloading, converting, uploading) — keep waiting
+          })
+
+          // Timeout: 10 minutes
+          setTimeout(() => {
+            cleanup()
+            reject(new Error('Conversion timed out (10 minutes)'))
+          }, 10 * 60 * 1000)
+        })
+      }
+
+      // image / attachment: convert to data URL (default fallback)
+      return new Promise<MediaUploadResult>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => {
+          resolve({ url: reader.result as string })
+        }
+        reader.readAsDataURL(file)
+      })
+    },
+    [],
+  )
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Editor</h1>
@@ -272,6 +334,7 @@ export default function EditorPage() {
         initialEditorState={JSON.stringify(DEMO_STATE)}
         placeholder="Start writing..."
         onChange={setEditorState}
+        onUpload={handleUpload}
       />
 
       <details className="mt-6">

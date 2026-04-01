@@ -7,6 +7,8 @@ export interface MediaUploadResult {
   fileName?: string
   fileSize?: number
   mimeType?: string
+  format?: 'mp4' | 'hls'
+  jobId?: string
 }
 
 export type MediaType = 'image' | 'video' | 'attachment'

@@ -65,6 +65,7 @@ import {
   INSERT_COLLAPSIBLE_COMMAND,
   INSERT_IMAGE_COMMAND,
   INSERT_VIDEO_COMMAND,
+  UPLOAD_VIDEO_COMMAND,
   INSERT_ATTACHMENT_COMMAND,
   INSERT_CODE_SNIPPET_COMMAND,
   INSERT_MERMAID_COMMAND,
@@ -97,6 +98,7 @@ const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
 export function Toolbar() {
   const { editor, state } = useToolbarState()
   const imageInputRef = React.useRef<HTMLInputElement>(null)
+  const videoInputRef = React.useRef<HTMLInputElement>(null)
 
   const formatText = (format: TextFormatType) => {
     editor.dispatchCommand(FORMAT_TEXT_COMMAND, format)
@@ -123,7 +125,7 @@ export function Toolbar() {
 
   return (
     <div className="le-toolbar">
-      {/* Hidden file input for image upload */}
+      {/* Hidden file inputs for upload */}
       <input
         ref={imageInputRef}
         type="file"
@@ -133,7 +135,20 @@ export function Toolbar() {
           const file = e.target.files?.[0]
           if (file) {
             editor.dispatchCommand(UPLOAD_IMAGE_COMMAND, file)
-            e.target.value = '' // reset so same file can be selected again
+            e.target.value = ''
+          }
+        }}
+      />
+      <input
+        ref={videoInputRef}
+        type="file"
+        accept="video/mp4"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) {
+            editor.dispatchCommand(UPLOAD_VIDEO_COMMAND, file)
+            e.target.value = ''
           }
         }}
       />
@@ -353,13 +368,7 @@ export function Toolbar() {
       </Dropdown>
 
       <Tooltip content="Video">
-        <Button variant="ghost" size="icon" onClick={() => {
-          editor.dispatchCommand(INSERT_VIDEO_COMMAND, {
-            src: 'https://www.w3schools.com/html/mov_bbb.mp4',
-            width: 320,
-            height: 180,
-          })
-        }}>
+        <Button variant="ghost" size="icon" onClick={() => videoInputRef.current?.click()}>
           <Video size={16} />
         </Button>
       </Tooltip>
