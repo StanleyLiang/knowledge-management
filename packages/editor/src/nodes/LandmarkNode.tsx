@@ -131,7 +131,7 @@ function LandmarkComponent({
         }}
         title={`${name} (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`}
       >
-        <MapPin size={12} />
+        <MapPin size={16} />
         <span>{name}</span>
       </span>
       {showModal && (

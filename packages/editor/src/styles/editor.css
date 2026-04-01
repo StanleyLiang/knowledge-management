@@ -558,10 +558,13 @@
 /* Landmark */
 /* Landmark inline tag */
 .le-landmark-tag {
-  @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs
+  @apply inline-flex items-center gap-1.5 px-3 py-1 text-sm
          bg-blue-50 text-blue-700 border border-blue-200 rounded-full
          font-medium whitespace-nowrap cursor-pointer
          hover:bg-blue-100 transition-colors;
+}
+.le-landmark-tag svg {
+  fill: currentColor;
 }
 
 /* Landmark portrait modal */
