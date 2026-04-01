@@ -159,12 +159,12 @@ const DEMO_STATE = {
         alignment: 'center', showCaption: false, caption: '',
       },
 
-      // ── H2: Video ──
-      h('h2', [t('Video')]),
+      // ── H2: Video (HLS) ──
+      h('h2', [t('Video (HLS Playback)')]),
       {
         type: 'video', version: 1,
-        src: 'https://www.w3schools.com/html/mov_bbb.mp4',
-        width: 480, height: 270, format: 'mp4',
+        src: 'http://localhost:9000/videos/hls/d2bb1a45-1f7f-459b-9bbf-215c1e2e1e0b/master.m3u8',
+        width: 640, height: 360, format: 'hls',
       },
 
       // ── H2: Attachment ──

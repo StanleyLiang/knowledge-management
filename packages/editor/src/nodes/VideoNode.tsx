@@ -52,6 +52,8 @@ function VideoComponent({
 }) {
   const [isSelected, setIsSelected] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const hlsRef = useRef<{ destroy: () => void } | null>(null)
+  const hlsSrcRef = useRef<string>('')
 
   const updateNode = useCallback(
     (updater: (node: VideoNode) => void) => {
@@ -77,27 +79,55 @@ function VideoComponent({
     },
   })
 
-  // HLS.js dynamic import
+  // HLS.js dynamic import — guard against re-render loops
   useEffect(() => {
     if (status !== 'ready') return
     if (format !== 'hls' || !videoRef.current) return
+    // Skip if already attached to the same source
+    if (hlsRef.current && hlsSrcRef.current === src) return
 
-    let hls: { destroy: () => void } | null = null
+    // Cleanup previous instance
+    if (hlsRef.current) {
+      hlsRef.current.destroy()
+      hlsRef.current = null
+    }
+
+    let cancelled = false
+    hlsSrcRef.current = src
+
     import('hls.js').then((HlsModule) => {
+      if (cancelled || !videoRef.current) return
       const Hls = HlsModule.default
-      if (Hls.isSupported() && videoRef.current) {
-        hls = new Hls()
+      if (Hls.isSupported()) {
+        const hls = new Hls({ enableWorker: true })
+        hlsRef.current = hls
         hls.loadSource(src)
         hls.attachMedia(videoRef.current)
-      } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          videoRef.current?.play().catch(() => {})
+        })
+      } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
         videoRef.current.src = src
       }
     }).catch(() => {
       if (videoRef.current) videoRef.current.src = src
     })
 
-    return () => { hls?.destroy() }
+    return () => {
+      cancelled = true
+      // Don't destroy on re-render — only on unmount or src change
+    }
   }, [src, format, status])
+
+  // Cleanup HLS on unmount
+  useEffect(() => {
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy()
+        hlsRef.current = null
+      }
+    }
+  }, [])
 
   const deleteNode = useCallback(() => {
     editor.update(() => {
