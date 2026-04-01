@@ -82,6 +82,9 @@ export function Editor({
   editable = true,
   placeholder = 'Start writing...',
   plugins = {},
+  title,
+  onTitleChange,
+  titlePlaceholder,
 }: EditorProps) {
   const {
     upload,
@@ -111,6 +114,14 @@ export function Editor({
   return (
     <LexicalComposer initialConfig={initialConfig}>
       <div className="le-editor-container">
+        {onTitleChange !== undefined && (
+          <input
+            className="le-editor-title"
+            value={title ?? ''}
+            onChange={(e) => onTitleChange(e.target.value)}
+            placeholder={titlePlaceholder ?? 'Untitled'}
+          />
+        )}
         <Toolbar />
         <div className="le-editor-body">
           <RichTextPlugin

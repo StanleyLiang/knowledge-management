@@ -165,11 +165,13 @@ export function CustomNodesPlugin() {
           editor.update(() => {
             const selection = $getSelection()
             if ($isRangeSelection(selection)) {
-              const items = payload.items ?? [
-                { id: '1', name: 'Taipei', latitude: 25.033, longitude: 121.565 },
-                { id: '2', name: 'Tokyo', latitude: 35.6762, longitude: 139.6503 },
-              ]
-              selection.insertNodes([$createLandmarkNode(items)])
+              selection.insertNodes([
+                $createLandmarkNode(
+                  payload.name ?? 'Taipei 101',
+                  payload.latitude ?? 25.0339,
+                  payload.longitude ?? 121.5645,
+                ),
+              ])
             }
           })
           return true

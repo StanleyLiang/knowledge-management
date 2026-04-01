@@ -105,9 +105,13 @@ export interface EditorProps {
   editable?: boolean
   placeholder?: string
   plugins?: PluginConfig
+  title?: string
+  onTitleChange?: (title: string) => void
+  titlePlaceholder?: string
 }
 
 export interface ViewerProps {
+  title?: string
   initialEditorState: SerializedEditorState | string
   decorateUrl?: DecorateUrl
   onDownload?: OnDownload

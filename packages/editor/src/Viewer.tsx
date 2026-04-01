@@ -52,6 +52,7 @@ const VIEWER_NODES = [
 ]
 
 export function Viewer({
+  title,
   initialEditorState,
   theme,
 }: ViewerProps) {
@@ -72,6 +73,7 @@ export function Viewer({
   return (
     <LexicalComposer initialConfig={initialConfig}>
       <div className="le-viewer-container">
+        {title && <h1 className="le-viewer-title">{title}</h1>}
         <RichTextPlugin
           contentEditable={
             <ContentEditable className="le-editor-content" />

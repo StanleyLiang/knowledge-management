@@ -241,15 +241,15 @@ const DEMO_STATE = {
       ]),
 
       // ── H2: Landmark ──
-      h('h2', [t('Landmark')]),
-      {
-        type: 'landmark', version: 1,
-        items: [
-          { id: '1', name: 'Taipei 101', latitude: 25.0339, longitude: 121.5645 },
-          { id: '2', name: 'Tokyo Tower', latitude: 35.6586, longitude: 139.7454 },
-          { id: '3', name: 'Eiffel Tower', latitude: 48.8584, longitude: 2.2945 },
-        ],
-      },
+      h('h2', [t('Landmarks')]),
+      p([
+        t('Key locations: '),
+        { type: 'landmark', version: 1, name: 'Taipei 101', latitude: 25.0339, longitude: 121.5645 },
+        t(' '),
+        { type: 'landmark', version: 1, name: 'Tokyo Tower', latitude: 35.6586, longitude: 139.7454 },
+        t(' '),
+        { type: 'landmark', version: 1, name: 'Eiffel Tower', latitude: 48.8584, longitude: 2.2945 },
+      ]),
 
       // ── Footer ──
       { type: 'divider', version: 1 },
