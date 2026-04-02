@@ -40,15 +40,13 @@ import * as ReactDOM from 'react-dom'
 import {
   INSERT_DIVIDER_COMMAND,
   INSERT_COLLAPSIBLE_COMMAND,
-  INSERT_IMAGE_COMMAND,
-  INSERT_VIDEO_COMMAND,
-  INSERT_ATTACHMENT_COMMAND,
   INSERT_BOOKMARK_COMMAND,
   INSERT_CODE_SNIPPET_COMMAND,
   INSERT_TABLE_COMMAND,
   INSERT_MERMAID_COMMAND,
   INSERT_LANDMARK_COMMAND,
 } from './InsertCommands'
+import { editorEventBus } from '../utils/eventBus'
 
 class SlashCommandOption extends MenuOption {
   title: string
@@ -93,33 +91,43 @@ function getSlashCommandOptions(editor: ReturnType<typeof useLexicalComposerCont
         }
       })
     }),
-    new SlashCommandOption('Image', Image, (ed) => {
-      ed.dispatchCommand(INSERT_IMAGE_COMMAND, {
-        src: 'https://placehold.co/400x300/e2e8f0/64748b?text=Image',
-        altText: 'Placeholder',
-        width: 400,
-        height: 300,
+    new SlashCommandOption('Heading 4', Heading4, (ed) => {
+      ed.update(() => {
+        const selection = $getSelection()
+        if ($isRangeSelection(selection)) {
+          $setBlocksType(selection, () => $createHeadingNode('h4'))
+        }
       })
+    }),
+    new SlashCommandOption('Heading 5', Heading5, (ed) => {
+      ed.update(() => {
+        const selection = $getSelection()
+        if ($isRangeSelection(selection)) {
+          $setBlocksType(selection, () => $createHeadingNode('h5'))
+        }
+      })
+    }),
+    new SlashCommandOption('Heading 6', Heading6, (ed) => {
+      ed.update(() => {
+        const selection = $getSelection()
+        if ($isRangeSelection(selection)) {
+          $setBlocksType(selection, () => $createHeadingNode('h6'))
+        }
+      })
+    }),
+    new SlashCommandOption('Image', Image, () => {
+      editorEventBus.emit('trigger:image-upload')
     }),
     new SlashCommandOption('Table', Table, (ed) => {
       ed.focus(() => {
         ed.dispatchCommand(INSERT_TABLE_COMMAND, { rows: 3, columns: 3 })
       })
     }),
-    new SlashCommandOption('Video', Video, (ed) => {
-      ed.dispatchCommand(INSERT_VIDEO_COMMAND, {
-        src: 'https://www.w3schools.com/html/mov_bbb.mp4',
-        width: 320,
-        height: 180,
-      })
+    new SlashCommandOption('Video', Video, () => {
+      editorEventBus.emit('trigger:video-upload')
     }),
-    new SlashCommandOption('Attachment', Paperclip, (ed) => {
-      ed.dispatchCommand(INSERT_ATTACHMENT_COMMAND, {
-        url: '#',
-        fileName: 'document.pdf',
-        fileSize: 256 * 1024,
-        mimeType: 'application/pdf',
-      })
+    new SlashCommandOption('Attachment', Paperclip, () => {
+      editorEventBus.emit('trigger:attachment-upload')
     }),
     new SlashCommandOption('Action Item', CheckSquare, (ed) => {
       ed.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined)

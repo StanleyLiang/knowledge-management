@@ -8,6 +8,7 @@ import {
   $createParagraphNode,
   type TextFormatType,
 } from 'lexical'
+import { editorEventBus } from '../../utils/eventBus'
 import { $setBlocksType } from '@lexical/selection'
 import { $createHeadingNode, $createQuoteNode, type HeadingTagType } from '@lexical/rich-text'
 import {
@@ -99,6 +100,22 @@ export function Toolbar() {
   const { editor, state } = useToolbarState()
   const imageInputRef = React.useRef<HTMLInputElement>(null)
   const videoInputRef = React.useRef<HTMLInputElement>(null)
+  const attachmentInputRef = React.useRef<HTMLInputElement>(null)
+
+  // Listen for file picker triggers from slash command / other sources
+  React.useEffect(() => {
+    const onImage = () => imageInputRef.current?.click()
+    const onVideo = () => videoInputRef.current?.click()
+    const onAttachment = () => attachmentInputRef.current?.click()
+    editorEventBus.on('trigger:image-upload', onImage)
+    editorEventBus.on('trigger:video-upload', onVideo)
+    editorEventBus.on('trigger:attachment-upload', onAttachment)
+    return () => {
+      editorEventBus.off('trigger:image-upload', onImage)
+      editorEventBus.off('trigger:video-upload', onVideo)
+      editorEventBus.off('trigger:attachment-upload', onAttachment)
+    }
+  }, [])
 
   const formatText = (format: TextFormatType) => {
     editor.dispatchCommand(FORMAT_TEXT_COMMAND, format)
@@ -148,6 +165,24 @@ export function Toolbar() {
           const file = e.target.files?.[0]
           if (file) {
             editor.dispatchCommand(UPLOAD_VIDEO_COMMAND, file)
+            e.target.value = ''
+          }
+        }}
+      />
+      <input
+        ref={attachmentInputRef}
+        type="file"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) {
+            // TODO: dispatch UPLOAD_ATTACHMENT_COMMAND when implemented
+            editor.dispatchCommand(INSERT_ATTACHMENT_COMMAND, {
+              url: '#',
+              fileName: file.name,
+              fileSize: file.size,
+              mimeType: file.type,
+            })
             e.target.value = ''
           }
         }}
@@ -374,14 +409,7 @@ export function Toolbar() {
       </Tooltip>
 
       <Tooltip content="Attachment">
-        <Button variant="ghost" size="icon" onClick={() => {
-          editor.dispatchCommand(INSERT_ATTACHMENT_COMMAND, {
-            url: '#',
-            fileName: 'document.pdf',
-            fileSize: 1024 * 256,
-            mimeType: 'application/pdf',
-          })
-        }}>
+        <Button variant="ghost" size="icon" onClick={() => attachmentInputRef.current?.click()}>
           <Paperclip size={16} />
         </Button>
       </Tooltip>
@@ -408,7 +436,7 @@ export function Toolbar() {
         <DropdownItem onClick={() => setBlockType('quote')}>
           <Quote size={16} /> Quote
         </DropdownItem>
-        <DropdownItem onClick={() => editor.dispatchCommand(INSERT_CODE_SNIPPET_COMMAND, { code: '// Your code here\nconsole.log("Hello World");', language: 'javascript' })}>
+        <DropdownItem onClick={() => editor.dispatchCommand(INSERT_CODE_SNIPPET_COMMAND, { code: '', language: 'javascript' })}>
           <Braces size={16} /> Code Snippet
         </DropdownItem>
         <DropdownItem onClick={() => editor.dispatchCommand(INSERT_MERMAID_COMMAND, { source: 'graph TD\n    A[Start] --> B[Process] --> C[End]' })}>
