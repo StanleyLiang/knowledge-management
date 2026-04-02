@@ -52,3 +52,22 @@ export interface UpdatePageInput {
   title?: string
   content?: Record<string, unknown>
 }
+
+export interface PageTemplate {
+  id: string
+  name: string
+  description: string | null
+  icon: string | null
+  content: Record<string, unknown>
+  sortOrder: number
+}
+
+export interface SearchResult {
+  id: string
+  title: string
+  status: string
+  spaceId: string
+  spaceName: string
+  createdAt: string
+  updatedAt: string
+}

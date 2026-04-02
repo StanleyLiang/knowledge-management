@@ -33,6 +33,7 @@ export const pageRoutes: FastifyPluginAsync = async (app) => {
       const page = await prisma.page.create({
         data: {
           title: request.body.title ?? 'Untitled',
+          content: request.body.content ?? undefined,
           spaceId: request.params.spaceId,
         },
       })

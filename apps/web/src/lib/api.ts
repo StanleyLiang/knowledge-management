@@ -1,4 +1,4 @@
-import type { Space, SpaceWithPages, PageSummary, Page, PageVersion, PageVersionSummary, CreateSpaceInput, UpdatePageInput } from './types'
+import type { Space, SpaceWithPages, PageSummary, Page, PageVersion, PageVersionSummary, PageTemplate, CreateSpaceInput, UpdatePageInput, SearchResult } from './types'
 
 const BASE_URL = typeof window === 'undefined'
   ? (process.env.API_URL || 'http://localhost:3001') + '/api'
@@ -30,7 +30,7 @@ export const api = {
   pages: {
     list: (spaceId: string) => request<PageSummary[]>(`/spaces/${spaceId}/pages`),
     get: (id: string) => request<Page>(`/pages/${id}`),
-    create: (spaceId: string, data?: { title?: string }) =>
+    create: (spaceId: string, data?: { title?: string; content?: Record<string, unknown> }) =>
       request<Page>(`/spaces/${spaceId}/pages`, { method: 'POST', body: JSON.stringify(data ?? {}) }),
     update: (id: string, data: UpdatePageInput) =>
       request<Page>(`/pages/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
@@ -46,5 +46,10 @@ export const api = {
       request<PageVersion>(`/pages/${id}/versions/${versionId}`),
     restore: (id: string, versionId: string) =>
       request<Page>(`/pages/${id}/restore/${versionId}`, { method: 'POST' }),
+  },
+  search: (query: string) =>
+    request<SearchResult[]>(`/search?q=${encodeURIComponent(query)}`),
+  templates: {
+    list: () => request<PageTemplate[]>('/templates'),
   },
 }

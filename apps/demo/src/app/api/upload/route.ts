@@ -17,35 +17,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    // Validate file type
-    if (!file.type.startsWith('video/')) {
-      return NextResponse.json({ error: 'File must be a video' }, { status: 400 })
+    const isVideo = file.type.startsWith('video/')
+    const isImage = file.type.startsWith('image/')
+
+    if (!isVideo && !isImage) {
+      return NextResponse.json({ error: 'File must be an image or video' }, { status: 400 })
     }
 
     const jobId = crypto.randomUUID()
-    // Use jobId as filename to avoid encoding issues with non-ASCII chars
-    const ext = (file.name || 'video.mp4').split('.').pop() || 'mp4'
-    const key = `uploads/${jobId}.${ext}`
+    const ext = (file.name || 'file').split('.').pop() || (isImage ? 'png' : 'mp4')
+    const prefix = isImage ? 'images' : 'uploads'
+    const key = `${prefix}/${jobId}.${ext}`
 
     // 1. Upload to MinIO
     const buffer = Buffer.from(await file.arrayBuffer())
     await uploadToMinio(BUCKET, key, buffer, file.type)
 
-    // 2. Publish NATS JetStream message
-    await publishVideoJob({
-      jobId,
-      inputUrl: `s3://${BUCKET}/${key}`,
-      outputBucket: BUCKET,
-      outputPrefix: `hls/${jobId}/`,
-    })
+    const publicUrl = `${MINIO_PUBLIC_URL}/${BUCKET}/${key}`
 
-    // 3. Return job info
-    const hlsUrl = `${MINIO_PUBLIC_URL}/${BUCKET}/hls/${jobId}/master.m3u8`
+    // 2. Video: also publish NATS conversion job
+    if (isVideo) {
+      await publishVideoJob({
+        jobId,
+        inputUrl: `s3://${BUCKET}/${key}`,
+        outputBucket: BUCKET,
+        outputPrefix: `hls/${jobId}/`,
+      })
 
+      const hlsUrl = `${MINIO_PUBLIC_URL}/${BUCKET}/hls/${jobId}/master.m3u8`
+
+      return NextResponse.json({
+        jobId,
+        src: publicUrl,
+        hlsUrl,
+        type: 'video',
+      })
+    }
+
+    // 3. Image: just return the public URL
     return NextResponse.json({
-      jobId,
-      src: `${MINIO_PUBLIC_URL}/${BUCKET}/${key}`,
-      hlsUrl,
+      src: publicUrl,
+      type: 'image',
     })
   } catch (error) {
     console.error('[upload] Error:', error)

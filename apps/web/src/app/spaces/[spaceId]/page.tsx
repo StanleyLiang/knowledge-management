@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, FileText } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
-import { CreatePageButton } from '@/components/pages/CreatePageButton'
+import { TemplatePicker } from '@/components/pages/TemplatePicker'
 import { DeletePageButton } from '@/components/pages/DeletePageButton'
 
 export const dynamic = 'force-dynamic'
@@ -29,7 +29,7 @@ export default async function SpaceDetailPage({ params }: { params: Promise<{ sp
           <h1 className="text-2xl font-bold">{space.name}</h1>
           {space.description && <p className="text-muted-foreground mt-1">{space.description}</p>}
         </div>
-        <CreatePageButton spaceId={spaceId} />
+        <TemplatePicker spaceId={spaceId} />
       </div>
 
       {space.pages.length === 0 ? (

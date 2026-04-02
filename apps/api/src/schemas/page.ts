@@ -2,6 +2,7 @@ import { Type } from '@sinclair/typebox'
 
 export const CreatePageBody = Type.Object({
   title: Type.Optional(Type.String({ minLength: 1, maxLength: 500 })),
+  content: Type.Optional(Type.Any()),
 })
 
 export const UpdatePageBody = Type.Object({

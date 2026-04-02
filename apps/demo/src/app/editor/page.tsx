@@ -292,7 +292,23 @@ export default function EditorPage() {
         return { url: hlsUrl, format: 'hls', jobId }
       }
 
-      // image / attachment: convert to data URL (default fallback)
+      if (type === 'image') {
+        // Upload image to MinIO via API route
+        onStatusChange('uploading')
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const res = await fetch('/api/upload', { method: 'POST', body: formData })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: 'Upload failed' }))
+          throw new Error(err.error || 'Upload failed')
+        }
+
+        const { src } = await res.json()
+        return { url: src }
+      }
+
+      // attachment: convert to data URL (default fallback)
       return new Promise<MediaUploadResult>((resolve) => {
         const reader = new FileReader()
         reader.onload = () => {
