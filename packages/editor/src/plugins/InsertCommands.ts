@@ -39,3 +39,5 @@ export const INSERT_LANDMARK_COMMAND: LexicalCommand<{
 export const UPLOAD_IMAGE_COMMAND: LexicalCommand<File> = createCommand('UPLOAD_IMAGE_COMMAND')
 
 export const UPLOAD_VIDEO_COMMAND: LexicalCommand<File> = createCommand('UPLOAD_VIDEO_COMMAND')
+
+export const UPLOAD_ATTACHMENT_COMMAND: LexicalCommand<File> = createCommand('UPLOAD_ATTACHMENT_COMMAND')

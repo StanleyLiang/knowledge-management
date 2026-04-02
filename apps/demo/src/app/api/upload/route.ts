@@ -20,13 +20,9 @@ export async function POST(request: NextRequest) {
     const isVideo = file.type.startsWith('video/')
     const isImage = file.type.startsWith('image/')
 
-    if (!isVideo && !isImage) {
-      return NextResponse.json({ error: 'File must be an image or video' }, { status: 400 })
-    }
-
     const jobId = crypto.randomUUID()
-    const ext = (file.name || 'file').split('.').pop() || (isImage ? 'png' : 'mp4')
-    const prefix = isImage ? 'images' : 'uploads'
+    const ext = (file.name || 'file').split('.').pop() || 'bin'
+    const prefix = isImage ? 'images' : isVideo ? 'uploads' : 'attachments'
     const key = `${prefix}/${jobId}.${ext}`
 
     // 1. Upload to MinIO
@@ -54,10 +50,13 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 3. Image: just return the public URL
+    // 3. Image / Attachment: return public URL + file metadata
     return NextResponse.json({
       src: publicUrl,
-      type: 'image',
+      type: isImage ? 'image' : 'attachment',
+      fileName: file.name,
+      fileSize: file.size,
+      mimeType: file.type,
     })
   } catch (error) {
     console.error('[upload] Error:', error)

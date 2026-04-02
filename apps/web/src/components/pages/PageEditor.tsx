@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { Editor } from '@lexical-editor/editor'
 import type { SerializedEditorState } from 'lexical'
 import type { MediaUploadResult, MediaType, MediaStatus } from '@lexical-editor/editor'
@@ -12,7 +13,8 @@ import type { Page } from '@/lib/types'
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
-export function PageEditor({ pageId }: { pageId: string }) {
+export function PageEditor({ pageId, spaceId }: { pageId: string; spaceId: string }) {
+  const router = useRouter()
   const [page, setPage] = useState<Page | null>(null)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState<SerializedEditorState | null>(null)
@@ -119,8 +121,9 @@ export function PageEditor({ pageId }: { pageId: string }) {
     }
     setPublishing(true)
     try {
-      const updated = await api.pages.publish(pageId)
-      setPage(updated)
+      await api.pages.publish(pageId)
+      // Navigate back to view mode after publish
+      router.push(`/spaces/${spaceId}/pages/${pageId}`)
     } finally {
       setPublishing(false)
     }

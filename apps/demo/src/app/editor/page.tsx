@@ -308,14 +308,19 @@ export default function EditorPage() {
         return { url: src }
       }
 
-      // attachment: convert to data URL (default fallback)
-      return new Promise<MediaUploadResult>((resolve) => {
-        const reader = new FileReader()
-        reader.onload = () => {
-          resolve({ url: reader.result as string })
-        }
-        reader.readAsDataURL(file)
-      })
+      // attachment: upload to MinIO
+      onStatusChange('uploading')
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await fetch('/api/upload', { method: 'POST', body: formData })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Upload failed' }))
+        throw new Error(err.error || 'Upload failed')
+      }
+
+      const { src, fileName, fileSize, mimeType } = await res.json()
+      return { url: src, fileName, fileSize, mimeType }
     },
     [],
   )

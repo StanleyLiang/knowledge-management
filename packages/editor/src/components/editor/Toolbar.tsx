@@ -72,6 +72,7 @@ import {
   INSERT_MERMAID_COMMAND,
   INSERT_LANDMARK_COMMAND,
   UPLOAD_IMAGE_COMMAND,
+  UPLOAD_ATTACHMENT_COMMAND,
 } from '../../plugins/InsertCommands'
 import React from 'react'
 import { useToolbarState, type BlockType } from '../../hooks/useToolbarState'
@@ -176,13 +177,7 @@ export function Toolbar() {
         onChange={(e) => {
           const file = e.target.files?.[0]
           if (file) {
-            // TODO: dispatch UPLOAD_ATTACHMENT_COMMAND when implemented
-            editor.dispatchCommand(INSERT_ATTACHMENT_COMMAND, {
-              url: '#',
-              fileName: file.name,
-              fileSize: file.size,
-              mimeType: file.type,
-            })
+            editor.dispatchCommand(UPLOAD_ATTACHMENT_COMMAND, file)
             e.target.value = ''
           }
         }}

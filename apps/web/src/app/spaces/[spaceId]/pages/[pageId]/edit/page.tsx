@@ -27,7 +27,7 @@ export default async function EditPagePage({
           </Button>
         </Link>
       </div>
-      <PageEditor pageId={pageId} />
+      <PageEditor pageId={pageId} spaceId={spaceId} />
     </div>
   )
 }

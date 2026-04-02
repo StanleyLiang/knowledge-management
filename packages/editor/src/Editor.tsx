@@ -19,6 +19,7 @@ import { OnChangePlugin } from './plugins/OnChangePlugin'
 import { CustomNodesPlugin } from './plugins/CustomNodesPlugin'
 import { TablePlugin } from './plugins/TablePlugin'
 import { VideoUploadPlugin } from './plugins/VideoUploadPlugin'
+import { AttachmentUploadPlugin } from './plugins/AttachmentUploadPlugin'
 import { VideoConvertPlugin } from './plugins/VideoConvertPlugin'
 import { TableActionToolbar } from './components/editor/TableActionToolbar'
 import { TableColumnResizePlugin } from './plugins/TableColumnResizePlugin'
@@ -149,6 +150,7 @@ export function Editor({
         <CustomNodesPlugin />
         <ImageUploadPlugin onUpload={upload?.onUpload} />
         <VideoUploadPlugin onUpload={upload?.onUpload} />
+        <AttachmentUploadPlugin onUpload={upload?.onUpload} />
         {videoConvert && <VideoConvertPlugin {...videoConvert} />}
         <SlashCommandPlugin />
         <MarkdownPlugin />
