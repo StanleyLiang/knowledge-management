@@ -1,8 +1,8 @@
 # Lexical Editor/Viewer Library — Product Requirements Document
 
-> **Version:** 1.1
-> **Last Updated:** 2026-03-21
-> **Status:** Draft
+> **Version:** 2.0
+> **Last Updated:** 2026-04-02
+> **Status:** Implementation Complete (Core Features)
 
 ---
 
@@ -18,13 +18,18 @@
 
 ## 2. Tech Stack
 
-- Lexical.js (latest v0.41)
-- shadcn/ui + Tailwind CSS
+- Lexical.js (v0.41)
+- shadcn/ui + Tailwind CSS 4
+- React 19 + Next.js 15
 - dayjs
 - framer-motion
-- lodash-es
 - lucide-react
-- react-simple-maps（Landmark 地圖渲染，D3-geo + TopoJSON）
+- react-simple-maps + taiwan-atlas（Landmark 地圖渲染，台灣：縣市級 TopoJSON；世界：Natural Earth 50m + admin-1 邊界）
+- hls.js（HLS 串流播放）
+- Prism.js（程式碼語法高亮）
+- CodeMirror 6（Mermaid 編輯器）
+- sonner（Toast 通知）
+- nats.ws（瀏覽器端 NATS WebSocket 連線）
 - **Event Bus:** mitt（低耦合對外溝通）
 - **i18n:** i18next + react-i18next（Vite/Next.js 通用）
 
@@ -32,11 +37,38 @@
 
 引用者可客製化：
 - **Toolbar** — 可自訂 toolbar items 和排列
-- **Plugins** — 可擴展或替換 plugins
+- **Plugins** — 透過 `plugins` prop 統一配置，可選擇性啟用
 - **Style** — 可覆寫主題樣式
 - **i18n** — 可注入翻譯資源
 - **UI 元件** — 優先使用 shadcn/ui 現有元件，避免重複造輪子
 - **Icon** — UI 圖示優先使用 Lucide React（emoji 除外）
+- **Title** — 可選的文件標題輸入框（`title` + `onTitleChange` props）
+
+### Editor Props 結構
+
+```tsx
+<Editor
+  // 核心 props
+  initialEditorState={state}
+  onChange={onChange}
+  editable={true}
+  theme={theme}
+  placeholder="Start writing..."
+  title="Document Title"
+  onTitleChange={setTitle}
+
+  // Plugin 配置統一入口
+  plugins={{
+    upload: { onUpload: handleUpload },
+    videoConvert: { natsWsUrl: 'ws://...', pollInterval: 3000 },
+    mention: { onSearch: searchUsers, onHover: hoverUser },
+    tags: { value: tags, onChange: setTags, suggestions: [] },
+    tableOfContents: true,
+    colorPresets: ['#ff0000', '#00ff00'],
+    codeSnippet: { languages: [...] },
+  }}
+/>
+```
 
 ---
 
@@ -89,19 +121,25 @@ Undo Redo | Heading▾ | Bold Italic MoreFormat▾ | TextColor▾ TextBgColor▾
 
 ## 5. Media 節點共通規格
 
-### 狀態機（Image / Video / Attachment）
+### 狀態機（Image / Video）
 
 ```
-initial → uploading → converting → success
-                                 → error（顯示錯誤訊息 + 重試）
+Image:  initial → uploading → ready | error
+Video:  initial → uploading → converting → ready | error
 ```
+
+### 插入流程
+
+- **Image**: 點擊 Image 按鈕 → file picker（`accept="image/*"`）→ 上傳 MinIO → 顯示圖片
+- **Video**: 點擊 Video 按鈕 → file picker（`accept="video/mp4"`）→ 上傳 MinIO → NATS 轉檔 → HLS 播放
+- 上傳期間顯示 blob URL/data URL 預覽 + spinner overlay
 
 ### 上傳 Interface
 
-引用者可透過 **function callback** 自訂檔案上傳方式：
+透過 `plugins.upload.onUpload` callback 自訂上傳方式：
 
 ```ts
-onUpload?: (
+type OnUpload = (
   file: File,
   type: 'image' | 'video' | 'attachment',
   onStatusChange: (status: 'uploading' | 'converting') => void
@@ -112,14 +150,35 @@ onUpload?: (
   fileName?: string
   fileSize?: number
   mimeType?: string
+  format?: 'mp4' | 'hls'   // Video 格式
+  jobId?: string            // Video 轉檔 job ID（觸發 VideoConvertPlugin）
 }>
 ```
 
 - **有提供 `onUpload`**：呼叫引用者的 function，取得上傳後的 URL 及 metadata
 - **未提供 `onUpload`（預設）**：自動將檔案轉為 **data URL** 作為節點的 source
-- **狀態通知**：引用者可透過 `onStatusChange` callback 通知中間狀態變化
+- **Video 轉檔**：若回傳 `jobId`，VideoUploadPlugin 設 status='converting'，由 `VideoConvertPlugin` 接管（NATS WS 訂閱 + polling）
 - **不支援進度百分比**：uploading / converting 狀態僅顯示 loading 指示
-- **錯誤處理**：Promise rejection 映射到 error 狀態，顯示錯誤訊息 + 重試按鈕
+- **錯誤處理**：Promise rejection 映射到 error 狀態，顯示錯誤訊息
+
+### VideoConvertPlugin（可選）
+
+```tsx
+plugins={{
+  videoConvert: {
+    natsWsUrl: 'ws://localhost:9222',       // NATS WebSocket URL
+    statusSubjectPrefix: 'video.convert.status', // 狀態 subject prefix
+    pollInterval: 3000,                     // Fallback polling 間隔 (ms)
+  }
+}}
+```
+
+- 監聽 status='converting' + jobId 的 VideoNode
+- 建立 NATS WebSocket 訂閱 `{prefix}.{jobId}`
+- 收到 `completed` → 更新 node status='ready', format='hls'
+- 收到 `failed` → 更新 node status='error'
+- Fallback: 定期 HEAD 請求 HLS URL
+- 不配置 `videoConvert` → plugin 不掛載，無額外開銷
 
 ### URL 裝飾 Interface
 
@@ -345,43 +404,40 @@ onDownload?: (
 
 ### 顯示形式
 
-- **地圖卡片** — 靜態世界地圖 + 標記 pin + 地點名稱
-- 引用者可透過設定切換為**純文字模式**（僅顯示地點名稱，不渲染地圖）
-- 地圖使用 **react-simple-maps**（D3-geo + TopoJSON，純前端、無外部服務依賴）
+- **Inline tag** — 藍色圓角 pill 標籤（`📍 地點名稱`），可嵌入 paragraph 中與文字並列
+- 一個 Landmark 節點代表一個地點（name, latitude, longitude）
+- 多個地點各自插入獨立的 Landmark tag
+
+### 互動
+
+- **點擊 tag** → 開啟 portrait modal 顯示地圖
+- Modal 自動偵測座標位置：
+  - **台灣範圍**（lat 21.8-25.4, lng 119.3-122.1）→ 使用 `taiwan-atlas` TopoJSON 顯示 22 縣市邊界
+  - **其他國家** → 使用 `react-simple-maps` + Natural Earth 50m + admin-1 省界
+- 地圖效果：漸層陸地填色、陰影、水域背景、藍色 marker + 光暈
+- 點擊 overlay 或 ✕ 按鈕關閉 modal
 
 ### 建立方式
 
-- 從 MoreInsert dropdown 選擇 Landmark
-- 彈出靜態世界地圖 overlay，顯示引用者預定義的所有 landmark 標記
-- 點擊地圖上的 pin → 選取該 landmark → 插入節點
+- 從 MoreInsert dropdown 或 `/landmark` slash command 插入
+- 預設插入 Taipei 101（可透過 command payload 自訂）
 
 ### Landmark 資料 Interface
 
-引用者提供預定義的 landmark 清單：
-
 ```ts
-landmark?: {
-  // 預定義的 landmark 列表
-  items: Array<{
-    id: string
-    name: string
-    latitude: number
-    longitude: number
-  }>
-
-  // 顯示模式（預設 'map'）
-  displayMode?: 'map' | 'text'
+// 序列化格式
+{
+  type: 'landmark',
+  version: 1,
+  name: string,        // 地點名稱
+  latitude: number,    // 緯度
+  longitude: number,   // 經度
 }
 ```
 
-### 浮動工具列（Block Selection Popover）
+### 無浮動工具列
 
-選取 Landmark 時，上方浮現 popover toolbar：
-
-| # | Item | 類型 | 說明 |
-|---|------|------|------|
-| 1 | Edit | Button | 重新開啟地圖選取介面，更換 landmark |
-| 2 | Delete | Button | 刪除 Landmark 節點 |
+Landmark 為 inline tag，點擊開啟 modal，不需要浮動工具列。
 
 ---
 
@@ -1175,9 +1231,70 @@ interface ViewerProps {
 
 ---
 
+## 27. 實作狀態總覽
+
+### 核心功能
+
+| 功能 | 狀態 | 說明 |
+|------|------|------|
+| Editor + Viewer | ✅ | 共用節點定義，分離渲染邏輯 |
+| Toolbar（21 項） | ✅ | 所有按鈕/dropdown 已實作 |
+| Slash Command (/) | ✅ | 17 個選項，鍵盤導航 |
+| Markdown shortcuts | ✅ | 標題、粗體、斜體、列表、引用、行內程式碼、連結 |
+| ```` ```lang ```` → CodeSnippetNode | ✅ | 自訂 transformer 取代 Lexical 內建 CodeNode |
+| @mention typeahead | ✅ | 搜尋 callback + avatar + 部門 |
+| :emoji picker | ✅ | 40+ emoji，名稱搜尋 |
+| Drag & Drop 排序 | ✅ | grip handle + 插入指示線 |
+| Floating Link Editor | ✅ | URL 顯示/編輯/刪除/開啟 |
+| Table of Contents | ✅ | 可選 sidebar，heading 連結 |
+| Page Tags | ✅ | chip UI + suggestions |
+| Title 輸入框 | ✅ | 可選 `title` + `onTitleChange` |
+| `plugins` 統一配置 | ✅ | 取代扁平 props |
+
+### 節點
+
+| 節點 | 狀態 | 說明 |
+|------|------|------|
+| Image | ✅ | 上傳 MinIO、resize handles、caption、alignment、lightbox |
+| Video | ✅ | 上傳 MinIO → NATS 轉檔 → HLS 播放、resize、不自動播放 |
+| Attachment | ✅ | 行內連結、file icon、file size |
+| Table | ✅ | 浮動工具列（Row/Col CRUD、Merge/Split、BG Color、Align、Header、Delete）、column resize、drag reorder、merge conflict guard + toast |
+| Code Snippet | ✅ | Prism.js 14 語言、light theme、line numbers、copy、overlay highlight、escape 跳脫 |
+| Mermaid | ✅ | CodeMirror 6 portal editor、500ms debounce 即時預覽、resize |
+| Landmark | ✅ | Inline tag、portrait modal、台灣縣市邊界（taiwan-atlas）、世界地圖 + admin-1（Natural Earth） |
+| Bookmark | ✅ | 卡片、icon + title + URL |
+| Divider | ✅ | `<hr>` |
+| Collapsible | ✅ | `<details>/<summary>`、展開/收合 |
+| Mention | ✅ | Inline badge、hover card |
+
+### 上傳管線
+
+| 環節 | 狀態 | 說明 |
+|------|------|------|
+| Image → MinIO | ✅ | POST /api/upload → `images/<uuid>.<ext>` |
+| Video → MinIO → NATS → HLS | ✅ | POST /api/upload → NATS JetStream → video-converter worker → HLS segments |
+| VideoConvertPlugin | ✅ | NATS WS 訂閱 + polling fallback，可選啟用 |
+| Attachment | ⚠️ | 目前使用 data URL fallback，未上傳 MinIO |
+
+### 待完成 / 未實作
+
+| 功能 | 狀態 | 說明 |
+|------|------|------|
+| Image Viewer (Lightbox) | 🔲 | PRD Section 6 — zoom/pan/pinch portal |
+| Presentation Mode | 🔲 | PRD Section 23 — slide/scroll 模式 |
+| Copy-Paste 規格 | 🔲 | PRD Section 24 — HTML import、image clipboard |
+| Link to Page 搜尋 | 🔲 | PRD Section 4 — `onPageSearch` callback |
+| i18n 實作 | 🔲 | i18next prop 存在但未使用 |
+| Attachment 上傳 MinIO | 🔲 | 目前使用 data URL |
+| `decorateUrl` 實作 | 🔲 | Type 存在但未 wired |
+| Keyboard Shortcuts | 🔲 | 無自訂快捷鍵設定 |
+
+---
+
 ## Revision History
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 2.0 | 2026-04-02 | 更新 Tech Stack、Editor Interface (plugins config)、Media 上傳流程 (MinIO + NATS + HLS)、Landmark (inline tag + Taiwan map)、實作狀態總覽 |
 | 1.1 | 2026-03-21 | 新增 Copy-Paste 規格、Emoji Picker、Mermaid 寬高控制、React Best Practices |
 | 1.0 | 2026-03-12 | Initial PRD — Editor/Viewer 完整規格 |

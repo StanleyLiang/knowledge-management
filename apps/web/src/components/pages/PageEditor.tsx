@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Editor } from '@lexical-editor/editor'
 import type { SerializedEditorState } from 'lexical'
+import type { MediaUploadResult, MediaType, MediaStatus } from '@lexical-editor/editor'
 import { Globe, Loader2 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -61,6 +62,54 @@ export function PageEditor({ pageId }: { pageId: string }) {
     setContent(editorState)
     scheduleSave({ content: editorState as unknown as Record<string, unknown> })
   }
+
+  const handleUpload = useCallback(
+    async (
+      file: File,
+      type: MediaType,
+      onStatusChange: (status: MediaStatus) => void,
+    ): Promise<MediaUploadResult> => {
+      if (type === 'video') {
+        onStatusChange('uploading')
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const res = await fetch('/api/upload', { method: 'POST', body: formData })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: 'Upload failed' }))
+          throw new Error(err.error || 'Upload failed')
+        }
+
+        const { jobId, hlsUrl } = await res.json()
+        return { url: hlsUrl, format: 'hls', jobId }
+      }
+
+      if (type === 'image') {
+        onStatusChange('uploading')
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const res = await fetch('/api/upload', { method: 'POST', body: formData })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: 'Upload failed' }))
+          throw new Error(err.error || 'Upload failed')
+        }
+
+        const { src } = await res.json()
+        return { url: src }
+      }
+
+      // attachment: convert to data URL fallback
+      return new Promise<MediaUploadResult>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => {
+          resolve({ url: reader.result as string })
+        }
+        reader.readAsDataURL(file)
+      })
+    },
+    [],
+  )
 
   async function handlePublish() {
     // Flush any pending save first
@@ -132,6 +181,14 @@ export function PageEditor({ pageId }: { pageId: string }) {
           initialEditorState={page.content && (page.content.root as Record<string, unknown>)?.version ? JSON.stringify(page.content) : undefined}
           onChange={handleContentChange}
           placeholder="Start writing..."
+          plugins={{
+            upload: { onUpload: handleUpload },
+            videoConvert: {
+              natsWsUrl: 'ws://localhost:9222',
+              statusSubjectPrefix: 'video.convert.status',
+              pollInterval: 3000,
+            },
+          }}
         />
       </div>
     </div>
