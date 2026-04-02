@@ -314,9 +314,9 @@ export default function EditorPage() {
         plugins={{
           upload: { onUpload: handleUpload },
           videoConvert: {
-            natsWsUrl: 'ws://localhost:9222',
-            statusSubjectPrefix: 'video.convert.status',
-            pollInterval: 3000,
+            natsWsUrl: process.env.NEXT_PUBLIC_NATS_WS_URL || 'ws://localhost:9222',
+            statusSubjectPrefix: process.env.NEXT_PUBLIC_NATS_STATUS_PREFIX || 'video.convert.status',
+            pollInterval: Number(process.env.NEXT_PUBLIC_VIDEO_CONVERT_POLL_INTERVAL) || 3000,
           },
         }}
       />

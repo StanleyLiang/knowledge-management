@@ -6,7 +6,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const MINIO_PUBLIC_URL = process.env.MINIO_PUBLIC_URL || 'http://localhost:9000'
-const BUCKET = 'videos'
+const BUCKET = process.env.MINIO_BUCKET || 'videos'
 
 export async function POST(request: NextRequest) {
   try {
