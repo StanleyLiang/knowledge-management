@@ -339,6 +339,7 @@ export default function EditorPage() {
             statusSubjectPrefix: process.env.NEXT_PUBLIC_NATS_STATUS_PREFIX || 'video.convert.status',
             pollInterval: Number(process.env.NEXT_PUBLIC_VIDEO_CONVERT_POLL_INTERVAL) || 3000,
           },
+          tableOfContents: true,
         }}
       />
 

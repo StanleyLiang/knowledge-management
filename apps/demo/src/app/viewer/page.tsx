@@ -265,7 +265,7 @@ export default function ViewerPage() {
     <div>
       <h1 className="text-2xl font-bold mb-6">Viewer</h1>
       <div className="border border-gray-200 rounded-lg">
-        <Viewer initialEditorState={JSON.stringify(VIEWER_DEMO_STATE)} />
+        <Viewer initialEditorState={JSON.stringify(VIEWER_DEMO_STATE)} showTableOfContents />
       </div>
     </div>
   )

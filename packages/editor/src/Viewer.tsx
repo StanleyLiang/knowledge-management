@@ -25,6 +25,7 @@ import {
   CollapsibleTitleNode,
   CollapsibleContentNode,
 } from './nodes/CollapsibleNodes'
+import { TableOfContentsPlugin } from './plugins/TableOfContentsPlugin'
 import type { ViewerProps } from './types'
 
 const VIEWER_NODES = [
@@ -55,6 +56,7 @@ export function Viewer({
   title,
   initialEditorState,
   theme,
+  showTableOfContents = false,
 }: ViewerProps) {
   const initialConfig = {
     namespace: 'LexicalViewer',
@@ -82,6 +84,7 @@ export function Viewer({
           ErrorBoundary={LexicalErrorBoundary}
         />
         <TablePlugin />
+        {showTableOfContents && <TableOfContentsPlugin />}
       </div>
     </LexicalComposer>
   )
