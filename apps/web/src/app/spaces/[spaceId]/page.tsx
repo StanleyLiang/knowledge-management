@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, FileText } from 'lucide-react'
+import { FileText, Pencil, MoreHorizontal } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { TemplatePicker } from '@/components/pages/TemplatePicker'
-import { DeletePageButton } from '@/components/pages/DeletePageButton'
+import { PageActions } from '@/components/pages/PageActions'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,10 +21,17 @@ export default async function SpaceDetailPage({ params }: { params: Promise<{ sp
 
   return (
     <div>
-      <Link href="/spaces" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
-        <ArrowLeft className="h-4 w-4" />
-        Back to Spaces
-      </Link>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild><Link href="/spaces">Spaces</Link></BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{space.name}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -38,25 +47,44 @@ export default async function SpaceDetailPage({ params }: { params: Promise<{ sp
           <p>No pages yet. Create one to get started.</p>
         </div>
       ) : (
-        <div className="border rounded-lg divide-y bg-white">
-          {space.pages.map((page) => (
-            <div key={page.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
-              <Link href={`/spaces/${spaceId}/pages/${page.id}`} className="flex-1 min-w-0">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="font-medium truncate">{page.title}</span>
-                  <Badge variant="secondary" className="text-xs shrink-0">
-                    {page.status.toLowerCase()}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground ml-7 mt-0.5">
-                  {page.author && <span>{page.author} · </span>}
-                  Updated {new Date(page.updatedAt).toLocaleDateString()}
-                </p>
-              </Link>
-              <DeletePageButton pageId={page.id} />
-            </div>
-          ))}
+        <div className="border rounded-lg bg-white">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Author</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Updated</TableHead>
+                <TableHead className="w-10" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {space.pages.map((page) => (
+                <TableRow key={page.id}>
+                  <TableCell>
+                    <Link href={`/spaces/${spaceId}/pages/${page.id}`} className="flex items-center gap-2 hover:underline">
+                      <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="font-medium">{page.title}</span>
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {page.author ?? '—'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={page.status === 'PUBLISHED' ? 'default' : 'secondary'} className="text-xs">
+                      {page.status.toLowerCase()}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {new Date(page.updatedAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <PageActions pageId={page.id} spaceId={spaceId} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>

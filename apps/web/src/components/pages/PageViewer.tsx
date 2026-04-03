@@ -2,6 +2,8 @@
 
 import { Viewer } from '@lexical-editor/editor'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Separator } from '@/components/ui/separator'
 import type { Page } from '@/lib/types'
 
 function isValidEditorState(content: Record<string, unknown>): boolean {
@@ -15,6 +17,10 @@ function formatDate(dateStr: string) {
     month: 'long',
     day: 'numeric',
   })
+}
+
+function getInitials(name: string) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
 }
 
 export function PageViewer({ page }: { page: Page }) {
@@ -34,20 +40,20 @@ export function PageViewer({ page }: { page: Page }) {
   return (
     <div>
       <div className="border rounded-lg bg-white">
-        {/* Title */}
         <h1 className="text-4xl font-bold leading-tight px-4 pt-4 pb-2">
           {displayTitle}
         </h1>
 
-        {/* Author + metadata row */}
-        <div className="flex items-center gap-3 px-4 pb-4 border-b">
+        <div className="flex items-center gap-3 px-4 pb-4">
           {page.author && (
             <div className="flex items-center gap-2">
-              <img
-                src={`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(page.author)}&radius=50&backgroundColor=c0aede`}
-                alt={page.author}
-                className="h-7 w-7 rounded-full"
-              />
+              <Avatar className="h-7 w-7">
+                <AvatarImage
+                  src={`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(page.author)}&radius=50&backgroundColor=c0aede`}
+                  alt={page.author}
+                />
+                <AvatarFallback className="text-xs">{getInitials(page.author)}</AvatarFallback>
+              </Avatar>
               <span className="text-sm font-medium">{page.author}</span>
             </div>
           )}
@@ -68,7 +74,8 @@ export function PageViewer({ page }: { page: Page }) {
           )}
         </div>
 
-        {/* Content */}
+        <Separator />
+
         {hasContent ? (
           <Viewer initialEditorState={JSON.stringify(displayContent)} />
         ) : (

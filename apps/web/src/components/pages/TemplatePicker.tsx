@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, File, ClipboardList, FileText, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
   DialogContent,
@@ -68,7 +69,11 @@ export function TemplatePicker({ spaceId }: { spaceId: string }) {
           <DialogDescription>Start with a template or a blank page.</DialogDescription>
         </DialogHeader>
         {loading ? (
-          <div className="py-8 text-center text-muted-foreground">Loading templates...</div>
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-28 w-full rounded-lg" />
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 mt-2">
             {templates.map((template) => (

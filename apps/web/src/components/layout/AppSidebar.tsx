@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Folder, FileText, ChevronRight } from 'lucide-react'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 import type { SpaceWithPages } from '@/lib/types'
@@ -57,11 +58,12 @@ export function AppSidebar() {
 
   if (loading) {
     return (
-      <div className="w-60 border-r bg-white p-4">
-        <div className="animate-pulse space-y-3">
-          <div className="h-4 bg-gray-200 rounded w-3/4" />
-          <div className="h-4 bg-gray-200 rounded w-1/2" />
-        </div>
+      <div className="w-60 border-r bg-white p-4 space-y-3">
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="h-5 w-36" />
+        <Skeleton className="h-4 w-28 ml-4" />
+        <Skeleton className="h-4 w-24 ml-4" />
+        <Skeleton className="h-5 w-32" />
       </div>
     )
   }

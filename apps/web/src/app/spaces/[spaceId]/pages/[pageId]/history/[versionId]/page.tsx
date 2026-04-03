@@ -1,9 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { VersionViewer } from '@/components/pages/VersionViewer'
 import { RestoreButton } from '@/components/pages/RestoreButton'
 
@@ -18,10 +17,12 @@ export default async function VersionDetailPage({
 
   let version
   let page
+  let space
   try {
-    ;[version, page] = await Promise.all([
+    ;[version, page, space] = await Promise.all([
       api.pages.getVersion(pageId, versionId),
       api.pages.get(pageId),
+      api.spaces.get(spaceId),
     ])
   } catch {
     notFound()
@@ -31,13 +32,29 @@ export default async function VersionDetailPage({
 
   return (
     <div>
-      <Link
-        href={`/spaces/${spaceId}/pages/${pageId}/history`}
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to History
-      </Link>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild><Link href="/spaces">Spaces</Link></BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild><Link href={`/spaces/${spaceId}`}>{space.name}</Link></BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild><Link href={`/spaces/${spaceId}/pages/${pageId}`}>{page.title}</Link></BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild><Link href={`/spaces/${spaceId}/pages/${pageId}/history`}>History</Link></BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>v{version.version}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">

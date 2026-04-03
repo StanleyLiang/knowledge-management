@@ -9,6 +9,7 @@ import { Globe, Loader2 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { Page } from '@/lib/types'
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
@@ -140,7 +141,13 @@ export function PageEditor({ pageId, spaceId }: { pageId: string; spaceId: strin
   }
 
   if (loading || !page) {
-    return <div className="animate-pulse p-8 text-muted-foreground">Loading...</div>
+    return (
+      <div className="space-y-4 p-4">
+        <Skeleton className="h-10 w-3/4" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    )
   }
 
   const isPublished = page.status === 'PUBLISHED'
