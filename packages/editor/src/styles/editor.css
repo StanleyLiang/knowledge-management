@@ -496,8 +496,24 @@
 }
 
 /* Table of Contents */
+/* Editor/Viewer wrapper with TOC */
+.le-editor-wrapper {
+  @apply w-full;
+}
+.le-editor-wrapper-with-toc {
+  @apply flex gap-4;
+}
+.le-editor-wrapper-with-toc > .le-editor-container,
+.le-editor-wrapper-with-toc > .le-viewer-container {
+  @apply flex-1 min-w-0;
+}
+
+/* TOC sidebar */
+.le-toc-sidebar {
+  @apply w-56 shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto;
+}
 .le-toc {
-  @apply border-l-2 border-gray-200 pl-3 py-2 my-2;
+  @apply border-l-2 border-gray-200 pl-3 py-2;
 }
 .le-toc-title {
   @apply text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2;

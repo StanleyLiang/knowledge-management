@@ -114,29 +114,30 @@ export function Editor({
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
-      <div className="le-editor-container">
-        {onTitleChange !== undefined && (
-          <input
-            className="le-editor-title"
-            value={title ?? ''}
-            onChange={(e) => onTitleChange(e.target.value)}
-            placeholder={titlePlaceholder ?? 'Untitled'}
-          />
-        )}
-        <Toolbar />
-        <div className="le-editor-body">
-          <RichTextPlugin
-            contentEditable={
-              <ContentEditable className="le-editor-content" />
-            }
-            placeholder={
-              <div className="le-editor-placeholder">
-                {placeholder}
-              </div>
-            }
-            ErrorBoundary={LexicalErrorBoundary}
-          />
-        </div>
+      <div className={`le-editor-wrapper ${tableOfContents ? 'le-editor-wrapper-with-toc' : ''}`}>
+        <div className="le-editor-container">
+          {onTitleChange !== undefined && (
+            <input
+              className="le-editor-title"
+              value={title ?? ''}
+              onChange={(e) => onTitleChange(e.target.value)}
+              placeholder={titlePlaceholder ?? 'Untitled'}
+            />
+          )}
+          <Toolbar />
+          <div className="le-editor-body">
+            <RichTextPlugin
+              contentEditable={
+                <ContentEditable className="le-editor-content" />
+              }
+              placeholder={
+                <div className="le-editor-placeholder">
+                  {placeholder}
+                </div>
+              }
+              ErrorBoundary={LexicalErrorBoundary}
+            />
+          </div>
         <HistoryPlugin />
         <ListPlugin />
         <LinkPlugin />
@@ -159,10 +160,15 @@ export function Editor({
         <EmojiPlugin />
         <DragDropPlugin />
         <OnChangePlugin onChange={onChange} />
-        {tableOfContents && <TableOfContentsPlugin />}
         {tags && <PageTags value={tags.value} onChange={tags.onChange} suggestions={tags.suggestions} editable={editable} />}
+        </div>
+        {tableOfContents && (
+          <aside className="le-toc-sidebar">
+            <TableOfContentsPlugin />
+          </aside>
+        )}
+        <Toaster position="bottom-center" />
       </div>
-      <Toaster position="bottom-center" />
     </LexicalComposer>
   )
 }

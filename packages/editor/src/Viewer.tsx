@@ -74,17 +74,23 @@ export function Viewer({
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
-      <div className="le-viewer-container">
-        {title && <h1 className="le-viewer-title">{title}</h1>}
-        <RichTextPlugin
-          contentEditable={
-            <ContentEditable className="le-editor-content" />
-          }
-          placeholder={null}
-          ErrorBoundary={LexicalErrorBoundary}
-        />
-        <TablePlugin />
-        {showTableOfContents && <TableOfContentsPlugin />}
+      <div className={`le-editor-wrapper ${showTableOfContents ? 'le-editor-wrapper-with-toc' : ''}`}>
+        <div className="le-viewer-container">
+          {title && <h1 className="le-viewer-title">{title}</h1>}
+          <RichTextPlugin
+            contentEditable={
+              <ContentEditable className="le-editor-content" />
+            }
+            placeholder={null}
+            ErrorBoundary={LexicalErrorBoundary}
+          />
+          <TablePlugin />
+        </div>
+        {showTableOfContents && (
+          <aside className="le-toc-sidebar">
+            <TableOfContentsPlugin />
+          </aside>
+        )}
       </div>
     </LexicalComposer>
   )
