@@ -59,9 +59,12 @@ export default async function HistoryPage({
                 </div>
                 <p className="text-sm text-muted-foreground">{v.title}</p>
               </div>
-              <span className="text-sm text-muted-foreground">
-                {new Date(v.createdAt).toLocaleString()}
-              </span>
+              <div className="text-right shrink-0">
+                {v.author && <p className="text-sm text-muted-foreground">{v.author}</p>}
+                <p className="text-sm text-muted-foreground">
+                  {new Date(v.createdAt).toLocaleString()}
+                </p>
+              </div>
             </Link>
           ))}
         </div>

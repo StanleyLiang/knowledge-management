@@ -3,6 +3,8 @@ import { prisma } from '../lib/prisma.js'
 import { CreatePageBody, UpdatePageBody, SpaceIdParam, PageIdParam, VersionIdParam } from '../schemas/page.js'
 import type { Static } from '@sinclair/typebox'
 
+const DEFAULT_AUTHOR = process.env.DEFAULT_AUTHOR || 'Admin'
+
 export const pageRoutes: FastifyPluginAsync = async (app) => {
   // List pages in a space (no content field)
   app.get<{ Params: Static<typeof SpaceIdParam> }>(
@@ -15,6 +17,7 @@ export const pageRoutes: FastifyPluginAsync = async (app) => {
           id: true,
           title: true,
           status: true,
+          author: true,
           spaceId: true,
           publishedVersionId: true,
           createdAt: true,
@@ -34,6 +37,7 @@ export const pageRoutes: FastifyPluginAsync = async (app) => {
         data: {
           title: request.body.title ?? 'Untitled',
           content: request.body.content ?? undefined,
+          author: DEFAULT_AUTHOR,
           spaceId: request.params.spaceId,
         },
       })
@@ -119,6 +123,7 @@ export const pageRoutes: FastifyPluginAsync = async (app) => {
             version: nextVersion,
             title: page.title,
             content: page.content,
+            author: DEFAULT_AUTHOR,
           },
         }),
         prisma.page.update({
@@ -166,6 +171,7 @@ export const pageRoutes: FastifyPluginAsync = async (app) => {
           pageId: true,
           version: true,
           title: true,
+          author: true,
           createdAt: true,
         },
         orderBy: { version: 'desc' },

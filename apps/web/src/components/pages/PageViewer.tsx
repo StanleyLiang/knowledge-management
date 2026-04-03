@@ -9,10 +9,17 @@ function isValidEditorState(content: Record<string, unknown>): boolean {
   return !!root && root.type === 'root' && typeof root.version === 'number'
 }
 
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
 export function PageViewer({ page }: { page: Page }) {
   const isPublished = page.status === 'PUBLISHED'
 
-  // Show published version content when available, otherwise draft
   const displayContent = isPublished && page.publishedVersion
     ? page.publishedVersion.content
     : page.content
@@ -21,20 +28,52 @@ export function PageViewer({ page }: { page: Page }) {
     ? page.publishedVersion.title
     : page.title
 
-  if (!displayContent || !isValidEditorState(displayContent)) {
-    return <div className="p-8 text-muted-foreground text-center">This page has no content yet.</div>
-  }
+  const publishedDate = page.publishedVersion?.createdAt
+  const hasContent = displayContent && isValidEditorState(displayContent)
 
   return (
     <div>
-      {isPublished && page.publishedVersion && (
-        <div className="flex items-center gap-2 mb-2 px-1">
-          <Badge>Published</Badge>
-          <span className="text-xs text-muted-foreground">v{page.publishedVersion.version}</span>
-        </div>
-      )}
       <div className="border rounded-lg bg-white">
-        <Viewer title={displayTitle} initialEditorState={JSON.stringify(displayContent)} />
+        {/* Title */}
+        <h1 className="text-4xl font-bold leading-tight px-4 pt-4 pb-2">
+          {displayTitle}
+        </h1>
+
+        {/* Author + metadata row */}
+        <div className="flex items-center gap-3 px-4 pb-4 border-b">
+          {page.author && (
+            <div className="flex items-center gap-2">
+              <img
+                src={`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(page.author)}&radius=50&backgroundColor=c0aede`}
+                alt={page.author}
+                className="h-7 w-7 rounded-full"
+              />
+              <span className="text-sm font-medium">{page.author}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            {isPublished && page.publishedVersion ? (
+              <>
+                <Badge>Published</Badge>
+                <span className="text-xs text-muted-foreground">v{page.publishedVersion.version}</span>
+              </>
+            ) : (
+              <Badge variant="secondary">Draft</Badge>
+            )}
+          </div>
+          {publishedDate && (
+            <span className="text-xs text-muted-foreground">
+              Published {formatDate(publishedDate)}
+            </span>
+          )}
+        </div>
+
+        {/* Content */}
+        {hasContent ? (
+          <Viewer initialEditorState={JSON.stringify(displayContent)} />
+        ) : (
+          <div className="p-8 text-muted-foreground text-center">This page has no content yet.</div>
+        )}
       </div>
     </div>
   )

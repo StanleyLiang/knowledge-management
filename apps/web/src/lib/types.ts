@@ -15,6 +15,7 @@ export interface PageSummary {
   id: string
   title: string
   status: string
+  author: string | null
   spaceId: string
   publishedVersionId: string | null
   createdAt: string
@@ -35,6 +36,7 @@ export interface PageVersionSummary {
   pageId: string
   version: number
   title: string
+  author: string | null
   createdAt: string
 }
 

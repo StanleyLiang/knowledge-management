@@ -50,6 +50,7 @@ export default async function SpaceDetailPage({ params }: { params: Promise<{ sp
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground ml-7 mt-0.5">
+                  {page.author && <span>{page.author} · </span>}
                   Updated {new Date(page.updatedAt).toLocaleDateString()}
                 </p>
               </Link>

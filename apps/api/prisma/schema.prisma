@@ -23,6 +23,7 @@ model Page {
   title              String        @default("Untitled")
   content            Json?         @db.JsonB
   status             PageStatus    @default(DRAFT)
+  author             String?
   publishedVersionId String?       @map("published_version_id")
   spaceId            String        @map("space_id")
   space              Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
@@ -41,6 +42,7 @@ model PageVersion {
   version   Int
   title     String
   content   Json     @db.JsonB
+  author    String?
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([pageId])
