@@ -1,6 +1,7 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { useEffect, useCallback } from 'react'
 import {
+  $getNodeByKey,
   $getSelection,
   $isRangeSelection,
   COMMAND_PRIORITY_EDITOR,
@@ -64,7 +65,7 @@ export function VideoUploadPlugin({
         if (onUpload) {
           const result = await onUpload(file, 'video', (status) => {
             editor.update(() => {
-              const node = editor._editorState._nodeMap.get(nodeKey)
+              const node = $getNodeByKey(nodeKey)
               if (node instanceof VideoNode) {
                 const writable = node.getWritable() as VideoNode
                 writable.__status = status === 'converting' ? 'converting' : 'uploading'
@@ -74,7 +75,7 @@ export function VideoUploadPlugin({
 
           // Update node with upload result
           editor.update(() => {
-            const node = editor._editorState._nodeMap.get(nodeKey)
+            const node = $getNodeByKey(nodeKey)
             if (node instanceof VideoNode) {
               const writable = node.getWritable() as VideoNode
               writable.__src = result.url
@@ -96,7 +97,7 @@ export function VideoUploadPlugin({
           // No onUpload — blob URL is the final source (data URL fallback)
           await new Promise((r) => setTimeout(r, 800))
           editor.update(() => {
-            const node = editor._editorState._nodeMap.get(nodeKey)
+            const node = $getNodeByKey(nodeKey)
             if (node instanceof VideoNode) {
               const writable = node.getWritable() as VideoNode
               writable.__status = 'ready'
@@ -109,7 +110,7 @@ export function VideoUploadPlugin({
         URL.revokeObjectURL(blobUrl)
       } catch (err) {
         editor.update(() => {
-          const node = editor._editorState._nodeMap.get(nodeKey)
+          const node = $getNodeByKey(nodeKey)
           if (node instanceof VideoNode) {
             const writable = node.getWritable() as VideoNode
             writable.__status = 'error'

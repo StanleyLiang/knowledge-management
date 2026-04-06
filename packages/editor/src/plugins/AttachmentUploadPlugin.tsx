@@ -1,6 +1,7 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { useEffect, useCallback } from 'react'
 import {
+  $getNodeByKey,
   $getSelection,
   $isRangeSelection,
   COMMAND_PRIORITY_EDITOR,
@@ -51,7 +52,7 @@ export function AttachmentUploadPlugin({
 
           // Update node with final URL from upload
           editor.update(() => {
-            const node = editor._editorState._nodeMap.get(nodeKey)
+            const node = $getNodeByKey(nodeKey)
             if (node instanceof AttachmentNode) {
               const writable = node.getWritable() as AttachmentNode
               writable.__url = result.url
@@ -65,7 +66,7 @@ export function AttachmentUploadPlugin({
           const reader = new FileReader()
           reader.onload = () => {
             editor.update(() => {
-              const node = editor._editorState._nodeMap.get(nodeKey)
+              const node = $getNodeByKey(nodeKey)
               if (node instanceof AttachmentNode) {
                 const writable = node.getWritable() as AttachmentNode
                 writable.__url = reader.result as string

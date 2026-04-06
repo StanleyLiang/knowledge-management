@@ -1,5 +1,6 @@
 import {
   DecoratorNode,
+  $getNodeByKey,
   type DOMExportOutput,
   type LexicalEditor,
   type LexicalNode,
@@ -74,7 +75,7 @@ function AttachmentComponent({
 
   const deleteNode = useCallback(() => {
     editor.update(() => {
-      const node = editor._editorState._nodeMap.get(nodeKey)
+      const node = $getNodeByKey(nodeKey)
       if (node) node.remove()
     })
   }, [editor, nodeKey])

@@ -1,6 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { useEffect, useRef } from 'react'
-import { $getNodeByKey } from 'lexical'
+import { $getNodeByKey, $getRoot } from 'lexical'
 import { VideoNode, $isVideoNode } from '../nodes/VideoNode'
 import { subscribeToJobStatus, type VideoJobStatus } from '../utils/nats-browser'
 import type { VideoConvertConfig } from '../types'
@@ -31,18 +31,17 @@ export function VideoConvertPlugin({
   useEffect(() => {
     const unregister = editor.registerUpdateListener(({ editorState }) => {
       editorState.read(() => {
-        const nodeMap = editorState._nodeMap
-
         // Find all VideoNodes in 'converting' state with a jobId
         const convertingJobs = new Set<string>()
+        const root = $getRoot()
 
-        for (const [key, node] of nodeMap) {
-          if ($isVideoNode(node) && node.__status === 'converting' && node.__jobId) {
-            convertingJobs.add(node.__jobId)
+        for (const child of root.getChildren()) {
+          if ($isVideoNode(child) && child.__status === 'converting' && child.__jobId) {
+            convertingJobs.add(child.__jobId)
 
             // Start tracking if not already
-            if (!trackedJobs.current.has(node.__jobId)) {
-              startTracking(node.__jobId, key, node.__src)
+            if (!trackedJobs.current.has(child.__jobId)) {
+              startTracking(child.__jobId, child.getKey(), child.__src)
             }
           }
         }
@@ -130,7 +129,7 @@ export function VideoConvertPlugin({
     if (!job) return
 
     editor.update(() => {
-      const node = editor._editorState._nodeMap.get(job.nodeKey)
+      const node = $getNodeByKey(job.nodeKey)
       if (node && $isVideoNode(node)) {
         const writable = node.getWritable() as VideoNode
         writable.__status = 'ready'
@@ -147,7 +146,7 @@ export function VideoConvertPlugin({
     if (!job) return
 
     editor.update(() => {
-      const node = editor._editorState._nodeMap.get(job.nodeKey)
+      const node = $getNodeByKey(job.nodeKey)
       if (node && $isVideoNode(node)) {
         const writable = node.getWritable() as VideoNode
         writable.__status = 'error'

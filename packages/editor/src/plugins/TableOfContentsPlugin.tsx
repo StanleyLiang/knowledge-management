@@ -55,7 +55,7 @@ export function TableOfContentsPlugin() {
       }
     }
     update()
-    return editor.registerUpdateListener(() => update())
+    return editor.registerUpdateListener(() => { update() })
   }, [editor])
 
   // On mount, scroll to heading if URL hash matches

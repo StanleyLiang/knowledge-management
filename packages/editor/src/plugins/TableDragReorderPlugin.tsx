@@ -103,7 +103,7 @@ export function TableDragReorderPlugin() {
 
   // Recompute handles on editor update + scroll + resize
   useEffect(() => {
-    const update = () => setHandles(computeHandles(editor))
+    const update = () => { setHandles(computeHandles(editor)) }
     const unregister = editor.registerUpdateListener(update)
     window.addEventListener('scroll', update, true)
     window.addEventListener('resize', update)

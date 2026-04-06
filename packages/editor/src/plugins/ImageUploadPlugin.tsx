@@ -1,6 +1,7 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { useEffect, useCallback } from 'react'
 import {
+  $getNodeByKey,
   $getSelection,
   $isRangeSelection,
   COMMAND_PRIORITY_EDITOR,
@@ -67,7 +68,7 @@ export function ImageUploadPlugin({
           const result = await onUpload(file, 'image', (status) => {
             // Update node status during upload
             editor.update(() => {
-              const node = editor._editorState._nodeMap.get(nodeKey)
+              const node = $getNodeByKey(nodeKey)
               if (node instanceof ImageNode) {
                 const writable = node.getWritable() as ImageNode
                 writable.__status = status === 'converting' ? 'converting' : 'uploading'
@@ -77,7 +78,7 @@ export function ImageUploadPlugin({
 
           // Success — update node with real URL
           editor.update(() => {
-            const node = editor._editorState._nodeMap.get(nodeKey)
+            const node = $getNodeByKey(nodeKey)
             if (node instanceof ImageNode) {
               const writable = node.getWritable() as ImageNode
               writable.__src = result.url
@@ -91,7 +92,7 @@ export function ImageUploadPlugin({
           // Simulate a brief upload delay for demo purposes
           await new Promise((r) => setTimeout(r, 800))
           editor.update(() => {
-            const node = editor._editorState._nodeMap.get(nodeKey)
+            const node = $getNodeByKey(nodeKey)
             if (node instanceof ImageNode) {
               const writable = node.getWritable() as ImageNode
               writable.__status = 'ready'
@@ -101,7 +102,7 @@ export function ImageUploadPlugin({
       } catch (err) {
         // Error
         editor.update(() => {
-          const node = editor._editorState._nodeMap.get(nodeKey)
+          const node = $getNodeByKey(nodeKey)
           if (node instanceof ImageNode) {
             const writable = node.getWritable() as ImageNode
             writable.__status = 'error'
