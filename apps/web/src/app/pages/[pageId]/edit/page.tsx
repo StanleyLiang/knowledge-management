@@ -9,15 +9,18 @@ import { PageEditor } from '@/components/pages/PageEditor'
 export default async function EditPagePage({
   params,
 }: {
-  params: Promise<{ spaceId: string; pageId: string }>
+  params: Promise<{ pageId: string }>
 }) {
-  const { spaceId, pageId } = await params
+  const { pageId } = await params
 
+  let page
   let space
   try {
-    space = await api.spaces.get(spaceId)
+    page = await api.pages.get(pageId)
+    space = await api.spaces.get(page.spaceId)
   } catch {
     space = null
+    page = null
   }
 
   return (
@@ -30,7 +33,7 @@ export default async function EditPagePage({
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink asChild><Link href={`/spaces/${spaceId}`}>{space?.name ?? 'Space'}</Link></BreadcrumbLink>
+              <BreadcrumbLink asChild><Link href={`/spaces/${page?.spaceId ?? ''}`}>{space?.name ?? 'Space'}</Link></BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -40,7 +43,7 @@ export default async function EditPagePage({
         </Breadcrumb>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Link href={`/spaces/${spaceId}/pages/${pageId}`}>
+            <Link href={`/pages/${pageId}`}>
               <Button variant="outline" size="sm">
                 <Eye className="h-4 w-4" />
                 View
@@ -50,7 +53,7 @@ export default async function EditPagePage({
           <TooltipContent>View published page</TooltipContent>
         </Tooltip>
       </div>
-      <PageEditor pageId={pageId} spaceId={spaceId} />
+      <PageEditor pageId={pageId} />
     </div>
   )
 }

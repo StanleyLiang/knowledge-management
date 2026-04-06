@@ -101,7 +101,7 @@ export function AppSidebar() {
                     space.pages.map((page) => (
                       <Link
                         key={page.id}
-                        href={`/spaces/${space.id}/pages/${page.id}`}
+                        href={`/pages/${page.id}`}
                         className={cn(
                           'flex items-center gap-1.5 px-2 py-1.5 text-sm rounded-md hover:bg-gray-100 truncate',
                           page.id === currentPageId && 'bg-gray-100 font-medium',

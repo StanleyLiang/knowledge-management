@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { api } from '@/lib/api'
 
-export function PageActions({ pageId, spaceId }: { pageId: string; spaceId: string }) {
+export function PageActions({ pageId }: { pageId: string }) {
   const router = useRouter()
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -36,7 +36,7 @@ export function PageActions({ pageId, spaceId }: { pageId: string; spaceId: stri
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => router.push(`/spaces/${spaceId}/pages/${pageId}/edit`)}>
+          <DropdownMenuItem onClick={() => router.push(`/pages/${pageId}/edit`)}>
             <Pencil className="h-4 w-4" />
             Edit
           </DropdownMenuItem>

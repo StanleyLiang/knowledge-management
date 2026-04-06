@@ -42,7 +42,7 @@ export function SearchInput() {
   function handleSelect(result: SearchResult) {
     setOpen(false)
     setQuery('')
-    router.push(`/spaces/${result.spaceId}/pages/${result.id}`)
+    router.push(`/pages/${result.id}`)
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {

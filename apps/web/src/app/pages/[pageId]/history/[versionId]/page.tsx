@@ -11,19 +11,19 @@ export const dynamic = 'force-dynamic'
 export default async function VersionDetailPage({
   params,
 }: {
-  params: Promise<{ spaceId: string; pageId: string; versionId: string }>
+  params: Promise<{ pageId: string; versionId: string }>
 }) {
-  const { spaceId, pageId, versionId } = await params
+  const { pageId, versionId } = await params
 
   let version
   let page
   let space
   try {
-    ;[version, page, space] = await Promise.all([
+    ;[version, page] = await Promise.all([
       api.pages.getVersion(pageId, versionId),
       api.pages.get(pageId),
-      api.spaces.get(spaceId),
     ])
+    space = await api.spaces.get(page.spaceId)
   } catch {
     notFound()
   }
@@ -39,15 +39,15 @@ export default async function VersionDetailPage({
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink asChild><Link href={`/spaces/${spaceId}`}>{space.name}</Link></BreadcrumbLink>
+            <BreadcrumbLink asChild><Link href={`/spaces/${page.spaceId}`}>{space.name}</Link></BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink asChild><Link href={`/spaces/${spaceId}/pages/${pageId}`}>{page.title}</Link></BreadcrumbLink>
+            <BreadcrumbLink asChild><Link href={`/pages/${pageId}`}>{page.title}</Link></BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink asChild><Link href={`/spaces/${spaceId}/pages/${pageId}/history`}>History</Link></BreadcrumbLink>
+            <BreadcrumbLink asChild><Link href={`/pages/${pageId}/history`}>History</Link></BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -65,7 +65,7 @@ export default async function VersionDetailPage({
           </span>
         </div>
         {!isCurrent && (
-          <RestoreButton pageId={pageId} versionId={versionId} spaceId={spaceId} />
+          <RestoreButton pageId={pageId} versionId={versionId} />
         )}
       </div>
 

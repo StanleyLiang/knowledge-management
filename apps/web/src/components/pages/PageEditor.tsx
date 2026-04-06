@@ -14,7 +14,7 @@ import type { Page } from '@/lib/types'
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
-export function PageEditor({ pageId, spaceId }: { pageId: string; spaceId: string }) {
+export function PageEditor({ pageId }: { pageId: string }) {
   const router = useRouter()
   const [page, setPage] = useState<Page | null>(null)
   const [title, setTitle] = useState('')
@@ -124,7 +124,7 @@ export function PageEditor({ pageId, spaceId }: { pageId: string; spaceId: strin
     try {
       await api.pages.publish(pageId)
       // Navigate back to view mode after publish
-      router.push(`/spaces/${spaceId}/pages/${pageId}`)
+      router.push(`/pages/${pageId}`)
     } finally {
       setPublishing(false)
     }
