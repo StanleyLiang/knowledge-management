@@ -13,11 +13,9 @@ import { api } from '@/lib/api'
 export function RestoreButton({
   pageId,
   versionId,
-  spaceId,
 }: {
   pageId: string
   versionId: string
-  spaceId: string
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -26,7 +24,7 @@ export function RestoreButton({
     setLoading(true)
     try {
       await api.pages.restore(pageId, versionId)
-      router.push(`/spaces/${spaceId}/pages/${pageId}/edit`)
+      router.push(`/pages/${pageId}/edit`)
     } finally {
       setLoading(false)
     }

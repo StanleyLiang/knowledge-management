@@ -14,7 +14,7 @@ export function CreatePageButton({ spaceId }: { spaceId: string }) {
     setLoading(true)
     try {
       const page = await api.pages.create(spaceId)
-      router.push(`/spaces/${spaceId}/pages/${page.id}/edit`)
+      router.push(`/pages/${page.id}/edit`)
     } finally {
       setLoading(false)
     }

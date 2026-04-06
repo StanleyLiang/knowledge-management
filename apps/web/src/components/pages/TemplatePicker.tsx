@@ -49,7 +49,7 @@ export function TemplatePicker({ spaceId }: { spaceId: string }) {
         content: isBlank ? undefined : template.content,
       })
       setOpen(false)
-      router.push(`/spaces/${spaceId}/pages/${page.id}/edit`)
+      router.push(`/pages/${page.id}/edit`)
     } finally {
       setCreating(null)
     }

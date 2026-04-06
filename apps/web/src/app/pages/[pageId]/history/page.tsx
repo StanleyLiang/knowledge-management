@@ -11,19 +11,19 @@ export const dynamic = 'force-dynamic'
 export default async function HistoryPage({
   params,
 }: {
-  params: Promise<{ spaceId: string; pageId: string }>
+  params: Promise<{ pageId: string }>
 }) {
-  const { spaceId, pageId } = await params
+  const { pageId } = await params
 
   let page
   let versions
   let space
   try {
-    ;[page, versions, space] = await Promise.all([
+    ;[page, versions] = await Promise.all([
       api.pages.get(pageId),
       api.pages.versions(pageId),
-      api.spaces.get(spaceId),
     ])
+    space = await api.spaces.get(page.spaceId)
   } catch {
     notFound()
   }
@@ -37,11 +37,11 @@ export default async function HistoryPage({
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink asChild><Link href={`/spaces/${spaceId}`}>{space.name}</Link></BreadcrumbLink>
+            <BreadcrumbLink asChild><Link href={`/spaces/${page.spaceId}`}>{space.name}</Link></BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink asChild><Link href={`/spaces/${spaceId}/pages/${pageId}`}>{page.title}</Link></BreadcrumbLink>
+            <BreadcrumbLink asChild><Link href={`/pages/${pageId}`}>{page.title}</Link></BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -73,7 +73,7 @@ export default async function HistoryPage({
               {versions.map((v) => (
                 <TableRow key={v.id}>
                   <TableCell>
-                    <Link href={`/spaces/${spaceId}/pages/${pageId}/history/${v.id}`} className="flex items-center gap-2 hover:underline">
+                    <Link href={`/pages/${pageId}/history/${v.id}`} className="flex items-center gap-2 hover:underline">
                       <span className="font-medium">v{v.version}</span>
                       {page.publishedVersionId === v.id && (
                         <Badge variant="default" className="text-xs">Current</Badge>

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { FileText, Pencil, MoreHorizontal } from 'lucide-react'
+import { FileText } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
@@ -62,7 +62,7 @@ export default async function SpaceDetailPage({ params }: { params: Promise<{ sp
               {space.pages.map((page) => (
                 <TableRow key={page.id}>
                   <TableCell>
-                    <Link href={`/spaces/${spaceId}/pages/${page.id}`} className="flex items-center gap-2 hover:underline">
+                    <Link href={`/pages/${page.id}`} className="flex items-center gap-2 hover:underline">
                       <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
                       <span className="font-medium">{page.title}</span>
                     </Link>
@@ -79,7 +79,7 @@ export default async function SpaceDetailPage({ params }: { params: Promise<{ sp
                     {new Date(page.updatedAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <PageActions pageId={page.id} spaceId={spaceId} />
+                    <PageActions pageId={page.id} />
                   </TableCell>
                 </TableRow>
               ))}

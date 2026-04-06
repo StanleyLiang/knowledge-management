@@ -12,16 +12,14 @@ export const dynamic = 'force-dynamic'
 export default async function ViewPagePage({
   params,
 }: {
-  params: Promise<{ spaceId: string; pageId: string }>
+  params: Promise<{ pageId: string }>
 }) {
-  const { spaceId, pageId } = await params
+  const { pageId } = await params
   let page
   let space
   try {
-    ;[page, space] = await Promise.all([
-      api.pages.get(pageId),
-      api.spaces.get(spaceId),
-    ])
+    page = await api.pages.get(pageId)
+    space = await api.spaces.get(page.spaceId)
   } catch {
     notFound()
   }
@@ -36,7 +34,7 @@ export default async function ViewPagePage({
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink asChild><Link href={`/spaces/${spaceId}`}>{space.name}</Link></BreadcrumbLink>
+              <BreadcrumbLink asChild><Link href={`/spaces/${page.spaceId}`}>{space.name}</Link></BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -47,7 +45,7 @@ export default async function ViewPagePage({
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Link href={`/spaces/${spaceId}/pages/${pageId}/history`}>
+              <Link href={`/pages/${pageId}/history`}>
                 <Button variant="outline" size="sm">
                   <History className="h-4 w-4" />
                   History
@@ -58,7 +56,7 @@ export default async function ViewPagePage({
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Link href={`/spaces/${spaceId}/pages/${pageId}/edit`}>
+              <Link href={`/pages/${pageId}/edit`}>
                 <Button variant="outline" size="sm">
                   <Pencil className="h-4 w-4" />
                   Edit
