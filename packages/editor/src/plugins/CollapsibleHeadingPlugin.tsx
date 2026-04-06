@@ -68,12 +68,13 @@ export function CollapsibleHeadingPlugin() {
       setHeadingInfos(items)
     }
 
-    update()
-    const unregister = editor.registerUpdateListener(() => requestAnimationFrame(update))
+    if (!container) return
 
-    // Also re-calc on scroll/resize
+    update()
+    const unregister = editor.registerUpdateListener(() => { requestAnimationFrame(update) })
+
     const observer = new ResizeObserver(update)
-    if (container) observer.observe(container)
+    observer.observe(container)
 
     return () => {
       unregister()
