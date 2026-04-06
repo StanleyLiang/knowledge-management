@@ -31,8 +31,10 @@ import { MentionPlugin } from './plugins/MentionPlugin'
 import { EmojiPlugin } from './plugins/EmojiPlugin'
 import { ImageUploadPlugin } from './plugins/ImageUploadPlugin'
 import { DragDropPlugin } from './plugins/DragDropPlugin'
+import { PastePlugin } from './plugins/PastePlugin'
+import { CollapsibleHeadingPlugin } from './plugins/CollapsibleHeadingPlugin'
 import { TableActionPlugin } from './plugins/TableActionPlugin'
-import { TableOfContentsPlugin } from './plugins/TableOfContentsPlugin'
+import { TocSidebar } from './components/TocSidebar'
 import { PageTags } from './components/editor/PageTags'
 import { MentionNode } from './nodes/MentionNode'
 import { MermaidNode } from './nodes/MermaidNode'
@@ -50,6 +52,8 @@ import {
   CollapsibleContentNode,
 } from './nodes/CollapsibleNodes'
 import { Toaster } from './components/ui/toast'
+import { EditorConfigProvider } from './context/EditorConfigContext'
+import { initI18n } from './i18n'
 import type { EditorProps } from './types'
 
 const EDITOR_NODES = [
@@ -80,6 +84,7 @@ export function Editor({
   initialEditorState,
   onChange,
   theme,
+  i18nResources,
   editable = true,
   placeholder = 'Start writing...',
   plugins = {},
@@ -87,10 +92,14 @@ export function Editor({
   onTitleChange,
   titlePlaceholder,
 }: EditorProps) {
+  initI18n(i18nResources)
   const {
     upload,
+    download,
+    decorateUrl,
     videoConvert,
     mention,
+    pageSearch,
     tags,
     tableOfContents,
   } = plugins
@@ -112,9 +121,12 @@ export function Editor({
       : {}),
   }
 
+  const editorConfig = { decorateUrl, onDownload: download?.onDownload, pageSearch }
+
   return (
     <LexicalComposer initialConfig={initialConfig}>
-      <div className={`le-editor-wrapper ${tableOfContents ? 'le-editor-wrapper-with-toc' : ''}`}>
+      <EditorConfigProvider config={editorConfig}>
+        <div className={`le-editor-wrapper ${tableOfContents ? 'le-editor-wrapper-with-toc' : ''}`}>
         <div className="le-editor-container">
           {onTitleChange !== undefined && (
             <input
@@ -159,16 +171,15 @@ export function Editor({
         <MentionPlugin onSearch={mention?.onSearch} />
         <EmojiPlugin />
         <DragDropPlugin />
+        <PastePlugin />
+        <CollapsibleHeadingPlugin />
         <OnChangePlugin onChange={onChange} />
         {tags && <PageTags value={tags.value} onChange={tags.onChange} suggestions={tags.suggestions} editable={editable} />}
         </div>
-        {tableOfContents && (
-          <aside className="le-toc-sidebar">
-            <TableOfContentsPlugin />
-          </aside>
-        )}
+        {tableOfContents && <TocSidebar />}
         <Toaster position="bottom-center" />
-      </div>
+        </div>
+      </EditorConfigProvider>
     </LexicalComposer>
   )
 }

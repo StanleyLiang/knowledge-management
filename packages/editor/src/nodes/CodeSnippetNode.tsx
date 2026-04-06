@@ -312,7 +312,7 @@ export class CodeSnippetNode extends DecoratorNode<JSX.Element> {
         code={this.__code}
         language={this.__language}
         nodeKey={this.__key}
-        editable={editor._config.editable ?? true}
+        editable={editor.isEditable()}
         editor={editor}
       />
     )

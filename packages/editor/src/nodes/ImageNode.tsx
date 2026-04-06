@@ -8,7 +8,8 @@ import {
   type SerializedLexicalNode,
   type Spread,
 } from 'lexical'
-import { useCallback, useState, type JSX } from 'react'
+import { useDecoratedUrl } from '../hooks/useDecoratedUrl'
+import { useCallback, useEffect, useRef, useState, type JSX } from 'react'
 import {
   AlignLeft,
   AlignCenter,
@@ -21,6 +22,7 @@ import {
 import { useResizable } from '../hooks/useResizable'
 import { ResizeHandles } from '../components/editor/ResizeHandles'
 import { FloatingNodeToolbar } from '../components/editor/FloatingNodeToolbar'
+import { ImageViewer } from '../components/ImageViewer'
 
 export type ImageAlignment = 'left' | 'center' | 'right'
 export type ImageStatus = 'ready' | 'uploading' | 'converting' | 'error'
@@ -67,8 +69,23 @@ function ImageComponent({
   editable: boolean
   editor: LexicalEditor
 }) {
+  const displaySrc = useDecoratedUrl(src, 'image')
   const [isSelected, setIsSelected] = useState(false)
+  const [showViewer, setShowViewer] = useState(false)
   const [captionText, setCaptionText] = useState(caption)
+  const imgRef = useRef<HTMLImageElement>(null)
+
+  // In Viewer mode, attach native click listener to bypass Lexical event interception
+  useEffect(() => {
+    if (editable || !imgRef.current) return
+    const el = imgRef.current
+    const handler = (e: MouseEvent) => {
+      e.stopPropagation()
+      setShowViewer(true)
+    }
+    el.addEventListener('click', handler, true)
+    return () => el.removeEventListener('click', handler, true)
+  }, [editable])
 
   const updateNode = useCallback(
     (updater: (node: ImageNode) => void) => {
@@ -126,7 +143,7 @@ function ImageComponent({
     <span
       className={`le-image-wrapper ${alignClass} ${isSelected && editable ? 'le-node-selected' : ''}`}
       data-lexical-node-key={nodeKey}
-      onClick={() => editable && setIsSelected(true)}
+      onClick={() => editable ? setIsSelected(true) : setShowViewer(true)}
       onBlur={(e) => {
         // Don't deselect if focus moved to a child element (e.g. toolbar input)
         if (e.currentTarget.contains(e.relatedTarget as Node)) return
@@ -180,6 +197,13 @@ function ImageComponent({
           />
           <div className="le-node-toolbar-sep" />
           <button
+            className="le-node-toolbar-btn"
+            onClick={() => setShowViewer(true)}
+            title="Image Viewer"
+          >
+            <Maximize2 size={14} />
+          </button>
+          <button
             className={`le-node-toolbar-btn ${showCaption ? 'le-node-toolbar-btn-active' : ''}`}
             onClick={toggleCaption}
             title="Toggle Caption"
@@ -217,13 +241,15 @@ function ImageComponent({
       )}
 
       <img
-        src={src}
+        ref={imgRef}
+        src={displaySrc}
         alt={altText}
         width={size.width}
         height={size.height}
         loading="lazy"
         className={`le-image ${status !== 'ready' ? 'le-image-loading' : ''}`}
         draggable={false}
+        style={!editable ? { cursor: 'pointer' } : undefined}
       />
 
       {/* Resize Handles */}
@@ -244,6 +270,15 @@ function ImageComponent({
         ) : (
           caption && <span className="le-image-caption">{caption}</span>
         )
+      )}
+
+      {/* Image Viewer Lightbox */}
+      {showViewer && (
+        <ImageViewer
+          src={displaySrc}
+          alt={altText}
+          onClose={() => setShowViewer(false)}
+        />
       )}
     </span>
   )
@@ -390,7 +425,7 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
         status={this.__status}
         errorMessage={this.__errorMessage}
         nodeKey={this.__key}
-        editable={editor._config.editable ?? true}
+        editable={editor.isEditable()}
         editor={editor}
       />
     )

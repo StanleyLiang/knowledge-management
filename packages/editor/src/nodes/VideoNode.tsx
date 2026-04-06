@@ -10,6 +10,7 @@ import {
 } from 'lexical'
 import { useCallback, useEffect, useRef, useState, type JSX } from 'react'
 import { Trash2 } from 'lucide-react'
+import { useDecoratedUrl } from '../hooks/useDecoratedUrl'
 import { useResizable } from '../hooks/useResizable'
 import { ResizeHandles } from '../components/editor/ResizeHandles'
 import { FloatingNodeToolbar } from '../components/editor/FloatingNodeToolbar'
@@ -50,6 +51,7 @@ function VideoComponent({
   editable: boolean
   editor: LexicalEditor
 }) {
+  const displaySrc = useDecoratedUrl(src, 'video')
   const [isSelected, setIsSelected] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<{ destroy: () => void } | null>(null)
@@ -93,7 +95,7 @@ function VideoComponent({
     }
 
     let cancelled = false
-    hlsSrcRef.current = src
+    hlsSrcRef.current = displaySrc
 
     import('hls.js').then((HlsModule) => {
       if (cancelled || !videoRef.current) return
@@ -101,21 +103,21 @@ function VideoComponent({
       if (Hls.isSupported()) {
         const hls = new Hls({ enableWorker: true })
         hlsRef.current = hls
-        hls.loadSource(src)
+        hls.loadSource(displaySrc)
         hls.attachMedia(videoRef.current)
         // No autoplay — user clicks play manually
       } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-        videoRef.current.src = src
+        videoRef.current.src = displaySrc
       }
     }).catch(() => {
-      if (videoRef.current) videoRef.current.src = src
+      if (videoRef.current) videoRef.current.src = displaySrc
     })
 
     return () => {
       cancelled = true
       // Don't destroy on re-render — only on unmount or src change
     }
-  }, [src, format, status])
+  }, [displaySrc, format, status])
 
   // Cleanup HLS on unmount
   useEffect(() => {
@@ -199,7 +201,7 @@ function VideoComponent({
       {/* Video player — show preview during upload, real player when ready */}
       <video
         ref={videoRef}
-        src={format === 'mp4' ? src : undefined}
+        src={format === 'mp4' ? displaySrc : undefined}
         width={size.width}
         height={size.height}
         controls={status === 'ready'}
@@ -300,7 +302,7 @@ export class VideoNode extends DecoratorNode<JSX.Element> {
         status={this.__status}
         errorMessage={this.__errorMessage}
         nodeKey={this.__key}
-        editable={editor._config.editable ?? true}
+        editable={editor.isEditable()}
         editor={editor}
       />
     )

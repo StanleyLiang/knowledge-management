@@ -15,8 +15,8 @@ import {
   INSERT_ORDERED_LIST_COMMAND,
   INSERT_UNORDERED_LIST_COMMAND,
 } from '@lexical/list'
-import { $getSelection, $isRangeSelection } from 'lexical'
-import { TOGGLE_LINK_COMMAND } from '@lexical/link'
+import { $getSelection, $isRangeSelection, $createTextNode } from 'lexical'
+import { TOGGLE_LINK_COMMAND, $createLinkNode } from '@lexical/link'
 import {
   Undo2,
   Redo2,
@@ -83,22 +83,108 @@ import { Dropdown, DropdownItem } from '../ui/dropdown'
 import { Tooltip } from '../ui/tooltip'
 import { TableInsertDropdown } from './TableInsertDropdown'
 import { TextColorPicker, TextBgColorPicker } from './ColorPicker'
+import { useEditorConfig } from '../../context/EditorConfigContext'
+import { useTranslation } from 'react-i18next'
 
-const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
-  paragraph: 'Normal Text',
-  h1: 'Heading 1',
-  h2: 'Heading 2',
-  h3: 'Heading 3',
-  h4: 'Heading 4',
-  h5: 'Heading 5',
-  h6: 'Heading 6',
-  quote: 'Quote',
-  bullet: 'Bulleted List',
-  number: 'Numbered List',
+function useBlockTypeLabels(): Record<BlockType, string> {
+  const { t } = useTranslation('lexicalEditor')
+  return {
+    paragraph: t('toolbar.normalText'),
+    h1: t('toolbar.heading1'),
+    h2: t('toolbar.heading2'),
+    h3: t('toolbar.heading3'),
+    h4: t('toolbar.heading4'),
+    h5: t('toolbar.heading5'),
+    h6: t('toolbar.heading6'),
+    quote: t('toolbar.quote'),
+    bullet: t('toolbar.bulletedList'),
+    number: t('toolbar.numberedList'),
+  }
+}
+
+function PageSearchDropdown() {
+  const { editor } = useToolbarState()
+  const { pageSearch } = useEditorConfig()
+  const { t } = useTranslation('lexicalEditor')
+  const [query, setQuery] = React.useState('')
+  const [results, setResults] = React.useState<Array<{ id: string; title: string }>>([])
+  const inputRef = React.useRef<HTMLInputElement>(null)
+
+  React.useEffect(() => {
+    if (!pageSearch?.onSearch || !query.trim()) {
+      setResults([])
+      return
+    }
+    let cancelled = false
+    pageSearch.onSearch(query).then((r) => { if (!cancelled) setResults(r) })
+    return () => { cancelled = true }
+  }, [query, pageSearch])
+
+  const insertPageLink = React.useCallback(
+    (page: { id: string; title: string }) => {
+      editor.update(() => {
+        const selection = $getSelection()
+        if (!$isRangeSelection(selection)) return
+        const linkNode = $createLinkNode(page.id)
+        linkNode.append($createTextNode(page.title))
+        selection.insertNodes([linkNode])
+      })
+      setQuery('')
+      setResults([])
+    },
+    [editor],
+  )
+
+  if (!pageSearch) {
+    return (
+      <Dropdown
+        trigger={<Button variant="ghost" size="icon"><FileSearch size={16} /></Button>}
+      >
+        <div className="le-dropdown-item le-dropdown-item-disabled">{t('pageSearch.notConfigured')}</div>
+      </Dropdown>
+    )
+  }
+
+  return (
+    <Dropdown
+      trigger={
+        <Tooltip content="Link to Page">
+          <Button variant="ghost" size="icon"><FileSearch size={16} /></Button>
+        </Tooltip>
+      }
+    >
+      <div className="le-page-search-dropdown">
+        <input
+          ref={inputRef}
+          type="text"
+          className="le-page-search-input"
+          placeholder={t('pageSearch.searchPlaceholder')}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          autoFocus
+        />
+        {results.length > 0 && (
+          <div className="le-page-search-results">
+            {results.map((page) => (
+              <DropdownItem key={page.id} onClick={() => insertPageLink(page)}>
+                <FileSearch size={14} />
+                <span className="le-page-search-title">{page.title}</span>
+              </DropdownItem>
+            ))}
+          </div>
+        )}
+        {query.trim() && results.length === 0 && (
+          <div className="le-page-search-empty">{t('pageSearch.noResults')}</div>
+        )}
+      </div>
+    </Dropdown>
+  )
 }
 
 export function Toolbar() {
   const { editor, state } = useToolbarState()
+  const { t } = useTranslation('lexicalEditor')
+  const blockTypeLabels = useBlockTypeLabels()
   const imageInputRef = React.useRef<HTMLInputElement>(null)
   const videoInputRef = React.useRef<HTMLInputElement>(null)
   const attachmentInputRef = React.useRef<HTMLInputElement>(null)
@@ -184,7 +270,7 @@ export function Toolbar() {
       />
 
       {/* Undo / Redo */}
-      <Tooltip content="Undo">
+      <Tooltip content={t('toolbar.undo')}>
         <Button
           variant="ghost"
           size="icon"
@@ -193,7 +279,7 @@ export function Toolbar() {
           <Undo2 size={16} />
         </Button>
       </Tooltip>
-      <Tooltip content="Redo">
+      <Tooltip content={t('toolbar.redo')}>
         <Button
           variant="ghost"
           size="icon"
@@ -209,43 +295,43 @@ export function Toolbar() {
       <Dropdown
         trigger={
           <Button variant="ghost" size="sm" className="le-toolbar-dropdown-trigger">
-            {BLOCK_TYPE_LABELS[state.blockType]}
+            {blockTypeLabels[state.blockType]}
             <ChevronDown size={14} />
           </Button>
         }
       >
         <DropdownItem active={state.blockType === 'paragraph'} onClick={() => setBlockType('paragraph')}>
-          <Type size={16} /> Normal Text
+          <Type size={16} /> {t('toolbar.normalText')}
         </DropdownItem>
         <DropdownItem active={state.blockType === 'h1'} onClick={() => setBlockType('h1')}>
-          <Heading1 size={16} /> Heading 1
+          <Heading1 size={16} /> {t('toolbar.heading1')}
         </DropdownItem>
         <DropdownItem active={state.blockType === 'h2'} onClick={() => setBlockType('h2')}>
-          <Heading2 size={16} /> Heading 2
+          <Heading2 size={16} /> {t('toolbar.heading2')}
         </DropdownItem>
         <DropdownItem active={state.blockType === 'h3'} onClick={() => setBlockType('h3')}>
-          <Heading3 size={16} /> Heading 3
+          <Heading3 size={16} /> {t('toolbar.heading3')}
         </DropdownItem>
         <DropdownItem active={state.blockType === 'h4'} onClick={() => setBlockType('h4')}>
-          <Heading4 size={16} /> Heading 4
+          <Heading4 size={16} /> {t('toolbar.heading4')}
         </DropdownItem>
         <DropdownItem active={state.blockType === 'h5'} onClick={() => setBlockType('h5')}>
-          <Heading5 size={16} /> Heading 5
+          <Heading5 size={16} /> {t('toolbar.heading5')}
         </DropdownItem>
         <DropdownItem active={state.blockType === 'h6'} onClick={() => setBlockType('h6')}>
-          <Heading6 size={16} /> Heading 6
+          <Heading6 size={16} /> {t('toolbar.heading6')}
         </DropdownItem>
       </Dropdown>
 
       <Separator />
 
       {/* Bold / Italic */}
-      <Tooltip content="Bold">
+      <Tooltip content={t('toolbar.bold')}>
         <Toggle pressed={state.isBold} onClick={() => formatText('bold')} size="icon">
           <Bold size={16} />
         </Toggle>
       </Tooltip>
-      <Tooltip content="Italic">
+      <Tooltip content={t('toolbar.italic')}>
         <Toggle pressed={state.isItalic} onClick={() => formatText('italic')} size="icon">
           <Italic size={16} />
         </Toggle>
@@ -260,19 +346,19 @@ export function Toolbar() {
         }
       >
         <DropdownItem active={state.isUnderline} onClick={() => formatText('underline')}>
-          <Underline size={16} /> Underline
+          <Underline size={16} /> {t('toolbar.underline')}
         </DropdownItem>
         <DropdownItem active={state.isStrikethrough} onClick={() => formatText('strikethrough')}>
-          <Strikethrough size={16} /> Strikethrough
+          <Strikethrough size={16} /> {t('toolbar.strikethrough')}
         </DropdownItem>
         <DropdownItem active={state.isCode} onClick={() => formatText('code')}>
-          <Code size={16} /> Inline Code
+          <Code size={16} /> {t('toolbar.inlineCode')}
         </DropdownItem>
         <DropdownItem active={state.isSuperscript} onClick={() => formatText('superscript')}>
-          <Superscript size={16} /> Superscript
+          <Superscript size={16} /> {t('toolbar.superscript')}
         </DropdownItem>
         <DropdownItem active={state.isSubscript} onClick={() => formatText('subscript')}>
-          <Subscript size={16} /> Subscript
+          <Subscript size={16} /> {t('toolbar.subscript')}
         </DropdownItem>
       </Dropdown>
 
@@ -302,19 +388,19 @@ export function Toolbar() {
           active={state.textAlign === 'left'}
           onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'left')}
         >
-          <AlignLeft size={16} /> Align Left
+          <AlignLeft size={16} /> {t('toolbar.alignLeft')}
         </DropdownItem>
         <DropdownItem
           active={state.textAlign === 'center'}
           onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'center')}
         >
-          <AlignCenter size={16} /> Align Center
+          <AlignCenter size={16} /> {t('toolbar.alignCenter')}
         </DropdownItem>
         <DropdownItem
           active={state.textAlign === 'right'}
           onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'right')}
         >
-          <AlignRight size={16} /> Align Right
+          <AlignRight size={16} /> {t('toolbar.alignRight')}
         </DropdownItem>
       </Dropdown>
 
@@ -332,20 +418,20 @@ export function Toolbar() {
           active={state.blockType === 'bullet'}
           onClick={() => setBlockType('bullet')}
         >
-          <List size={16} /> Bulleted List
+          <List size={16} /> {t('toolbar.bulletedList')}
         </DropdownItem>
         <DropdownItem
           active={state.blockType === 'number'}
           onClick={() => setBlockType('number')}
         >
-          <ListOrdered size={16} /> Numbered List
+          <ListOrdered size={16} /> {t('toolbar.numberedList')}
         </DropdownItem>
       </Dropdown>
 
       <Separator />
 
       {/* Outdent / Indent */}
-      <Tooltip content="Outdent">
+      <Tooltip content={t('toolbar.outdent')}>
         <Button
           variant="ghost"
           size="icon"
@@ -354,7 +440,7 @@ export function Toolbar() {
           <Outdent size={16} />
         </Button>
       </Tooltip>
-      <Tooltip content="Indent">
+      <Tooltip content={t('toolbar.indent')}>
         <Button
           variant="ghost"
           size="icon"
@@ -367,7 +453,7 @@ export function Toolbar() {
       <Separator />
 
       {/* Insert items */}
-      <Tooltip content="Image">
+      <Tooltip content={t('toolbar.image')}>
         <Button variant="ghost" size="icon" onClick={() => imageInputRef.current?.click()}>
           <Image size={16} />
         </Button>
@@ -376,7 +462,7 @@ export function Toolbar() {
       {/* Table dropdown */}
       <TableInsertDropdown />
 
-      <Tooltip content="Create Link">
+      <Tooltip content={t('toolbar.createLink')}>
         <Button
           variant="ghost"
           size="icon"
@@ -387,23 +473,15 @@ export function Toolbar() {
       </Tooltip>
 
       {/* Link to Page */}
-      <Dropdown
-        trigger={
-          <Button variant="ghost" size="icon">
-            <FileSearch size={16} />
-          </Button>
-        }
-      >
-        <div className="le-dropdown-item">Link to Page (coming soon)</div>
-      </Dropdown>
+      <PageSearchDropdown />
 
-      <Tooltip content="Video">
+      <Tooltip content={t('toolbar.video')}>
         <Button variant="ghost" size="icon" onClick={() => videoInputRef.current?.click()}>
           <Video size={16} />
         </Button>
       </Tooltip>
 
-      <Tooltip content="Attachment">
+      <Tooltip content={t('toolbar.attachment')}>
         <Button variant="ghost" size="icon" onClick={() => attachmentInputRef.current?.click()}>
           <Paperclip size={16} />
         </Button>
@@ -419,29 +497,29 @@ export function Toolbar() {
         align="end"
       >
         <DropdownItem onClick={() => editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined)}>
-          <CheckSquare size={16} /> Action Item
+          <CheckSquare size={16} /> {t('toolbar.actionItem')}
         </DropdownItem>
         <div className="le-separator-h" />
         <DropdownItem onClick={() => editor.dispatchCommand(INSERT_DIVIDER_COMMAND, undefined)}>
-          <Minus size={16} /> Divider
+          <Minus size={16} /> {t('toolbar.divider')}
         </DropdownItem>
         <DropdownItem onClick={() => editor.dispatchCommand(INSERT_COLLAPSIBLE_COMMAND, undefined)}>
-          <ChevronsUpDown size={16} /> Collapsible
+          <ChevronsUpDown size={16} /> {t('toolbar.collapsible')}
         </DropdownItem>
         <DropdownItem onClick={() => setBlockType('quote')}>
-          <Quote size={16} /> Quote
+          <Quote size={16} /> {t('toolbar.quote')}
         </DropdownItem>
         <DropdownItem onClick={() => editor.dispatchCommand(INSERT_CODE_SNIPPET_COMMAND, { code: '', language: 'javascript' })}>
-          <Braces size={16} /> Code Snippet
+          <Braces size={16} /> {t('toolbar.codeSnippet')}
         </DropdownItem>
         <DropdownItem onClick={() => editor.dispatchCommand(INSERT_MERMAID_COMMAND, { source: 'graph TD\n    A[Start] --> B[Process] --> C[End]' })}>
-          <GitBranch size={16} /> Mermaid
+          <GitBranch size={16} /> {t('toolbar.mermaid')}
         </DropdownItem>
         <DropdownItem onClick={() => editor.dispatchCommand(INSERT_BOOKMARK_COMMAND, { title: 'Example', url: 'https://example.com' })}>
-          <Bookmark size={16} /> Bookmark
+          <Bookmark size={16} /> {t('toolbar.bookmark')}
         </DropdownItem>
         <DropdownItem onClick={() => editor.dispatchCommand(INSERT_LANDMARK_COMMAND, {})}>
-          <MapPin size={16} /> Landmark
+          <MapPin size={16} /> {t('toolbar.landmark')}
         </DropdownItem>
       </Dropdown>
     </div>
