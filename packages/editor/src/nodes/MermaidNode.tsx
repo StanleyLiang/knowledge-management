@@ -313,7 +313,7 @@ export class MermaidNode extends DecoratorNode<JSX.Element> {
         width={this.__width}
         height={this.__height}
         nodeKey={this.__key}
-        editable={editor._config.editable ?? true}
+        editable={editor.isEditable()}
         editor={editor}
       />
     )

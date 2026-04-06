@@ -2,6 +2,9 @@
 export { Editor } from './Editor'
 export { Viewer } from './Viewer'
 
+// Context (for custom node consumers)
+export { EditorConfigProvider, useEditorConfig, type EditorConfig } from './context/EditorConfigContext'
+
 // Standalone UI Components
 export { PresentationMode, PresentationButton } from './components/viewer/PresentationMode'
 export { PageTags } from './components/editor/PageTags'

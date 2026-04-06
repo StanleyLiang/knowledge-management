@@ -9,6 +9,8 @@ import {
 } from 'lexical'
 import { FileText, FileImage, FileVideo, File, Download, Trash2 } from 'lucide-react'
 import { useCallback, useState, type JSX } from 'react'
+import { useDecoratedUrl } from '../hooks/useDecoratedUrl'
+import { useEditorConfig } from '../context/EditorConfigContext'
 import { FloatingNodeToolbar } from '../components/editor/FloatingNodeToolbar'
 
 export type SerializedAttachmentNode = Spread<
@@ -54,15 +56,21 @@ function AttachmentComponent({
   editable: boolean
   editor: LexicalEditor
 }) {
+  const displayUrl = useDecoratedUrl(url, 'attachment')
+  const { onDownload } = useEditorConfig()
   const Icon = getFileIcon(mimeType)
   const [isSelected, setIsSelected] = useState(false)
 
   const handleDownload = useCallback(() => {
+    if (onDownload) {
+      onDownload({ url: displayUrl, fileName, fileSize, mimeType })
+      return
+    }
     const a = document.createElement('a')
-    a.href = url
+    a.href = displayUrl
     a.download = fileName
     a.click()
-  }, [url, fileName])
+  }, [displayUrl, fileName, fileSize, mimeType, onDownload])
 
   const deleteNode = useCallback(() => {
     editor.update(() => {
@@ -179,7 +187,7 @@ export class AttachmentNode extends DecoratorNode<JSX.Element> {
         fileSize={this.__fileSize}
         mimeType={this.__mimeType}
         nodeKey={this.__key}
-        editable={editor._config.editable ?? true}
+        editable={editor.isEditable()}
         editor={editor}
       />
     )

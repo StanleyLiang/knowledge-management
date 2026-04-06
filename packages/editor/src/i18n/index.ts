@@ -22,7 +22,12 @@ export function initI18n(resources?: Record<string, Record<string, string>>) {
     ns: [NAMESPACE],
     defaultNS: NAMESPACE,
     interpolation: { escapeValue: false },
+    initImmediate: false,
   })
 
   return i18n
 }
+
+// Ensure i18n is initialized with defaults at module load time
+// so useTranslation() always has a valid t() function
+initI18n()

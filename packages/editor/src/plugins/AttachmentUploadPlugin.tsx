@@ -60,8 +60,20 @@ export function AttachmentUploadPlugin({
               if (result.mimeType) writable.__mimeType = result.mimeType
             }
           })
+        } else {
+          // No onUpload — convert to data URL as fallback
+          const reader = new FileReader()
+          reader.onload = () => {
+            editor.update(() => {
+              const node = editor._editorState._nodeMap.get(nodeKey)
+              if (node instanceof AttachmentNode) {
+                const writable = node.getWritable() as AttachmentNode
+                writable.__url = reader.result as string
+              }
+            })
+          }
+          reader.readAsDataURL(file)
         }
-        // No onUpload → keep '#' as URL (data URL not useful for attachments)
       } catch (err) {
         console.error('[AttachmentUpload] Error:', err)
       }

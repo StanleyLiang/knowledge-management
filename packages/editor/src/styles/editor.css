@@ -168,7 +168,7 @@
 }
 /* Viewer container */
 .le-viewer-container {
-  @apply w-full bg-white;
+  @apply relative w-full bg-white;
 }
 
 .le-editor-placeholder {
@@ -494,6 +494,45 @@
   @apply flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600
          border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors;
 }
+.le-presentation-control-btn {
+  @apply flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100
+         text-gray-600 transition-colors cursor-pointer;
+}
+.le-presentation-control-btn-active {
+  @apply bg-red-100 text-red-600 hover:bg-red-200;
+}
+.le-presentation-scroll {
+  @apply flex-1 w-full overflow-y-auto;
+}
+.le-presentation-scroll-content {
+  @apply max-w-4xl mx-auto px-12 py-8;
+}
+.le-presentation-laser-active {
+  cursor: none !important;
+}
+.le-presentation-laser-active * {
+  cursor: none !important;
+}
+.le-presentation-laser-dot {
+  @apply fixed w-3 h-3 rounded-full pointer-events-none z-[10000];
+  background: red;
+  box-shadow: 0 0 10px 4px rgba(255, 0, 0, 0.5);
+  transform: translate(-50%, -50%);
+}
+
+/* Collapsible Heading Toggle */
+.le-heading-toggle-layer {
+  @apply absolute inset-0 pointer-events-none;
+}
+.le-heading-toggle {
+  @apply flex items-center justify-center w-5 h-5 text-xs text-gray-400
+         hover:text-gray-600 rounded cursor-pointer opacity-0 transition-opacity
+         duration-150 select-none bg-transparent border-none p-0 z-10 pointer-events-auto;
+}
+.le-heading-toggle:hover,
+.le-heading-toggle-visible {
+  @apply opacity-100;
+}
 
 /* Table of Contents */
 /* Editor/Viewer wrapper with TOC */
@@ -511,6 +550,14 @@
 /* TOC sidebar */
 .le-toc-sidebar {
   @apply w-56 shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto;
+  transition: width 0.3s ease;
+}
+.le-toc-sidebar-collapsed {
+  @apply w-10 overflow-hidden;
+}
+.le-toc-toggle {
+  @apply flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100
+         text-gray-500 hover:text-gray-700 transition-colors cursor-pointer mb-1;
 }
 .le-toc {
   @apply border-l-2 border-gray-200 pl-3 py-2;
@@ -526,7 +573,54 @@
 }
 .le-toc-link {
   @apply text-sm text-gray-600 hover:text-blue-600 hover:underline
-         transition-colors cursor-pointer text-left;
+         transition-colors cursor-pointer text-left block truncate max-w-full;
+}
+
+/* Image Viewer / Lightbox */
+.le-image-viewer-overlay {
+  @apply fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center;
+}
+.le-image-viewer-toolbar {
+  @apply absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2
+         bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2;
+}
+.le-image-viewer-btn {
+  @apply flex items-center justify-center w-8 h-8 rounded hover:bg-white/20
+         text-white transition-colors cursor-pointer;
+}
+.le-image-viewer-zoom {
+  @apply text-sm text-white/80 min-w-[50px] text-center select-none;
+}
+.le-image-viewer-container {
+  @apply flex-1 w-full flex items-center justify-center overflow-hidden select-none;
+}
+.le-image-viewer-img {
+  @apply max-w-full max-h-full object-contain transition-none;
+  transform-origin: center center;
+}
+
+/* Page Search Dropdown */
+.le-page-search-dropdown {
+  @apply p-2 min-w-[240px];
+}
+.le-page-search-input {
+  @apply w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md
+         focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500;
+}
+.le-page-search-results {
+  @apply mt-1 max-h-[200px] overflow-y-auto;
+}
+.le-page-search-results .le-dropdown-item {
+  @apply flex items-center gap-2;
+}
+.le-page-search-title {
+  @apply truncate;
+}
+.le-page-search-empty {
+  @apply text-sm text-gray-400 text-center py-2;
+}
+.le-dropdown-item-disabled {
+  @apply text-gray-400 cursor-default;
 }
 
 /* Page Tags */

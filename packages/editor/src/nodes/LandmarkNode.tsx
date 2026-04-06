@@ -327,7 +327,7 @@ export class LandmarkNode extends DecoratorNode<JSX.Element> {
         latitude={this.__latitude}
         longitude={this.__longitude}
         nodeKey={this.__key}
-        editable={editor._config.editable ?? true}
+        editable={editor.isEditable()}
         editor={editor}
       />
     )

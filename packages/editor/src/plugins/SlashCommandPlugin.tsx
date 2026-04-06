@@ -5,6 +5,7 @@ import {
   useBasicTypeaheadTriggerMatch,
 } from '@lexical/react/LexicalTypeaheadMenuPlugin'
 import { useCallback, useMemo, useState } from 'react'
+import { useTranslation, type TFunction } from 'react-i18next'
 import { $getSelection, $isRangeSelection, TextNode } from 'lexical'
 import { $setBlocksType } from '@lexical/selection'
 import { $createHeadingNode, $createQuoteNode, type HeadingTagType } from '@lexical/rich-text'
@@ -65,9 +66,9 @@ class SlashCommandOption extends MenuOption {
   }
 }
 
-function getSlashCommandOptions(editor: ReturnType<typeof useLexicalComposerContext>[0]): SlashCommandOption[] {
+function getSlashCommandOptions(editor: ReturnType<typeof useLexicalComposerContext>[0], t: TFunction): SlashCommandOption[] {
   return [
-    new SlashCommandOption('Heading 1', Heading1, (ed) => {
+    new SlashCommandOption(t('slashCommand.heading1'), Heading1, (ed) => {
       ed.update(() => {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
@@ -75,7 +76,7 @@ function getSlashCommandOptions(editor: ReturnType<typeof useLexicalComposerCont
         }
       })
     }),
-    new SlashCommandOption('Heading 2', Heading2, (ed) => {
+    new SlashCommandOption(t('slashCommand.heading2'), Heading2, (ed) => {
       ed.update(() => {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
@@ -83,7 +84,7 @@ function getSlashCommandOptions(editor: ReturnType<typeof useLexicalComposerCont
         }
       })
     }),
-    new SlashCommandOption('Heading 3', Heading3, (ed) => {
+    new SlashCommandOption(t('slashCommand.heading3'), Heading3, (ed) => {
       ed.update(() => {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
@@ -91,7 +92,7 @@ function getSlashCommandOptions(editor: ReturnType<typeof useLexicalComposerCont
         }
       })
     }),
-    new SlashCommandOption('Heading 4', Heading4, (ed) => {
+    new SlashCommandOption(t('slashCommand.heading4'), Heading4, (ed) => {
       ed.update(() => {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
@@ -99,7 +100,7 @@ function getSlashCommandOptions(editor: ReturnType<typeof useLexicalComposerCont
         }
       })
     }),
-    new SlashCommandOption('Heading 5', Heading5, (ed) => {
+    new SlashCommandOption(t('slashCommand.heading5'), Heading5, (ed) => {
       ed.update(() => {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
@@ -107,7 +108,7 @@ function getSlashCommandOptions(editor: ReturnType<typeof useLexicalComposerCont
         }
       })
     }),
-    new SlashCommandOption('Heading 6', Heading6, (ed) => {
+    new SlashCommandOption(t('slashCommand.heading6'), Heading6, (ed) => {
       ed.update(() => {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
@@ -115,30 +116,30 @@ function getSlashCommandOptions(editor: ReturnType<typeof useLexicalComposerCont
         }
       })
     }),
-    new SlashCommandOption('Image', Image, () => {
+    new SlashCommandOption(t('slashCommand.image'), Image, () => {
       editorEventBus.emit('trigger:image-upload')
     }),
-    new SlashCommandOption('Table', Table, (ed) => {
+    new SlashCommandOption(t('slashCommand.table'), Table, (ed) => {
       ed.focus(() => {
         ed.dispatchCommand(INSERT_TABLE_COMMAND, { rows: 3, columns: 3 })
       })
     }),
-    new SlashCommandOption('Video', Video, () => {
+    new SlashCommandOption(t('slashCommand.video'), Video, () => {
       editorEventBus.emit('trigger:video-upload')
     }),
-    new SlashCommandOption('Attachment', Paperclip, () => {
+    new SlashCommandOption(t('slashCommand.attachment'), Paperclip, () => {
       editorEventBus.emit('trigger:attachment-upload')
     }),
-    new SlashCommandOption('Action Item', CheckSquare, (ed) => {
+    new SlashCommandOption(t('slashCommand.actionItem'), CheckSquare, (ed) => {
       ed.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined)
     }),
-    new SlashCommandOption('Divider', Minus, (ed) => {
+    new SlashCommandOption(t('slashCommand.divider'), Minus, (ed) => {
       ed.dispatchCommand(INSERT_DIVIDER_COMMAND, undefined)
     }),
-    new SlashCommandOption('Collapsible', ChevronsUpDown, (ed) => {
+    new SlashCommandOption(t('slashCommand.collapsible'), ChevronsUpDown, (ed) => {
       ed.dispatchCommand(INSERT_COLLAPSIBLE_COMMAND, undefined)
     }),
-    new SlashCommandOption('Quote', Quote, (ed) => {
+    new SlashCommandOption(t('slashCommand.quote'), Quote, (ed) => {
       ed.update(() => {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
@@ -146,30 +147,30 @@ function getSlashCommandOptions(editor: ReturnType<typeof useLexicalComposerCont
         }
       })
     }),
-    new SlashCommandOption('Code Snippet', Braces, (ed) => {
+    new SlashCommandOption(t('slashCommand.codeSnippet'), Braces, (ed) => {
       ed.dispatchCommand(INSERT_CODE_SNIPPET_COMMAND, {
         code: '',
         language: 'javascript',
       })
     }),
-    new SlashCommandOption('Mermaid', GitBranch, (ed) => {
+    new SlashCommandOption(t('slashCommand.mermaid'), GitBranch, (ed) => {
       ed.dispatchCommand(INSERT_MERMAID_COMMAND, {
         source: 'graph TD\n    A[Start] --> B[Process] --> C[End]',
       })
     }),
-    new SlashCommandOption('Bulleted List', List, (ed) => {
+    new SlashCommandOption(t('slashCommand.bulletedList'), List, (ed) => {
       ed.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)
     }),
-    new SlashCommandOption('Numbered List', ListOrdered, (ed) => {
+    new SlashCommandOption(t('slashCommand.numberedList'), ListOrdered, (ed) => {
       ed.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)
     }),
-    new SlashCommandOption('Bookmark', Bookmark, (ed) => {
+    new SlashCommandOption(t('slashCommand.bookmark'), Bookmark, (ed) => {
       ed.dispatchCommand(INSERT_BOOKMARK_COMMAND, {
         title: 'Example',
         url: 'https://example.com',
       })
     }),
-    new SlashCommandOption('Landmark', MapPin, (ed) => {
+    new SlashCommandOption(t('slashCommand.landmark'), MapPin, (ed) => {
       ed.dispatchCommand(INSERT_LANDMARK_COMMAND, {})
     }),
   ]
@@ -177,6 +178,7 @@ function getSlashCommandOptions(editor: ReturnType<typeof useLexicalComposerCont
 
 export function SlashCommandPlugin() {
   const [editor] = useLexicalComposerContext()
+  const { t } = useTranslation('lexicalEditor')
   const [queryString, setQueryString] = useState<string | null>(null)
 
   const checkForSlashTrigger = useBasicTypeaheadTriggerMatch('/', {
@@ -184,12 +186,12 @@ export function SlashCommandPlugin() {
   })
 
   const options = useMemo(() => {
-    const allOptions = getSlashCommandOptions(editor)
+    const allOptions = getSlashCommandOptions(editor, t)
     if (!queryString) return allOptions
     return allOptions.filter((opt) =>
       opt.title.toLowerCase().includes(queryString.toLowerCase()),
     )
-  }, [editor, queryString])
+  }, [editor, queryString, t])
 
   const onSelectOption = useCallback(
     (

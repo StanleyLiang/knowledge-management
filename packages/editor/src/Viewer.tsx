@@ -25,7 +25,12 @@ import {
   CollapsibleTitleNode,
   CollapsibleContentNode,
 } from './nodes/CollapsibleNodes'
-import { TableOfContentsPlugin } from './plugins/TableOfContentsPlugin'
+import { TocSidebar } from './components/TocSidebar'
+import { CollapsibleHeadingPlugin } from './plugins/CollapsibleHeadingPlugin'
+import { EditorConfigProvider } from './context/EditorConfigContext'
+import { initI18n } from './i18n'
+import { PresentationMode, PresentationButton } from './components/viewer/PresentationMode'
+import { useState } from 'react'
 import type { ViewerProps } from './types'
 
 const VIEWER_NODES = [
@@ -55,9 +60,15 @@ const VIEWER_NODES = [
 export function Viewer({
   title,
   initialEditorState,
+  decorateUrl,
+  onDownload,
   theme,
+  i18nResources,
   showTableOfContents = false,
+  showPresentationButton = false,
 }: ViewerProps) {
+  initI18n(i18nResources)
+  const [showPresentation, setShowPresentation] = useState(false)
   const initialConfig = {
     namespace: 'LexicalViewer',
     theme: { ...defaultTheme, ...theme },
@@ -72,26 +83,37 @@ export function Viewer({
         : JSON.stringify(initialEditorState),
   }
 
+  const editorConfig = { decorateUrl, onDownload }
+
   return (
     <LexicalComposer initialConfig={initialConfig}>
-      <div className={`le-editor-wrapper ${showTableOfContents ? 'le-editor-wrapper-with-toc' : ''}`}>
-        <div className="le-viewer-container">
-          {title && <h1 className="le-viewer-title">{title}</h1>}
-          <RichTextPlugin
-            contentEditable={
-              <ContentEditable className="le-editor-content" />
-            }
-            placeholder={null}
-            ErrorBoundary={LexicalErrorBoundary}
-          />
-          <TablePlugin />
+      <EditorConfigProvider config={editorConfig}>
+        <div className={`le-editor-wrapper ${showTableOfContents ? 'le-editor-wrapper-with-toc' : ''}`}>
+          <div className="le-viewer-container">
+            {title && <h1 className="le-viewer-title">{title}</h1>}
+            <RichTextPlugin
+              contentEditable={
+                <ContentEditable className="le-editor-content" />
+              }
+              placeholder={null}
+              ErrorBoundary={LexicalErrorBoundary}
+            />
+            <TablePlugin />
+            <CollapsibleHeadingPlugin />
+          </div>
+          {showTableOfContents && <TocSidebar />}
         </div>
-        {showTableOfContents && (
-          <aside className="le-toc-sidebar">
-            <TableOfContentsPlugin />
-          </aside>
+        {showPresentationButton && (
+          <PresentationButton onClick={() => setShowPresentation(true)} />
         )}
-      </div>
+        {showPresentation && (
+          <PresentationMode
+            initialEditorState={initialEditorState}
+            onClose={() => setShowPresentation(false)}
+            theme={theme}
+          />
+        )}
+      </EditorConfigProvider>
     </LexicalComposer>
   )
 }
