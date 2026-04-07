@@ -1,6 +1,0 @@
-node_modules
-.git
-k8s
-*.md
-docker-compose.yml
-.dockerignore
