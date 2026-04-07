@@ -11,6 +11,7 @@ import {
 import { $createParagraphNode } from 'lexical'
 import { useState, useCallback, useEffect, useRef, type JSX } from 'react'
 import { Copy, Check } from 'lucide-react'
+import { injectHtml } from '../utils/injectMarkup'
 
 export type SerializedCodeSnippetNode = Spread<
   {
@@ -82,6 +83,10 @@ function HighlightedCode({ code, language }: { code: string; language: string })
     return () => { cancelled = true }
   }, [code, language])
 
+  useEffect(() => {
+    injectHtml(ref.current, html)
+  }, [html])
+
   if (!html) {
     return (
       <pre className="le-code-snippet-pre">
@@ -92,11 +97,7 @@ function HighlightedCode({ code, language }: { code: string; language: string })
 
   return (
     <pre className="le-code-snippet-pre">
-      <code
-        ref={ref}
-        className={`language-${language}`}
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      <code ref={ref} className={`language-${language}`} />
     </pre>
   )
 }

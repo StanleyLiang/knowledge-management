@@ -19,6 +19,7 @@ const CodeMirrorEditor = lazy(() =>
 )
 import { useResizable } from '../hooks/useResizable'
 import { ResizeHandles } from '../components/editor/ResizeHandles'
+import { injectSvg } from '../utils/injectMarkup'
 
 export type SerializedMermaidNode = Spread<
   {
@@ -46,6 +47,11 @@ function MermaidEditor({
   const [preview, setPreview] = useState<string>('')
   const [previewError, setPreviewError] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const previewRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    injectSvg(previewRef.current, preview)
+  }, [preview])
 
   // Debounced mermaid render
   useEffect(() => {
@@ -104,10 +110,7 @@ function MermaidEditor({
             {previewError ? (
               <div className="le-mermaid-error">{previewError}</div>
             ) : preview ? (
-              <div
-                className="le-mermaid-portal-preview-svg"
-                dangerouslySetInnerHTML={{ __html: preview }}
-              />
+              <div ref={previewRef} className="le-mermaid-portal-preview-svg" />
             ) : (
               <div className="le-mermaid-loading">Type Mermaid syntax to preview...</div>
             )}
@@ -144,6 +147,11 @@ function MermaidComponent({
   const [isEditing, setIsEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [svg, setSvg] = useState<string>('')
+  const svgRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    injectSvg(svgRef.current, svg)
+  }, [svg])
 
   const updateNode = useCallback(
     (updater: (node: MermaidNode) => void) => {
@@ -233,9 +241,9 @@ function MermaidComponent({
           </div>
         ) : svg ? (
           <div
+            ref={svgRef}
             className="le-mermaid-svg"
             style={{ height: size.height }}
-            dangerouslySetInnerHTML={{ __html: svg }}
           />
         ) : (
           <div className="le-mermaid-loading">Loading diagram...</div>
