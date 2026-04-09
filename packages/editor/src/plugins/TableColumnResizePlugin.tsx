@@ -1,6 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { useEffect, useRef, useCallback } from 'react'
-import { $isTableNode, $findTableNode, $findCellNode } from '@lexical/table'
+import { useEffect, useRef } from 'react'
 
 const RESIZE_HANDLE_WIDTH = 6 // pixels near border that triggers resize cursor
 const MIN_COL_WIDTH = 50

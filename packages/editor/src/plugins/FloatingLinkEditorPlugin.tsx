@@ -10,7 +10,7 @@ import {
 } from 'lexical'
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link'
 import { $isAtNodeEnd } from '@lexical/selection'
-import { mergeRegister, $getNearestNodeOfType } from '@lexical/utils'
+import { mergeRegister } from '@lexical/utils'
 import { createPortal } from 'react-dom'
 import { Check, X, Pencil, ExternalLink, Trash2 } from 'lucide-react'
 
@@ -27,7 +27,7 @@ function getSelectedNode(selection: ReturnType<typeof $getSelection>) {
     : $isAtNodeEnd(anchor) ? focusNode : anchorNode
 }
 
-function FloatingLinkEditor({ anchorElem }: { anchorElem: HTMLElement }) {
+function FloatingLinkEditor({ anchorElem: _anchorElem }: { anchorElem: HTMLElement }) {
   const [editor] = useLexicalComposerContext()
   const editorRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)

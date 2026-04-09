@@ -7,9 +7,8 @@ import {
   COMMAND_PRIORITY_CRITICAL,
   FORMAT_TEXT_COMMAND,
   SELECTION_CHANGE_COMMAND,
-  type TextFormatType,
 } from 'lexical'
-import { $isHeadingNode, type HeadingTagType } from '@lexical/rich-text'
+import { $isHeadingNode } from '@lexical/rich-text'
 import { $isListNode, ListNode } from '@lexical/list'
 import { $isLinkNode } from '@lexical/link'
 import { $findMatchingParent, $getNearestNodeOfType } from '@lexical/utils'
@@ -107,7 +106,7 @@ export function useToolbarState() {
       const isLink = $isLinkNode(parent) || $isLinkNode(node)
 
       // Text align
-      const elementFormat = element.getFormatType?.() ?? 'left'
+      const elementFormat = (element as unknown as { getFormatType?: () => string }).getFormatType?.() ?? 'left'
       const textAlign = (['left', 'center', 'right', 'justify'].includes(elementFormat)
         ? elementFormat
         : 'left') as ToolbarState['textAlign']

@@ -6,7 +6,7 @@ import {
   $isRangeSelection,
   COMMAND_PRIORITY_EDITOR,
 } from 'lexical'
-import { UPLOAD_IMAGE_COMMAND, INSERT_IMAGE_COMMAND } from './InsertCommands'
+import { UPLOAD_IMAGE_COMMAND } from './InsertCommands'
 import { $createImageNode, ImageNode } from '../nodes/ImageNode'
 import type { OnUpload } from '../types'
 

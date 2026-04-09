@@ -15,9 +15,7 @@ import {
   AlignCenter,
   AlignRight,
   Maximize2,
-  CaptionIcon,
   Trash2,
-  ImageIcon,
 } from 'lucide-react'
 import { useResizable } from '../hooks/useResizable'
 import { ResizeHandles } from '../components/editor/ResizeHandles'

@@ -4,11 +4,9 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import {
   $getSelection,
   $isRangeSelection,
-  $getNodeByKey,
 } from 'lexical'
 import {
   $isTableCellNode,
-  $isTableNode,
   $isTableRowNode,
   $isTableSelection,
   $findTableNode,
@@ -37,8 +35,6 @@ import {
   SplitSquareHorizontal,
   Paintbrush,
   AlignLeft,
-  AlignCenter,
-  AlignRight,
 } from 'lucide-react'
 
 interface DropdownItem {

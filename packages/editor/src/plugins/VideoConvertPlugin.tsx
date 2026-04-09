@@ -47,7 +47,7 @@ export function VideoConvertPlugin({
         }
 
         // Cleanup jobs that are no longer in converting state
-        for (const [jobId, job] of trackedJobs.current) {
+        for (const [jobId] of trackedJobs.current) {
           if (!convertingJobs.has(jobId)) {
             stopTracking(jobId)
           }

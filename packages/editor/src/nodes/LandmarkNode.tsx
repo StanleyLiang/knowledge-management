@@ -1,6 +1,5 @@
 import {
   DecoratorNode,
-  $getNodeByKey,
   type DOMExportOutput,
   type LexicalEditor,
   type LexicalNode,
@@ -11,7 +10,6 @@ import {
 import { lazy, Suspense, useState, type JSX } from 'react'
 import { createPortal } from 'react-dom'
 import { MapPin, X } from 'lucide-react'
-import type { LandmarkItem } from '../types'
 
 const ComposableMap = lazy(() =>
   import('react-simple-maps').then((m) => ({ default: m.ComposableMap })),

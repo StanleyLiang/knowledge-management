@@ -1,7 +1,6 @@
 import {
   DecoratorNode,
   type DOMExportOutput,
-  type LexicalEditor,
   type LexicalNode,
   type NodeKey,
   type SerializedLexicalNode,

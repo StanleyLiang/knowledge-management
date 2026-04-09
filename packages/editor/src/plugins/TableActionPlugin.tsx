@@ -10,25 +10,17 @@ import {
 import {
   $isTableCellNode,
   $isTableRowNode,
-  $isTableNode,
   $getTableNodeFromLexicalNodeOrThrow,
-  $getTableRowIndexFromTableCellNode,
-  $getTableColumnIndexFromTableCellNode,
   $insertTableRow__EXPERIMENTAL,
   $insertTableColumn__EXPERIMENTAL,
   $deleteTableRow__EXPERIMENTAL,
   $deleteTableColumn__EXPERIMENTAL,
-  $unmergeCell,
   TableCellHeaderStates,
   TableCellNode,
-  TableNode,
-  TableRowNode,
 } from '@lexical/table'
 import {
   Plus,
   Minus,
-  Rows3,
-  Columns3,
   ToggleLeft,
   Trash2,
 } from 'lucide-react'

@@ -1,7 +1,6 @@
 import {
   $isTableCellNode,
   $isTableRowNode,
-  $computeTableMap,
   type TableNode,
   type TableCellNode,
 } from '@lexical/table'
@@ -15,7 +14,7 @@ const TOAST_MSG = 'Please unmerge cells first'
 export function checkRowOperation(
   tableNode: TableNode,
   rowIndex: number,
-  operation: 'insert' | 'delete' | 'move',
+  _operation: 'insert' | 'delete' | 'move',
 ): string | null {
   const rows = tableNode.getChildren()
   if (rowIndex < 0 || rowIndex >= rows.length) return null
@@ -57,7 +56,7 @@ export function checkRowOperation(
 export function checkColumnOperation(
   tableNode: TableNode,
   colIndex: number,
-  operation: 'insert' | 'delete' | 'move',
+  _operation: 'insert' | 'delete' | 'move',
 ): string | null {
   const rows = tableNode.getChildren()
 

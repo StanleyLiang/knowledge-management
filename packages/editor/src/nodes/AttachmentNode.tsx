@@ -84,7 +84,7 @@ function AttachmentComponent({
     <span
       className={`le-attachment ${isSelected && editable ? 'le-attachment-selected' : ''}`}
       data-lexical-node-key={nodeKey}
-      onClick={(e) => {
+      onClick={() => {
         if (editable) {
           setIsSelected(true)
         } else {

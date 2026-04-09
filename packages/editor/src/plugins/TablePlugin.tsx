@@ -24,7 +24,6 @@ export function TablePlugin() {
   // https://github.com/facebook/lexical/issues/5543
   useEffect(() => {
     const orig = Node.prototype.removeChild
-    // @ts-expect-error — monkey-patching DOM API
     Node.prototype.removeChild = function <T extends Node>(child: T): T {
       if (child.parentNode !== this) {
         // Silently return if the child isn't actually ours (Lexical moved it)

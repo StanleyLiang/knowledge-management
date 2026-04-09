@@ -162,7 +162,7 @@ function MermaidComponent({
     initialHeight,
     minWidth: 200,
     minHeight: 100,
-    lockAspectRatio: false,
+    aspectRatio: 0,
     onResize: (w, h) => {
       updateNode((node) => {
         node.__width = Math.round(w)

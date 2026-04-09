@@ -5,10 +5,10 @@ import {
   useBasicTypeaheadTriggerMatch,
 } from '@lexical/react/LexicalTypeaheadMenuPlugin'
 import { useCallback, useMemo, useState } from 'react'
-import { useTranslation, type TFunction } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import { $getSelection, $isRangeSelection, TextNode } from 'lexical'
 import { $setBlocksType } from '@lexical/selection'
-import { $createHeadingNode, $createQuoteNode, type HeadingTagType } from '@lexical/rich-text'
+import { $createHeadingNode, $createQuoteNode } from '@lexical/rich-text'
 import {
   INSERT_UNORDERED_LIST_COMMAND,
   INSERT_ORDERED_LIST_COMMAND,
@@ -37,7 +37,7 @@ import {
   MapPin,
   type LucideIcon,
 } from 'lucide-react'
-import * as ReactDOM from 'react-dom'
+import { createPortal } from 'react-dom'
 import {
   INSERT_DIVIDER_COMMAND,
   INSERT_COLLAPSIBLE_COMMAND,
@@ -51,7 +51,7 @@ import { editorEventBus } from '../utils/eventBus'
 
 class SlashCommandOption extends MenuOption {
   title: string
-  icon: LucideIcon
+  iconComponent: LucideIcon
   onSelect: (editor: ReturnType<typeof useLexicalComposerContext>[0]) => void
 
   constructor(
@@ -61,12 +61,14 @@ class SlashCommandOption extends MenuOption {
   ) {
     super(title)
     this.title = title
-    this.icon = icon
+    this.iconComponent = icon
     this.onSelect = onSelect
   }
 }
 
-function getSlashCommandOptions(editor: ReturnType<typeof useLexicalComposerContext>[0], t: TFunction): SlashCommandOption[] {
+type TranslateFn = ReturnType<typeof useTranslation>['t']
+
+function getSlashCommandOptions(_editor: ReturnType<typeof useLexicalComposerContext>[0], t: TranslateFn): SlashCommandOption[] {
   return [
     new SlashCommandOption(t('slashCommand.heading1'), Heading1, (ed) => {
       ed.update(() => {
@@ -221,10 +223,10 @@ export function SlashCommandPlugin() {
         { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex },
       ) => {
         if (!anchorElementRef.current || options.length === 0) return null
-        return ReactDOM.createPortal(
+        return createPortal(
           <div className="le-slash-menu">
             {options.map((option, index) => {
-              const Icon = option.icon
+              const Icon = option.iconComponent
               return (
                 <button
                   key={option.key}

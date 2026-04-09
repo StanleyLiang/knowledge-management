@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { $getSelection, $isRangeSelection, $isTextNode } from 'lexical'
 import { Palette, Highlighter } from 'lucide-react'

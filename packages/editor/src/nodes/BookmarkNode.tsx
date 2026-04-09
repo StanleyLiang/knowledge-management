@@ -7,7 +7,7 @@ import {
   type DOMExportOutput,
   type LexicalEditor,
 } from 'lexical'
-import { Globe, Pencil, Trash2 } from 'lucide-react'
+import { Globe } from 'lucide-react'
 import { type JSX } from 'react'
 
 export type SerializedBookmarkNode = Spread<

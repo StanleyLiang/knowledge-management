@@ -33,7 +33,7 @@ import {
   CollapsibleTitleNode,
   CollapsibleContentNode,
 } from '../../nodes/CollapsibleNodes'
-import { extractSlides, buildSlideState, type SlideData } from '../../utils/slideExtractor'
+import { extractSlides, buildSlideState } from '../../utils/slideExtractor'
 
 const PRESENTATION_NODES = [
   HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode,

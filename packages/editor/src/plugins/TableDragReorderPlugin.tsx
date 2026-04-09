@@ -13,7 +13,7 @@ import {
 } from '@lexical/table'
 import { GripVertical } from 'lucide-react'
 import { toast } from '../components/ui/toast'
-import { checkRowOperation, checkColumnOperation, tableHasMergedCells } from '../utils/tableMergeGuard'
+import { tableHasMergedCells } from '../utils/tableMergeGuard'
 
 interface HandleInfo {
   type: 'row' | 'column'

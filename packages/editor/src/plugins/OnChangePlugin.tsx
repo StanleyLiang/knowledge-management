@@ -1,6 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { useEffect } from 'react'
-import type { EditorState, SerializedEditorState } from 'lexical'
+import type { SerializedEditorState } from 'lexical'
 
 interface OnChangePluginProps {
   onChange?: (editorState: SerializedEditorState) => void

@@ -120,7 +120,7 @@ export class CollapsibleTitleNode extends ElementNode {
     const contentNode = container.getChildAtIndex(1)
     if (contentNode) {
       const paragraph = $createParagraphNode()
-      contentNode.append(paragraph)
+      ;(contentNode as ElementNode).append(paragraph)
       paragraph.select()
       return paragraph
     }

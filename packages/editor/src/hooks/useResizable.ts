@@ -46,7 +46,6 @@ export function useResizable({
         if (!isDragging.current) return
 
         let dx = moveEvent.clientX - startPos.current.x
-        const dy = moveEvent.clientY - startPos.current.y
 
         // Invert for left-side handles
         if (handleRef.current === 'nw' || handleRef.current === 'sw') dx = -dx
