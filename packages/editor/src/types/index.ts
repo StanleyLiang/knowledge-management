@@ -78,6 +78,10 @@ export interface VideoConvertConfig {
   pollInterval?: number
 }
 
+export interface MermaidConfig {
+  onGenerate: (text: string) => Promise<string>
+}
+
 export interface PluginConfig {
   upload?: { onUpload: OnUpload }
   download?: { onDownload: OnDownload }
@@ -95,6 +99,7 @@ export interface PluginConfig {
   tags?: TagsConfig
   tableOfContents?: boolean
   colorPresets?: string[]
+  mermaid?: MermaidConfig
 }
 
 export interface EditorProps {

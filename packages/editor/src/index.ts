@@ -25,6 +25,7 @@ export type {
   LandmarkConfig,
   CodeSnippetConfig,
   TagsConfig,
+  MermaidConfig,
 } from './types'
 
 // Custom Nodes (for consumers who need to extend or reference)
@@ -55,4 +56,5 @@ export {
   INSERT_CODE_SNIPPET_COMMAND,
   INSERT_MERMAID_COMMAND,
   INSERT_LANDMARK_COMMAND,
+  GENERATE_MERMAID_COMMAND,
 } from './plugins/InsertCommands'

@@ -34,6 +34,10 @@ import { DragDropPlugin } from './plugins/DragDropPlugin'
 import { PastePlugin } from './plugins/PastePlugin'
 import { CollapsibleHeadingPlugin } from './plugins/CollapsibleHeadingPlugin'
 import { TableActionPlugin } from './plugins/TableActionPlugin'
+import { SelectionActionMenuPlugin, type SelectionAction } from './plugins/SelectionActionMenuPlugin'
+import { TextToMermaidPlugin } from './plugins/TextToMermaidPlugin'
+import { GENERATE_MERMAID_COMMAND } from './plugins/InsertCommands'
+import { GitBranch } from 'lucide-react'
 import { TocSidebar } from './components/TocSidebar'
 import { PageTags } from './components/editor/PageTags'
 import { MentionNode } from './nodes/MentionNode'
@@ -102,7 +106,20 @@ export function Editor({
     pageSearch,
     tags,
     tableOfContents,
+    mermaid,
   } = plugins
+
+  const selectionActions: SelectionAction[] = []
+  if (mermaid?.onGenerate) {
+    selectionActions.push({
+      key: 'to-mermaid',
+      label: 'Generate Diagram',
+      icon: GitBranch,
+      onAction: (text, ed) => {
+        ed.dispatchCommand(GENERATE_MERMAID_COMMAND, { text })
+      },
+    })
+  }
   const initialConfig = {
     namespace: 'LexicalEditor',
     theme: { ...defaultTheme, ...theme },
@@ -173,6 +190,8 @@ export function Editor({
         <DragDropPlugin />
         <PastePlugin />
         <CollapsibleHeadingPlugin />
+        {selectionActions.length > 0 && <SelectionActionMenuPlugin actions={selectionActions} />}
+        {mermaid?.onGenerate && <TextToMermaidPlugin onGenerate={mermaid.onGenerate} />}
         <OnChangePlugin onChange={onChange} />
         {tags && <PageTags value={tags.value} onChange={tags.onChange} suggestions={tags.suggestions} editable={editable} />}
         </div>

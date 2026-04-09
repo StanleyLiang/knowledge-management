@@ -15,6 +15,13 @@
       "port": 3002,
       "cwd": "apps/web",
       "autoPort": true
+    },
+    {
+      "name": "rsbuild",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "export PATH=/usr/local/bin:$PATH && npx rsbuild dev --port 3003"],
+      "port": 3003,
+      "cwd": "apps/rsbuild"
     }
   ]
 }

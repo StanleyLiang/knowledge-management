@@ -358,7 +358,7 @@
   @apply text-red-600;
 }
 .le-video-spinner {
-  @apply w-8 h-8 border-3 border-gray-300 border-t-blue-500 rounded-full animate-spin;
+  @apply w-8 h-8 border-[3px] border-gray-300 border-t-blue-500 rounded-full animate-spin;
 }
 .le-video-loading {
   @apply opacity-30;
@@ -449,6 +449,38 @@
 }
 .le-mermaid-portal-footer {
   @apply flex items-center justify-end gap-3 px-5 py-3 border-t border-gray-200;
+}
+
+/* Mermaid processing & error states */
+.le-mermaid-processing {
+  @apply flex flex-col items-center justify-center gap-2 text-sm text-gray-500 bg-gray-50;
+}
+.le-mermaid-spinner {
+  animation: le-spin 1s linear infinite;
+}
+@keyframes le-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.le-mermaid-generation-error {
+  @apply p-4 flex flex-col gap-1 text-sm text-red-600 bg-red-50;
+}
+.le-mermaid-generation-error-detail {
+  @apply text-xs text-red-500;
+}
+.le-mermaid-generation-error-remove {
+  @apply mt-2 flex items-center gap-1 text-xs text-red-600 hover:text-red-800
+         px-2 py-1 rounded border border-red-200 hover:bg-red-100 transition-colors w-fit;
+}
+
+/* Selection Action Menu */
+.le-selection-action-menu {
+  @apply absolute z-50 -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg
+         px-1 py-1 flex items-center gap-0.5;
+}
+.le-selection-action-btn {
+  @apply flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-gray-700 rounded
+         hover:bg-gray-100 transition-colors whitespace-nowrap;
 }
 
 /* Presentation Mode */

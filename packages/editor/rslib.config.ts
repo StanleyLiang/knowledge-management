@@ -1,11 +1,15 @@
 import { defineConfig } from '@rslib/core'
+import { pluginReact } from '@rsbuild/plugin-react'
 
 export default defineConfig({
+  plugins: [pluginReact()],
   lib: [
     {
       format: 'esm',
       syntax: 'es2022',
-      dts: true,
+      dts: {
+        distPath: './types',
+      },
     },
     {
       format: 'cjs',
@@ -20,5 +24,8 @@ export default defineConfig({
   output: {
     target: 'web',
     externals: ['react', 'react-dom', 'react/jsx-runtime'],
+    distPath: {
+      root: './dist',
+    },
   },
 })

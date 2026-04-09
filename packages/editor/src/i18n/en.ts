@@ -98,6 +98,13 @@ export const en = {
     slideMode: 'Switch to Slide mode',
     scrollMode: 'Switch to Scroll mode',
   },
+  selectionAction: {
+    toMermaid: 'Generate Diagram',
+  },
+  mermaid: {
+    generating: 'Generating diagram...',
+    generationFailed: 'Failed to generate diagram',
+  },
   node: {
     delete: 'Delete',
     alignLeft: 'Align Left',

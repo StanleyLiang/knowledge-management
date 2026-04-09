@@ -340,6 +340,13 @@ export default function EditorPage() {
             pollInterval: Number(process.env.NEXT_PUBLIC_VIDEO_CONVERT_POLL_INTERVAL) || 3000,
           },
           tableOfContents: true,
+          mermaid: {
+            onGenerate: async (text: string) => {
+              // Simulate AI latency
+              await new Promise((r) => setTimeout(r, 2000))
+              return `graph TD\n    A["${text.substring(0, 40).replace(/"/g, "'")}"] --> B[Generated Diagram]`
+            },
+          },
         }}
       />
 

@@ -10,7 +10,7 @@ import {
 } from 'lexical'
 import { useCallback, useEffect, useRef, useState, type JSX } from 'react'
 import { createPortal } from 'react-dom'
-import { Pencil, Trash2, X } from 'lucide-react'
+import { Pencil, Trash2, X, Loader2 } from 'lucide-react'
 import { lazy, Suspense } from 'react'
 import { FloatingNodeToolbar } from '../components/editor/FloatingNodeToolbar'
 
@@ -20,6 +20,8 @@ const CodeMirrorEditor = lazy(() =>
 import { useResizable } from '../hooks/useResizable'
 import { ResizeHandles } from '../components/editor/ResizeHandles'
 
+export type MermaidNodeStatus = 'idle' | 'processing' | 'error'
+
 export type SerializedMermaidNode = Spread<
   {
     type: 'mermaid'
@@ -27,6 +29,8 @@ export type SerializedMermaidNode = Spread<
     source: string
     width: number
     height: number
+    status?: MermaidNodeStatus
+    errorMessage?: string | null
   },
   SerializedLexicalNode
 >
@@ -129,6 +133,8 @@ function MermaidComponent({
   source: initialSource,
   width: initialWidth,
   height: initialHeight,
+  status,
+  errorMessage,
   nodeKey,
   editable,
   editor,
@@ -136,6 +142,8 @@ function MermaidComponent({
   source: string
   width: number
   height: number
+  status: MermaidNodeStatus
+  errorMessage: string | null
   nodeKey: NodeKey
   editable: boolean
   editor: LexicalEditor
@@ -226,8 +234,24 @@ function MermaidComponent({
           </FloatingNodeToolbar>
         )}
 
-        {/* SVG rendering with viewBox scaling */}
-        {error ? (
+        {/* Status-based rendering */}
+        {status === 'processing' ? (
+          <div className="le-mermaid-processing" style={{ height: size.height }}>
+            <Loader2 size={24} className="le-mermaid-spinner" />
+            <span>Generating diagram...</span>
+          </div>
+        ) : status === 'error' ? (
+          <div className="le-mermaid-generation-error">
+            <span>Failed to generate diagram</span>
+            {errorMessage && <span className="le-mermaid-generation-error-detail">{errorMessage}</span>}
+            {editable && (
+              <button className="le-mermaid-generation-error-remove" onClick={deleteNode}>
+                <Trash2 size={12} />
+                <span>Remove</span>
+              </button>
+            )}
+          </div>
+        ) : error ? (
           <div className="le-mermaid-error">
             <span>Mermaid Error:</span> {error}
           </div>
@@ -262,26 +286,50 @@ export class MermaidNode extends DecoratorNode<JSX.Element> {
   __source: string
   __width: number
   __height: number
+  __status: MermaidNodeStatus
+  __errorMessage: string | null
 
   static getType(): string { return 'mermaid' }
 
   static clone(node: MermaidNode): MermaidNode {
-    return new MermaidNode(node.__source, node.__width, node.__height, node.__key)
+    return new MermaidNode(node.__source, node.__width, node.__height, node.__status, node.__errorMessage, node.__key)
   }
 
-  constructor(source: string, width: number = 600, height: number = 300, key?: NodeKey) {
+  constructor(
+    source: string,
+    width: number = 600,
+    height: number = 300,
+    status: MermaidNodeStatus = 'idle',
+    errorMessage: string | null = null,
+    key?: NodeKey,
+  ) {
     super(key)
     this.__source = source
     this.__width = width
     this.__height = height
+    this.__status = status
+    this.__errorMessage = errorMessage
   }
 
   static importJSON(serializedNode: SerializedMermaidNode): MermaidNode {
-    return $createMermaidNode(serializedNode.source, serializedNode.width, serializedNode.height)
+    return $createMermaidNode(
+      serializedNode.source,
+      serializedNode.width,
+      serializedNode.height,
+      serializedNode.status ?? 'idle',
+      serializedNode.errorMessage ?? null,
+    )
   }
 
   exportJSON(): SerializedMermaidNode {
-    return { type: 'mermaid', version: 1, source: this.__source, width: this.__width, height: this.__height }
+    return {
+      type: 'mermaid',
+      version: 1,
+      source: this.__source,
+      width: this.__width,
+      height: this.__height,
+      // status and errorMessage are transient UI states — always persist as idle
+    }
   }
 
   exportDOM(): DOMExportOutput {
@@ -306,12 +354,20 @@ export class MermaidNode extends DecoratorNode<JSX.Element> {
   getSource(): string { return this.__source }
   setSource(source: string): void { this.getWritable().__source = source }
 
+  getStatus(): MermaidNodeStatus { return this.__status }
+  setStatus(status: MermaidNodeStatus): void { this.getWritable().__status = status }
+
+  getErrorMessage(): string | null { return this.__errorMessage }
+  setErrorMessage(errorMessage: string | null): void { this.getWritable().__errorMessage = errorMessage }
+
   decorate(editor: LexicalEditor): JSX.Element {
     return (
       <MermaidComponent
         source={this.__source}
         width={this.__width}
         height={this.__height}
+        status={this.__status}
+        errorMessage={this.__errorMessage}
         nodeKey={this.__key}
         editable={editor.isEditable()}
         editor={editor}
@@ -320,8 +376,14 @@ export class MermaidNode extends DecoratorNode<JSX.Element> {
   }
 }
 
-export function $createMermaidNode(source: string = '', width: number = 600, height: number = 300): MermaidNode {
-  return new MermaidNode(source, width, height)
+export function $createMermaidNode(
+  source: string = '',
+  width: number = 600,
+  height: number = 300,
+  status: MermaidNodeStatus = 'idle',
+  errorMessage: string | null = null,
+): MermaidNode {
+  return new MermaidNode(source, width, height, status, errorMessage)
 }
 
 export function $isMermaidNode(node: LexicalNode | null | undefined): node is MermaidNode {

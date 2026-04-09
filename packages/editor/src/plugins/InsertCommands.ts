@@ -36,6 +36,9 @@ export const INSERT_LANDMARK_COMMAND: LexicalCommand<{
   name?: string; latitude?: number; longitude?: number
 }> = createCommand('INSERT_LANDMARK_COMMAND')
 
+export const GENERATE_MERMAID_COMMAND: LexicalCommand<{ text: string }> =
+  createCommand('GENERATE_MERMAID_COMMAND')
+
 export const UPLOAD_IMAGE_COMMAND: LexicalCommand<File> = createCommand('UPLOAD_IMAGE_COMMAND')
 
 export const UPLOAD_VIDEO_COMMAND: LexicalCommand<File> = createCommand('UPLOAD_VIDEO_COMMAND')
