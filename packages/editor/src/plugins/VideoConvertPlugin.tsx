@@ -1,7 +1,7 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { useEffect, useRef } from 'react'
-import { $getNodeByKey, $getRoot } from 'lexical'
-import { VideoNode, $isVideoNode } from '../nodes/VideoNode'
+import { $getNodeByKey, $nodesOfType } from 'lexical'
+import { VideoNode } from '../nodes/VideoNode'
 import { subscribeToJobStatus, type VideoJobStatus } from '../utils/nats-browser'
 import type { VideoConvertConfig } from '../types'
 
@@ -33,15 +33,15 @@ export function VideoConvertPlugin({
       editorState.read(() => {
         // Find all VideoNodes in 'converting' state with a jobId
         const convertingJobs = new Set<string>()
-        const root = $getRoot()
+        const videoNodes = $nodesOfType(VideoNode)
 
-        for (const child of root.getChildren()) {
-          if ($isVideoNode(child) && child.__status === 'converting' && child.__jobId) {
-            convertingJobs.add(child.__jobId)
+        for (const node of videoNodes) {
+          if (node.__status === 'converting' && node.__jobId) {
+            convertingJobs.add(node.__jobId)
 
             // Start tracking if not already
-            if (!trackedJobs.current.has(child.__jobId)) {
-              startTracking(child.__jobId, child.getKey(), child.__src)
+            if (!trackedJobs.current.has(node.__jobId)) {
+              startTracking(node.__jobId, node.getKey(), node.__src)
             }
           }
         }
@@ -130,7 +130,7 @@ export function VideoConvertPlugin({
 
     editor.update(() => {
       const node = $getNodeByKey(job.nodeKey)
-      if (node && $isVideoNode(node)) {
+      if (node instanceof VideoNode) {
         const writable = node.getWritable() as VideoNode
         writable.__status = 'ready'
         writable.__format = 'hls'
@@ -147,7 +147,7 @@ export function VideoConvertPlugin({
 
     editor.update(() => {
       const node = $getNodeByKey(job.nodeKey)
-      if (node && $isVideoNode(node)) {
+      if (node instanceof VideoNode) {
         const writable = node.getWritable() as VideoNode
         writable.__status = 'error'
         writable.__errorMessage = errorMessage
