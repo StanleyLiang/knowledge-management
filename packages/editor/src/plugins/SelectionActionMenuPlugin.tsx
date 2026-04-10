@@ -19,7 +19,7 @@ export interface SelectionAction {
   key: string
   label: string
   icon: LucideIcon
-  onAction: (selectedText: string, editor: LexicalEditor) => void
+  onAction: (selectedText: string, anchorBlockKey: string, editor: LexicalEditor) => void
 }
 
 function getSelectedNode(selection: ReturnType<typeof $getSelection>) {
@@ -37,16 +37,18 @@ function getSelectedNode(selection: ReturnType<typeof $getSelection>) {
 
 function SelectionActionMenu({
   actions,
-  anchorElem,
+  portalContainer,
 }: {
   actions: SelectionAction[]
-  anchorElem: HTMLElement
+  portalContainer: HTMLElement
 }) {
   const [editor] = useLexicalComposerContext()
   const menuRef = useRef<HTMLDivElement | null>(null)
   const [isVisible, setIsVisible] = useState(false)
   const isVisibleRef = useRef(false)
-  const [selectedText, setSelectedText] = useState('')
+  // Use refs for action data so they persist through re-renders when menu hides
+  const selectedTextRef = useRef<string>('')
+  const anchorBlockKeyRef = useRef<string>('')
 
   isVisibleRef.current = isVisible
 
@@ -73,7 +75,12 @@ function SelectionActionMenu({
       return
     }
 
-    setSelectedText(text)
+    // Capture the anchor block key for use in actions
+    const anchorNode = selection.anchor.getNode()
+    const topBlock = anchorNode.getTopLevelElement()
+    anchorBlockKeyRef.current = topBlock?.getKey() ?? ''
+
+    selectedTextRef.current = text
 
     const nativeSelection = window.getSelection()
     const rootElement = editor.getRootElement()
@@ -83,19 +90,22 @@ function SelectionActionMenu({
     }
 
     const rangeRect = nativeSelection.getRangeAt(0).getBoundingClientRect()
-    const rootRect = rootElement.getBoundingClientRect()
+    const containerRect = portalContainer.getBoundingClientRect()
 
     // Position above the selection, clamped to stay within the editor
     const menuEl = menuRef.current
-    const rawTop = rangeRect.top - rootRect.top - 44
+    const rawTop = rangeRect.top - containerRect.top - 44
     menuEl.style.top = `${Math.max(0, rawTop)}px`
-    menuEl.style.left = `${rangeRect.left - rootRect.left + rangeRect.width / 2}px`
+    menuEl.style.left = `${rangeRect.left - containerRect.left + rangeRect.width / 2}px`
 
     setIsVisible(true)
-  }, [editor])
+  }, [editor, portalContainer])
 
   useEffect(() => {
     return mergeRegister(
+      editor.registerUpdateListener(({ editorState }) => {
+        editorState.read(() => updateMenu())
+      }),
       editor.registerCommand(
         SELECTION_CHANGE_COMMAND,
         () => {
@@ -132,7 +142,7 @@ function SelectionActionMenu({
             className="le-selection-action-btn"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
-              action.onAction(selectedText, editor)
+              action.onAction(selectedTextRef.current, anchorBlockKeyRef.current, editor)
               setIsVisible(false)
             }}
           >
@@ -142,7 +152,7 @@ function SelectionActionMenu({
         )
       })}
     </div>,
-    anchorElem,
+    portalContainer,
   )
 }
 
@@ -151,10 +161,16 @@ export function SelectionActionMenuPlugin({ actions }: { actions: SelectionActio
   const [rootElement, setRootElement] = useState<HTMLElement | null>(null)
 
   useEffect(() => {
-    setRootElement(editor.getRootElement())
+    return editor.registerRootListener((newRootElement) => {
+      setRootElement(newRootElement)
+    })
   }, [editor])
 
   if (!rootElement || actions.length === 0) return null
 
-  return <SelectionActionMenu actions={actions} anchorElem={rootElement} />
+  // Portal into the parent container, not the contenteditable root
+  const portalContainer = rootElement.parentElement
+  if (!portalContainer) return null
+
+  return <SelectionActionMenu actions={actions} portalContainer={portalContainer} />
 }

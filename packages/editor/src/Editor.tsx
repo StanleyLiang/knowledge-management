@@ -115,8 +115,8 @@ export function Editor({
       key: 'to-mermaid',
       label: 'Generate Diagram',
       icon: GitBranch,
-      onAction: (text, ed) => {
-        ed.dispatchCommand(GENERATE_MERMAID_COMMAND, { text })
+      onAction: (text, anchorBlockKey, ed) => {
+        ed.dispatchCommand(GENERATE_MERMAID_COMMAND, { text, anchorBlockKey })
       },
     })
   }

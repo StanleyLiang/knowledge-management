@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import {
-  $getSelection,
-  $isRangeSelection,
   $createParagraphNode,
   $getNodeByKey,
   COMMAND_PRIORITY_EDITOR,
@@ -25,54 +23,48 @@ export function TextToMermaidPlugin({
     const unregister = editor.registerCommand(
       GENERATE_MERMAID_COMMAND,
       (payload) => {
-        let mermaidNodeKey: string | null = null
+        const { text, anchorBlockKey } = payload
 
+        // Insert the processing node, then start async generation
         editor.update(() => {
-          const selection = $getSelection()
-          if (!$isRangeSelection(selection)) return
+          const anchorBlock = $getNodeByKey(anchorBlockKey)
+          if (!anchorBlock) return
 
-          // Find the top-level block containing the selection
-          const anchorNode = selection.anchor.getNode()
-          const topLevelBlock = anchorNode.getTopLevelElement()
-          if (!topLevelBlock) return
-
-          // Create a new paragraph after the block and insert a processing MermaidNode
           const paragraph = $createParagraphNode()
           const mermaidNode = $createMermaidNode('', 600, 300, 'processing')
           paragraph.append(mermaidNode)
-          topLevelBlock.insertAfter(paragraph)
+          anchorBlock.insertAfter(paragraph)
 
-          mermaidNodeKey = mermaidNode.getKey()
+          const nodeKey = mermaidNode.getKey()
+
+          // Use queueMicrotask to run async work after the update is flushed
+          queueMicrotask(() => {
+            onGenerateRef.current(text)
+              .then((source) => {
+                if (disposed) return
+                editor.update(() => {
+                  const node = $getNodeByKey(nodeKey)
+                  if ($isMermaidNode(node)) {
+                    const writable = node.getWritable()
+                    writable.__source = source
+                    writable.__status = 'idle'
+                    writable.__errorMessage = null
+                  }
+                })
+              })
+              .catch((err) => {
+                if (disposed) return
+                editor.update(() => {
+                  const node = $getNodeByKey(nodeKey)
+                  if ($isMermaidNode(node)) {
+                    const writable = node.getWritable()
+                    writable.__status = 'error'
+                    writable.__errorMessage = err instanceof Error ? err.message : 'Generation failed'
+                  }
+                })
+              })
+          })
         })
-
-        // Async: call the external generator
-        if (mermaidNodeKey) {
-          const nodeKey = mermaidNodeKey
-          onGenerateRef.current(payload.text)
-            .then((source) => {
-              if (disposed) return
-              editor.update(() => {
-                const node = $getNodeByKey(nodeKey)
-                if ($isMermaidNode(node)) {
-                  const writable = node.getWritable()
-                  writable.__source = source
-                  writable.__status = 'idle'
-                  writable.__errorMessage = null
-                }
-              })
-            })
-            .catch((err) => {
-              if (disposed) return
-              editor.update(() => {
-                const node = $getNodeByKey(nodeKey)
-                if ($isMermaidNode(node)) {
-                  const writable = node.getWritable()
-                  writable.__status = 'error'
-                  writable.__errorMessage = err instanceof Error ? err.message : 'Generation failed'
-                }
-              })
-            })
-        }
 
         return true
       },
