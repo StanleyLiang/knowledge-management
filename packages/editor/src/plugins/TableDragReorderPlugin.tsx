@@ -92,6 +92,8 @@ export function TableDragReorderPlugin() {
   const [indicatorPos, setIndicatorPos] = useState<{
     top: number; left: number; width: number; height: number
   } | null>(null)
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null)
+  const [hoveredCol, setHoveredCol] = useState<number | null>(null)
 
   // Use refs for drag state so mouseup handler always sees latest values
   const draggingRef = useRef<{
@@ -112,6 +114,71 @@ export function TableDragReorderPlugin() {
       unregister()
       window.removeEventListener('scroll', update, true)
       window.removeEventListener('resize', update)
+    }
+  }, [editor])
+
+  // Track which row/column the mouse is hovering over
+  useEffect(() => {
+    const rootEl = editor.getRootElement()
+    if (!rootEl) return
+
+    let clearTimer: ReturnType<typeof setTimeout> | null = null
+
+    const clearHover = () => {
+      setHoveredRow(null)
+      setHoveredCol(null)
+    }
+
+    const scheduleClear = () => {
+      if (clearTimer) clearTimeout(clearTimer)
+      clearTimer = setTimeout(clearHover, 80)
+    }
+
+    const cancelClear = () => {
+      if (clearTimer) { clearTimeout(clearTimer); clearTimer = null }
+    }
+
+    const handleTableHover = (e: MouseEvent) => {
+      if (draggingRef.current) return
+
+      const target = e.target instanceof Element ? e.target : null
+
+      // Keep hover state when mouse is over a drag handle
+      if (target?.closest('.le-table-drag-handle')) {
+        cancelClear()
+        return
+      }
+
+      const cell = target?.closest('td, th') as HTMLTableCellElement | null
+      if (!cell) {
+        // Delay clearing so mouse can cross the gap between cell and handle
+        scheduleClear()
+        return
+      }
+      cancelClear()
+      const row = cell.closest('tr') as HTMLTableRowElement | null
+      const table = cell.closest('table')
+      if (!row || !table) {
+        scheduleClear()
+        return
+      }
+      setHoveredRow(row.rowIndex)
+      setHoveredCol(cell.cellIndex)
+    }
+
+    const handleTableLeave = () => {
+      if (draggingRef.current) return
+      scheduleClear()
+    }
+
+    // Listen on parentElement (portal target) so we also catch events on drag handles
+    const listenTarget = rootEl.parentElement || rootEl
+    listenTarget.addEventListener('mousemove', handleTableHover)
+    listenTarget.addEventListener('mouseleave', handleTableLeave)
+    return () => {
+      listenTarget.removeEventListener('mousemove', handleTableHover)
+      listenTarget.removeEventListener('mouseleave', handleTableLeave)
+      if (clearTimer) clearTimeout(clearTimer)
     }
   }, [editor])
 
@@ -246,7 +313,7 @@ export function TableDragReorderPlugin() {
   return createPortal(
     <>
       {handles
-        .filter((h) => h.type === 'row')
+        .filter((h) => h.type === 'row' && h.index === hoveredRow)
         .map((h) => (
           <div
             key={`row-${h.index}`}
@@ -259,7 +326,7 @@ export function TableDragReorderPlugin() {
           </div>
         ))}
       {handles
-        .filter((h) => h.type === 'column')
+        .filter((h) => h.type === 'column' && h.index === hoveredCol)
         .map((h) => (
           <div
             key={`col-${h.index}`}
