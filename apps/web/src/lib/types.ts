@@ -17,6 +17,7 @@ export interface PageSummary {
   status: string
   author: string | null
   spaceId: string
+  parentId: string | null
   publishedVersionId: string | null
   createdAt: string
   updatedAt: string

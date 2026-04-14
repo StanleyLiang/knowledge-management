@@ -40,6 +40,7 @@ export const spaceRoutes: FastifyPluginAsync = async (app) => {
               title: true,
               status: true,
               author: true,
+              parentId: true,
               createdAt: true,
               updatedAt: true,
             },

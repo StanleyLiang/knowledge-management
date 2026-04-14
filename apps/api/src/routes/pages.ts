@@ -19,6 +19,7 @@ export const pageRoutes: FastifyPluginAsync = async (app) => {
           status: true,
           author: true,
           spaceId: true,
+          parentId: true,
           publishedVersionId: true,
           createdAt: true,
           updatedAt: true,
@@ -39,6 +40,7 @@ export const pageRoutes: FastifyPluginAsync = async (app) => {
           content: request.body.content ?? undefined,
           author: DEFAULT_AUTHOR,
           spaceId: request.params.spaceId,
+          parentId: request.body.parentId ?? null,
         },
       })
       return reply.status(201).send(page)

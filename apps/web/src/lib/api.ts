@@ -30,7 +30,7 @@ export const api = {
   pages: {
     list: (spaceId: string) => request<PageSummary[]>(`/spaces/${spaceId}/pages`),
     get: (id: string) => request<Page>(`/pages/${id}`),
-    create: (spaceId: string, data?: { title?: string; content?: Record<string, unknown> }) =>
+    create: (spaceId: string, data?: { title?: string; content?: Record<string, unknown>; parentId?: string }) =>
       request<Page>(`/spaces/${spaceId}/pages`, { method: 'POST', body: JSON.stringify(data ?? {}) }),
     update: (id: string, data: UpdatePageInput) =>
       request<Page>(`/pages/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),

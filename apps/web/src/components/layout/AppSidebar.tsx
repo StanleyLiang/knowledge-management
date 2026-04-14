@@ -1,30 +1,153 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Folder, FileText, ChevronRight } from 'lucide-react'
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { usePathname, useRouter } from 'next/navigation'
+import { Folder, FileText, ChevronRight, Plus } from 'lucide-react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
-import type { SpaceWithPages } from '@/lib/types'
+import type { SpaceWithPages, PageSummary } from '@/lib/types'
+
+// ── Tree building ──
+
+interface PageTreeNode extends PageSummary {
+  children: PageTreeNode[]
+}
+
+function buildPageTree(pages: PageSummary[]): PageTreeNode[] {
+  const map = new Map<string, PageTreeNode>()
+  const roots: PageTreeNode[] = []
+
+  for (const page of pages) {
+    map.set(page.id, { ...page, children: [] })
+  }
+
+  for (const page of pages) {
+    const node = map.get(page.id)!
+    if (page.parentId && map.has(page.parentId)) {
+      map.get(page.parentId)!.children.push(node)
+    } else {
+      roots.push(node)
+    }
+  }
+
+  return roots
+}
+
+// ── Flat row for virtualizer ──
+
+interface FlatRow {
+  type: 'space' | 'page'
+  id: string
+  title: string
+  depth: number
+  hasChildren: boolean
+  spaceId: string
+}
+
+function flattenTree(
+  spaces: SpaceWithPages[],
+  spaceTrees: Map<string, PageTreeNode[]>,
+  expandedIds: Set<string>,
+): FlatRow[] {
+  const rows: FlatRow[] = []
+
+  for (const space of spaces) {
+    rows.push({
+      type: 'space',
+      id: space.id,
+      title: space.name,
+      depth: 0,
+      hasChildren: space.pages.length > 0,
+      spaceId: space.id,
+    })
+
+    if (expandedIds.has(space.id)) {
+      const tree = spaceTrees.get(space.id) ?? []
+      if (tree.length === 0) {
+        rows.push({
+          type: 'page',
+          id: `empty-${space.id}`,
+          title: 'No pages',
+          depth: 1,
+          hasChildren: false,
+          spaceId: space.id,
+        })
+      } else {
+        flattenNodes(tree, space.id, 1, expandedIds, rows)
+      }
+    }
+  }
+
+  return rows
+}
+
+function flattenNodes(
+  nodes: PageTreeNode[],
+  spaceId: string,
+  depth: number,
+  expandedIds: Set<string>,
+  rows: FlatRow[],
+) {
+  for (const node of nodes) {
+    rows.push({
+      type: 'page',
+      id: node.id,
+      title: node.title,
+      depth,
+      hasChildren: node.children.length > 0,
+      spaceId,
+    })
+
+    if (node.children.length > 0 && expandedIds.has(node.id)) {
+      flattenNodes(node.children, spaceId, depth + 1, expandedIds, rows)
+    }
+  }
+}
+
+// ── Helpers ──
+
+function collectAncestorIds(
+  pages: PageSummary[],
+  targetId: string | undefined,
+): Set<string> {
+  if (!targetId) return new Set()
+  const parentMap = new Map<string, string>()
+  for (const p of pages) {
+    if (p.parentId) parentMap.set(p.id, p.parentId)
+  }
+  const ancestors = new Set<string>()
+  let current = targetId
+  while (parentMap.has(current)) {
+    current = parentMap.get(current)!
+    ancestors.add(current)
+  }
+  return ancestors
+}
+
+const ROW_HEIGHT = 32
+
+// ── Component ──
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const [spaces, setSpaces] = useState<SpaceWithPages[]>([])
   const [loading, setLoading] = useState(true)
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const [creatingFor, setCreatingFor] = useState<string | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Extract current spaceId from URL
   const spaceMatch = pathname.match(/\/spaces\/([^/]+)/)
   const currentSpaceId = spaceMatch?.[1]
   const pageMatch = pathname.match(/\/pages\/([^/]+)/)
   const currentPageId = pageMatch?.[1]
 
+  // Fetch data
   useEffect(() => {
     api.spaces.list().then(async (spaceList) => {
-      // Fetch pages for each space
       const spacesWithPages = await Promise.all(
         spaceList.map(async (space) => {
           try {
@@ -39,7 +162,7 @@ export function AppSidebar() {
     })
   }, [])
 
-  // Refresh sidebar when pathname changes (e.g. after creating a page)
+  // Refresh on pathname change
   useEffect(() => {
     if (loading) return
     api.spaces.list().then(async (spaceList) => {
@@ -55,6 +178,79 @@ export function AppSidebar() {
       setSpaces(spacesWithPages)
     })
   }, [pathname, loading])
+
+  // Auto-expand current space and ancestor pages
+  useEffect(() => {
+    if (spaces.length === 0) return
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      // Expand current space
+      if (currentSpaceId) next.add(currentSpaceId)
+      // Expand space containing current page, and ancestor pages
+      if (currentPageId) {
+        for (const space of spaces) {
+          const page = space.pages.find((p) => p.id === currentPageId)
+          if (page) {
+            next.add(space.id)
+            const ancestors = collectAncestorIds(space.pages, currentPageId)
+            for (const id of ancestors) next.add(id)
+            break
+          }
+        }
+      }
+      return next
+    })
+  }, [spaces, currentSpaceId, currentPageId])
+
+  // Build trees
+  const spaceTrees = useMemo(() => {
+    const map = new Map<string, PageTreeNode[]>()
+    for (const space of spaces) {
+      map.set(space.id, buildPageTree(space.pages))
+    }
+    return map
+  }, [spaces])
+
+  // Flatten for virtualizer
+  const flatRows = useMemo(
+    () => flattenTree(spaces, spaceTrees, expandedIds),
+    [spaces, spaceTrees, expandedIds],
+  )
+
+  const virtualizer = useVirtualizer({
+    count: flatRows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 10,
+  })
+
+  const toggleExpand = useCallback((id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }, [])
+
+  const handleAddSubPage = useCallback(
+    async (e: React.MouseEvent, spaceId: string, parentId: string) => {
+      e.preventDefault()
+      e.stopPropagation()
+      if (creatingFor) return
+      setCreatingFor(parentId)
+      try {
+        const page = await api.pages.create(spaceId, { parentId })
+        router.push(`/pages/${page.id}/edit`)
+      } finally {
+        setCreatingFor(null)
+      }
+    },
+    [creatingFor, router],
+  )
 
   if (loading) {
     return (
@@ -75,49 +271,134 @@ export function AppSidebar() {
           Spaces
         </span>
       </div>
-      <ScrollArea className="flex-1">
-        <div className="p-2">
-          {spaces.map((space) => (
-            <Collapsible key={space.id} defaultOpen={space.id === currentSpaceId}>
-              <CollapsibleTrigger className="flex items-center gap-1.5 w-full px-2 py-1.5 text-sm rounded-md hover:bg-gray-100 group">
-                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
-                <Folder className="h-4 w-4 text-blue-500 shrink-0" />
-                <Link
-                  href={`/spaces/${space.id}`}
-                  className={cn(
-                    'truncate flex-1 text-left',
-                    space.id === currentSpaceId && !currentPageId && 'font-semibold',
-                  )}
-                  onClick={(e) => e.stopPropagation()}
+      <div ref={scrollRef} className="flex-1 overflow-auto">
+        <div
+          className="relative w-full p-2"
+          style={{ height: virtualizer.getTotalSize() }}
+        >
+          {virtualizer.getVirtualItems().map((virtualItem) => {
+            const row = flatRows[virtualItem.index]
+            const isExpanded = expandedIds.has(row.id)
+            const isEmpty = row.id.startsWith('empty-')
+
+            // Empty placeholder row
+            if (isEmpty) {
+              return (
+                <div
+                  key={virtualItem.key}
+                  className="absolute left-0 right-0"
+                  style={{
+                    height: virtualItem.size,
+                    transform: `translateY(${virtualItem.start}px)`,
+                  }}
                 >
-                  {space.name}
-                </Link>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="ml-5 pl-2 border-l border-gray-200">
-                  {space.pages.length === 0 ? (
-                    <div className="px-2 py-1.5 text-xs text-muted-foreground">No pages</div>
-                  ) : (
-                    space.pages.map((page) => (
-                      <Link
-                        key={page.id}
-                        href={`/pages/${page.id}`}
-                        className={cn(
-                          'flex items-center gap-1.5 px-2 py-1.5 text-sm rounded-md hover:bg-gray-100 truncate',
-                          page.id === currentPageId && 'bg-gray-100 font-medium',
-                        )}
-                      >
-                        <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        <span className="truncate">{page.title}</span>
-                      </Link>
-                    ))
-                  )}
+                  <div
+                    className="px-2 py-1.5 text-xs text-muted-foreground"
+                    style={{ paddingLeft: row.depth * 16 + 8 }}
+                  >
+                    No pages
+                  </div>
                 </div>
-              </CollapsibleContent>
-            </Collapsible>
-          ))}
+              )
+            }
+
+            // Space row
+            if (row.type === 'space') {
+              return (
+                <div
+                  key={virtualItem.key}
+                  className="absolute left-0 right-0"
+                  style={{
+                    height: virtualItem.size,
+                    transform: `translateY(${virtualItem.start}px)`,
+                  }}
+                >
+                  <button
+                    onClick={() => toggleExpand(row.id)}
+                    className="flex items-center gap-1.5 w-full px-2 py-1.5 text-sm rounded-md hover:bg-gray-100"
+                  >
+                    <ChevronRight
+                      className={cn(
+                        'h-3.5 w-3.5 text-muted-foreground transition-transform',
+                        isExpanded && 'rotate-90',
+                      )}
+                    />
+                    <Folder className="h-4 w-4 text-blue-500 shrink-0" />
+                    <Link
+                      href={`/spaces/${row.id}`}
+                      className={cn(
+                        'truncate flex-1 text-left',
+                        row.id === currentSpaceId && !currentPageId && 'font-semibold',
+                      )}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {row.title}
+                    </Link>
+                  </button>
+                </div>
+              )
+            }
+
+            // Page row
+            return (
+              <div
+                key={virtualItem.key}
+                className="absolute left-0 right-0 group"
+                style={{
+                  height: virtualItem.size,
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                <div className="flex items-center" style={{ paddingLeft: row.depth * 16 }}>
+                  {row.hasChildren ? (
+                    <button
+                      onClick={() => toggleExpand(row.id)}
+                      className="flex items-center gap-1.5 flex-1 min-w-0 px-2 py-1.5 text-sm rounded-md hover:bg-gray-100"
+                    >
+                      <ChevronRight
+                        className={cn(
+                          'h-3 w-3 text-muted-foreground transition-transform shrink-0',
+                          isExpanded && 'rotate-90',
+                        )}
+                      />
+                      <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <Link
+                        href={`/pages/${row.id}`}
+                        className={cn(
+                          'truncate flex-1 text-left',
+                          row.id === currentPageId && 'font-medium',
+                        )}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {row.title}
+                      </Link>
+                    </button>
+                  ) : (
+                    <Link
+                      href={`/pages/${row.id}`}
+                      className={cn(
+                        'flex items-center gap-1.5 flex-1 min-w-0 px-2 py-1.5 text-sm rounded-md hover:bg-gray-100 truncate',
+                        row.id === currentPageId && 'bg-gray-100 font-medium',
+                      )}
+                    >
+                      <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="truncate">{row.title}</span>
+                    </Link>
+                  )}
+                  <button
+                    onClick={(e) => handleAddSubPage(e, row.spaceId, row.id)}
+                    disabled={creatingFor === row.id}
+                    className="hidden group-hover:flex items-center justify-center h-5 w-5 rounded hover:bg-gray-200 shrink-0 mr-1"
+                    title="Add sub-page"
+                  >
+                    <Plus className="h-3 w-3 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+            )
+          })}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   )
 }
