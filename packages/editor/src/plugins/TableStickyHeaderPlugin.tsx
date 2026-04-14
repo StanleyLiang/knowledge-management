@@ -203,7 +203,8 @@ export function TableStickyHeaderPlugin() {
       }
     }
 
-    const scrollHandler = () => requestAnimationFrame(updateAll)
+    // Use direct call instead of rAF for more reliable scroll response
+    const scrollHandler = () => updateAll()
     window.addEventListener('scroll', scrollHandler, { passive: true })
 
     const rootEl = editor.getRootElement()
