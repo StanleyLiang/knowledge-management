@@ -114,12 +114,42 @@ export function TableColumnResizePlugin() {
       }
     }
 
+    // Apply table-layout:fixed for tables that already have colgroup widths
+    // (e.g. loaded from serialized JSON with colWidths)
+    function initColWidths() {
+      const tables = rootEl!.querySelectorAll<HTMLTableElement>('table')
+      tables.forEach((table) => {
+        if (table.style.tableLayout === 'fixed') return // already set
+        const cols = table.querySelectorAll('colgroup col')
+        if (cols.length === 0) return
+        const widths: number[] = []
+        let hasExplicitWidth = false
+        cols.forEach((col) => {
+          const w = parseFloat((col as HTMLElement).style.width)
+          if (w > 0) {
+            hasExplicitWidth = true
+            widths.push(w)
+          }
+        })
+        if (hasExplicitWidth && widths.length === cols.length) {
+          table.style.tableLayout = 'fixed'
+          table.style.width = `${widths.reduce((a, b) => a + b, 0)}px`
+        }
+      })
+    }
+
+    // Run on init and on DOM changes
+    initColWidths()
+    const observer = new MutationObserver(initColWidths)
+    observer.observe(rootEl, { childList: true, subtree: true })
+
     rootEl.addEventListener('mousemove', handleMouseMove)
     rootEl.addEventListener('mousedown', handleMouseDown)
     document.addEventListener('mouseup', handleMouseUp)
     document.addEventListener('mousemove', handleMouseMove)
 
     return () => {
+      observer.disconnect()
       rootEl.removeEventListener('mousemove', handleMouseMove)
       rootEl.removeEventListener('mousedown', handleMouseDown)
       document.removeEventListener('mouseup', handleMouseUp)

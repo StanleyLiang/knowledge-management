@@ -134,6 +134,21 @@
   overflow-y: hidden;
   @apply bg-white border-t border-gray-200;
 }
+/* Force scrollbar always visible (macOS hides overlay scrollbars) */
+.le-table-sticky-scrollbar::-webkit-scrollbar {
+  height: 10px;
+}
+.le-table-sticky-scrollbar::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+.le-table-sticky-scrollbar::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 4px;
+}
+.le-table-sticky-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
 
 /* Sticky Header — JS-based clone (see TableStickyHeaderPlugin) */
 .le-table-sticky-header-clone-wrapper th {

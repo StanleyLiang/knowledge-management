@@ -210,6 +210,7 @@ const VIEWER_DEMO_STATE = {
         return {
           type: 'table' as const, version: 1, direction: 'ltr' as const, format: '' as const, indent: 0,
           frozenRowCount: 1, frozenColumnCount: 1,
+          colWidths: [140, 100, 120, 100, 120, 100, 100, 200],
           children: [
             { type: 'tablerow' as const, version: 1, direction: 'ltr' as const, format: '' as const, indent: 0, children: headers.map(hdr) },
             ...data.map(row),

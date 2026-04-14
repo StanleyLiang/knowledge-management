@@ -130,7 +130,7 @@ export function TableStickyHeaderPlugin() {
       if (!entry) {
         const proxy = document.createElement('div')
         proxy.className = 'le-table-sticky-scrollbar'
-        proxy.style.height = '12px'
+        proxy.style.height = '14px'
         const spacer = document.createElement('div')
         spacer.style.height = '1px'
         proxy.appendChild(spacer)
