@@ -176,35 +176,49 @@ const DEMO_STATE = {
 
       // ── H2: Table ──
       h('h2', [t('Table')]),
-      {
-        type: 'table', version: 1, direction: 'ltr', format: '', indent: 0,
-        children: [
-          {
-            type: 'tablerow', version: 1, direction: 'ltr', format: '', indent: 0,
-            children: [
-              { type: 'tablecell', version: 1, direction: 'ltr', format: '', indent: 0, headerState: 1, colSpan: 1, rowSpan: 1, backgroundColor: null, children: [p([t('Feature', 1)])] },
-              { type: 'tablecell', version: 1, direction: 'ltr', format: '', indent: 0, headerState: 1, colSpan: 1, rowSpan: 1, backgroundColor: null, children: [p([t('Status', 1)])] },
-              { type: 'tablecell', version: 1, direction: 'ltr', format: '', indent: 0, headerState: 1, colSpan: 1, rowSpan: 1, backgroundColor: null, children: [p([t('Notes', 1)])] },
-            ],
-          },
-          {
-            type: 'tablerow', version: 1, direction: 'ltr', format: '', indent: 0,
-            children: [
-              { type: 'tablecell', version: 1, direction: 'ltr', format: '', indent: 0, headerState: 0, colSpan: 1, rowSpan: 1, backgroundColor: null, children: [p([t('Rich Text')])] },
-              { type: 'tablecell', version: 1, direction: 'ltr', format: '', indent: 0, headerState: 0, colSpan: 1, rowSpan: 1, backgroundColor: null, children: [p([t('✅ Done')])] },
-              { type: 'tablecell', version: 1, direction: 'ltr', format: '', indent: 0, headerState: 0, colSpan: 1, rowSpan: 1, backgroundColor: null, children: [p([t('All formats supported')])] },
-            ],
-          },
-          {
-            type: 'tablerow', version: 1, direction: 'ltr', format: '', indent: 0,
-            children: [
-              { type: 'tablecell', version: 1, direction: 'ltr', format: '', indent: 0, headerState: 0, colSpan: 1, rowSpan: 1, backgroundColor: null, children: [p([t('Custom Nodes')])] },
-              { type: 'tablecell', version: 1, direction: 'ltr', format: '', indent: 0, headerState: 0, colSpan: 1, rowSpan: 1, backgroundColor: null, children: [p([t('✅ Done')])] },
-              { type: 'tablecell', version: 1, direction: 'ltr', format: '', indent: 0, headerState: 0, colSpan: 1, rowSpan: 1, backgroundColor: null, children: [p([t('12 node types')])] },
-            ],
-          },
-        ],
-      },
+      (() => {
+        const hdr = (text: string) => ({ type: 'tablecell' as const, version: 1, direction: 'ltr' as const, format: '' as const, indent: 0, headerState: 1, colSpan: 1, rowSpan: 1, backgroundColor: null, children: [p([t(text, 1)])] })
+        const cell = (text: string) => ({ type: 'tablecell' as const, version: 1, direction: 'ltr' as const, format: '' as const, indent: 0, headerState: 0, colSpan: 1, rowSpan: 1, backgroundColor: null, children: [p([t(text)])] })
+        const row = (cells: string[]) => ({ type: 'tablerow' as const, version: 1, direction: 'ltr' as const, format: '' as const, indent: 0, children: cells.map(cell) })
+
+        const headers = ['Feature', 'Status', 'Category', 'Priority', 'Assignee', 'Sprint', 'Est. Hours', 'Notes']
+        const data: string[][] = [
+          ['Rich Text',       '✅ Done',    'Core',      'P0', 'Alice',   'S1', '40',  'All formats supported'],
+          ['Custom Nodes',    '✅ Done',    'Core',      'P0', 'Bob',     'S1', '60',  '12 node types'],
+          ['Table',           '✅ Done',    'Core',      'P0', 'Charlie', 'S2', '80',  'Sticky header, freeze columns, sorting, filter'],
+          ['Code Snippet',    '✅ Done',    'Content',   'P1', 'Alice',   'S2', '24',  'Prism.js 14 languages'],
+          ['Mermaid',         '✅ Done',    'Content',   'P1', 'Bob',     'S3', '32',  'CodeMirror 6 + live preview'],
+          ['Image',           '✅ Done',    'Media',     'P0', 'Diana',   'S1', '48',  'Upload, resize, caption, lightbox'],
+          ['Video',           '✅ Done',    'Media',     'P0', 'Diana',   'S2', '56',  'HLS streaming via NATS'],
+          ['Attachment',      '✅ Done',    'Media',     'P1', 'Eve',     'S2', '16',  'Inline download link'],
+          ['Bookmark',        '✅ Done',    'Content',   'P2', 'Frank',   'S3', '12',  'Card with icon + title'],
+          ['Mention',         '✅ Done',    'Social',    'P1', 'Alice',   'S3', '20',  'Inline badge + hover card'],
+          ['Landmark',        '✅ Done',    'Content',   'P2', 'Bob',     'S4', '36',  'Taiwan atlas + world map'],
+          ['Collapsible',     '✅ Done',    'Layout',    'P1', 'Charlie', 'S3', '8',   'Details / summary toggle'],
+          ['Divider',         '✅ Done',    'Layout',    'P2', 'Eve',     'S1', '2',   'Horizontal rule'],
+          ['Drag & Drop',     '✅ Done',    'UX',        'P1', 'Frank',   'S4', '24',  'Block-level reordering'],
+          ['Slash Command',   '✅ Done',    'UX',        'P0', 'Alice',   'S2', '20',  '/ menu with fuzzy search'],
+          ['Markdown Import', '✅ Done',    'Core',      'P1', 'Bob',     'S3', '16',  'Paste markdown auto-convert'],
+          ['Emoji Picker',    '✅ Done',    'UX',        'P2', 'Diana',   'S4', '8',   'Grid picker + search'],
+          ['Page Tags',       '✅ Done',    'Meta',      'P2', 'Eve',     'S4', '12',  'Tag input + suggestions'],
+          ['TOC Sidebar',     '✅ Done',    'Navigation','P1', 'Frank',   'S3', '16',  'Auto-generated from headings'],
+          ['Float Link',      '✅ Done',    'UX',        'P1', 'Charlie', 'S2', '12',  'Inline link editing toolbar'],
+          ['Sticky Header',   '🔲 TODO',   'Table',     'P1', 'Alice',   'S5', '8',   'Fixed header on scroll'],
+          ['Freeze Columns',  '🔲 TODO',   'Table',     'P1', 'Bob',     'S5', '12',  'Sticky left columns'],
+          ['Sorting',         '🔲 TODO',   'Table',     'P2', 'Charlie', 'S6', '16',  'Column sort asc/desc'],
+          ['Filter',          '🔲 TODO',   'Table',     'P2', 'Diana',   'S6', '24',  'Row filter rules'],
+          ['Presentation',    '🔲 TODO',   'Viewer',    'P2', 'Eve',     'S7', '20',  'Slide-by-slide mode'],
+        ]
+
+        return {
+          type: 'table' as const, version: 1, direction: 'ltr' as const, format: '' as const, indent: 0,
+          frozenRowCount: 1, frozenColumnCount: 1,
+          children: [
+            { type: 'tablerow' as const, version: 1, direction: 'ltr' as const, format: '' as const, indent: 0, children: headers.map(hdr) },
+            ...data.map(row),
+          ],
+        }
+      })(),
 
       // ── H2: Code Snippet ──
       h('h2', [t('Code Snippet')]),

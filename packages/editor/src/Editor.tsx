@@ -34,6 +34,8 @@ import { DragDropPlugin } from './plugins/DragDropPlugin'
 import { PastePlugin } from './plugins/PastePlugin'
 import { CollapsibleHeadingPlugin } from './plugins/CollapsibleHeadingPlugin'
 import { TableActionPlugin } from './plugins/TableActionPlugin'
+import { TableFreezeColumnPlugin } from './plugins/TableFreezeColumnPlugin'
+import { TableStickyHeaderPlugin } from './plugins/TableStickyHeaderPlugin'
 import { SelectionActionMenuPlugin, type SelectionAction } from './plugins/SelectionActionMenuPlugin'
 import { TextToMermaidPlugin } from './plugins/TextToMermaidPlugin'
 import { GENERATE_MERMAID_COMMAND } from './plugins/InsertCommands'
@@ -171,12 +173,14 @@ export function Editor({
         <ListPlugin />
         <LinkPlugin />
         <CheckListPlugin />
-        <LexicalTablePlugin />
+        <LexicalTablePlugin hasHorizontalScroll />
         <TablePlugin />
         <TableActionToolbar />
         <TableColumnResizePlugin />
         <TableDragReorderPlugin />
         <TableActionPlugin />
+        <TableFreezeColumnPlugin />
+        <TableStickyHeaderPlugin />
         <CustomNodesPlugin />
         <ImageUploadPlugin onUpload={upload?.onUpload} />
         <VideoUploadPlugin onUpload={upload?.onUpload} />

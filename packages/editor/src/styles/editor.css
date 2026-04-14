@@ -94,10 +94,18 @@
 
 /* Table */
 .le-table {
-  @apply border-collapse w-full mb-4;
+  @apply w-full mb-4;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 .le-table-cell {
-  @apply border border-gray-300 p-2 min-w-[60px];
+  @apply border-r border-b border-gray-300 p-2 min-w-[60px];
+}
+.le-table tr:first-child .le-table-cell {
+  @apply border-t;
+}
+.le-table tr .le-table-cell:first-child {
+  @apply border-l;
 }
 .le-table-cell-header {
   @apply bg-gray-100 font-bold;
@@ -107,6 +115,37 @@
 }
 .le-table-cell-selected {
   @apply bg-blue-100;
+}
+
+/* Table Scrollable Wrapper */
+.le-table-scrollable-wrapper {
+  @apply overflow-x-auto mb-4;
+}
+.le-table-scrollable-wrapper .le-table {
+  @apply mb-0;
+}
+
+/* Sticky Header — JS-based clone (see TableStickyHeaderPlugin) */
+.le-table-sticky-header-clone-wrapper th {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Frozen Columns */
+.le-table-frozen-column [data-lexical-frozen-column] td.le-table-frozen-cell,
+.le-table-frozen-column [data-lexical-frozen-column] th.le-table-frozen-cell {
+  position: sticky;
+  z-index: 1;
+}
+.le-table-frozen-column [data-lexical-frozen-column] td.le-table-frozen-cell {
+  background-color: white;
+}
+.le-table-frozen-column [data-lexical-frozen-column] th.le-table-frozen-cell {
+  z-index: 3;
+  background-color: #f3f4f6;
+}
+.le-table-frozen-column [data-lexical-frozen-column] .le-table-frozen-cell-last {
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.08);
 }
 
 /* Table Action Toolbar */

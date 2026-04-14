@@ -35,6 +35,7 @@ import {
   SplitSquareHorizontal,
   Paintbrush,
   AlignLeft,
+  PanelLeft,
 } from 'lucide-react'
 
 interface DropdownItem {
@@ -270,6 +271,9 @@ export function TableActionToolbar() {
           )
         }
       }
+
+      // Sync frozen row state for sticky header
+      ;(tableNode as TableNode).setFrozenRows(isCurrentlyHeader ? 0 : 1)
     })
   }, [editor])
 
@@ -329,6 +333,22 @@ export function TableActionToolbar() {
               child.setFormat(align)
             }
           }
+        }
+      })
+    },
+    [editor],
+  )
+
+  const setFreezeColumns = useCallback(
+    (count: number) => {
+      editor.update(() => {
+        const selection = $getSelection()
+        if (!$isRangeSelection(selection)) return
+        const cellNode = $findCellNode(selection.anchor.getNode())
+        if (!cellNode) return
+        const tableNode = $findTableNode(cellNode)
+        if (tableNode) {
+          ;(tableNode as TableNode).setFrozenColumns(count)
         }
       })
     },
@@ -421,6 +441,17 @@ export function TableActionToolbar() {
       <button className="le-table-toolbar-btn" onClick={toggleHeader} title="Toggle Header Row">
         <span className="le-table-toolbar-btn-label">Header</span>
       </button>
+      <ToolbarDropdown
+        icon={PanelLeft}
+        label="Freeze"
+        items={[
+          { label: 'No Freeze', action: () => setFreezeColumns(0) },
+          { label: 'Freeze 1 Column', action: () => setFreezeColumns(1) },
+          { label: 'Freeze 2 Columns', action: () => setFreezeColumns(2) },
+          { label: 'Freeze 3 Columns', action: () => setFreezeColumns(3) },
+        ]}
+      />
+      <div className="le-table-toolbar-sep" />
       <button className="le-table-toolbar-btn le-table-toolbar-btn-danger" onClick={deleteTable} title="Delete Table">
         <Trash2 size={14} />
       </button>

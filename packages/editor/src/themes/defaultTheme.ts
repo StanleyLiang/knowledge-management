@@ -39,4 +39,7 @@ export const defaultTheme: EditorThemeClasses = {
   tableRow: 'le-table-row',
   tableSelection: 'le-table-selection',
   tableCellSelected: 'le-table-cell-selected',
+  tableScrollableWrapper: 'le-table-scrollable-wrapper',
+  tableFrozenRow: 'le-table-frozen-row',
+  tableFrozenColumn: 'le-table-frozen-column',
 }

@@ -27,6 +27,7 @@ import {
 } from './nodes/CollapsibleNodes'
 import { TocSidebar } from './components/TocSidebar'
 import { CollapsibleHeadingPlugin } from './plugins/CollapsibleHeadingPlugin'
+import { TableStickyHeaderPlugin } from './plugins/TableStickyHeaderPlugin'
 import { EditorConfigProvider } from './context/EditorConfigContext'
 import { initI18n } from './i18n'
 import { PresentationMode, PresentationButton } from './components/viewer/PresentationMode'
@@ -98,7 +99,8 @@ export function Viewer({
               placeholder={null}
               ErrorBoundary={LexicalErrorBoundary}
             />
-            <TablePlugin />
+            <TablePlugin hasHorizontalScroll />
+            <TableStickyHeaderPlugin />
             <CollapsibleHeadingPlugin />
           </div>
           {showTableOfContents && <TocSidebar />}

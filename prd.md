@@ -502,7 +502,10 @@ codeSnippet?: {
 | 5 | Cell BG Color | Dropdown | Color Picker（儲存格背景色） |
 | 6 | Cell Align | Dropdown | Align Left, Align Center, Align Right（儲存格內文字對齊） |
 | 7 | Toggle Header | Toggle Button | 切換第一行是否為 header row |
-| 8 | Delete Table | Button | 刪除整個表格 |
+| 8 | Freeze Column ▾ | Dropdown | 不凍結（預設）、凍結第 1 欄、凍結前 2 欄、凍結前 3 欄 |
+| 9 | Sort ▾ | Dropdown | 依當前欄 Ascending ↑、Descending ↓、Clear Sort |
+| 10 | Filter ▾ | Dropdown | 開啟 Filter Rule 面板（見下方 Filter 子節） |
+| 11 | Delete Table | Button | 刪除整個表格 |
 
 ### 多選儲存格
 
@@ -525,6 +528,90 @@ codeSnippet?: {
 
 - 浮動工具列上的 Toggle Header 按鈕切換
 - Header row 有特殊樣式（粗體、背景色區分）
+
+### Sticky Header（Header Row 固定）
+
+- **前提**：表格已啟用 Header Row（Toggle Header = ON）
+- **行為**：垂直捲動時，Header Row **固定於編輯器可視區域頂部**，直到表格底部離開可視範圍
+- **適用模式**：Editor ✅ / Viewer ✅
+- **視覺規格**：
+  - 保留原有 header 樣式（粗體、背景色）
+  - 固定狀態下加底部 `box-shadow` 區分浮動層次
+  - 欄寬與原表格 **完全同步**（含 column resize 後的寬度）
+- **邊界條件**：
+  - 表格完全可見 → 正常排版，不觸發 sticky
+  - 表格頂部超出、底部仍可見 → header sticky
+  - 表格完全離開可視範圍 → header 不顯示
+- **z-index**：高於一般儲存格，低於浮動工具列
+- **合併儲存格**：header row 含 colspan 時，sticky 維持合併
+- **實作提示**：Lexical `setFrozenRows()` API + CSS `position: sticky; top: 0` 於 `<th>`
+
+### Freeze Columns（欄位凍結）
+
+- **觸發方式**：浮動工具列 Freeze Column ▾ Dropdown
+  - 選項：不凍結（預設）/ 凍結第 1 欄 / 凍結前 2 欄 / 凍結前 3 欄
+- **行為**：凍結欄在水平捲動時 **固定於表格左側**，其餘欄位正常捲動
+- **適用模式**：Editor ✅ / Viewer ✅
+- **前提**：表格啟用水平捲動容器（`tableScrollableWrapper`）
+- **視覺規格**：
+  - 凍結欄右側加 `box-shadow`（右側陰影）區分固定與捲動區域
+  - 凍結欄保持原有儲存格樣式
+  - 凍結欄寬度與原欄寬同步
+- **邊界條件**：
+  - 表格未超出容器 → 無水平捲軸，設定值保留但無視覺效果
+  - 凍結欄含 colspan → 合併範圍完整凍結
+  - **Sticky Header + Freeze Columns 同時啟用** → 左上角交叉區域水平垂直皆固定
+- **實作提示**：Lexical `setFrozenColumns(count)` API + `position: sticky; left: 0`
+
+### Sorting（欄位排序）
+
+- **觸發方式**：
+  - 浮動工具列 Sort ▾ Dropdown → 依當前所在欄排序
+  - 或點擊 header cell 的排序圖示（↑↓）
+- **排序類型**：自動偵測欄位內容類型
+  - 數字 → 數值排序
+  - 日期（ISO / 常見格式） → 日期排序
+  - 其他 → 字串排序（locale-aware）
+- **排序方向**：Ascending ↑ / Descending ↓ / Clear Sort（還原插入順序）
+- **適用模式**：Editor ✅ / Viewer ❌（唯讀不提供排序互動）
+- **視覺規格**：
+  - 排序中的 header cell 顯示方向箭頭（↑ 或 ↓）
+  - 非排序欄位不顯示箭頭
+- **邊界條件**：
+  - **Header Row 未啟用** → 排序功能不可用（禁用 Sort 按鈕）
+  - **合併儲存格** → 含 rowspan/colspan 的表格 **禁止排序** + toast 提示
+  - **排序 + Sticky Header** → 排序箭頭隨 sticky header 固定顯示
+  - **單欄排序**（v1 不支援多欄排序）
+- **實作提示**：Lexical 無內建排序 API，需自建：
+  1. 遍歷 cell children 抽取純文字值
+  2. 偵測類型（嘗試 parseFloat → Date.parse → fallback string）
+  3. 排序後用 `insertBefore/insertAfter` 重排 TableRowNode
+  4. 跳過 header row（index 0）
+
+### Filter（欄位篩選）
+
+- **觸發方式**：浮動工具列 Filter ▾ → 開啟 Filter Rule 面板
+- **Filter Rule 面板**：
+  - 浮動 popover，顯示在表格上方或下方
+  - 每條規則：`[欄位名稱] [運算子] [值]`
+  - 支援多條規則，以 AND 連接
+  - 可新增 / 刪除規則
+- **運算子**（依欄位內容類型自動調整）：
+  - 文字：contains、does not contain、is、is not、is empty、is not empty
+  - 數字：=、≠、>、<、≥、≤
+  - 日期：is、is before、is after
+- **行為**：不符合條件的 row **視覺隱藏**（`display: none`），不刪除資料
+- **適用模式**：Editor ✅ / Viewer ❌
+- **視覺規格**：
+  - 篩選啟用時，表格左上角顯示 filter badge（如「2 filters active」）
+  - 被隱藏的行數顯示在 badge 旁（如「3 rows hidden」）
+- **邊界條件**：
+  - **Header Row 未啟用** → Filter 功能不可用（無法確定欄位名稱）
+  - **合併儲存格** → 含 rowspan 的表格 **禁止篩選** + toast 提示
+  - **Filter + Sort 同時啟用** → 先 filter 再 sort（filter 優先）
+  - **清除所有 filter** → 還原所有隱藏行
+- **狀態持久化**：Filter 規則存於 TableNode metadata，序列化時保留
+- **實作提示**：與 Sorting 共用 cell value 抽取邏輯；row 隱藏使用 CSS class 而非移除 Node
 
 ### 巢狀 Table
 
@@ -907,6 +994,10 @@ lexical-editor/
 | **欄寬調整** | ❌ 不可拖曳 |
 | **Row/Column 拖曳移動** | ❌ 不載入 |
 | **多選儲存格** | ❌ 不載入 |
+| **Sticky Header** | ✅ Header Row 固定於可視區域頂部（需已啟用 Header Row） |
+| **Freeze Columns** | ✅ 凍結欄位固定於左側（保留 Editor 設定的凍結狀態） |
+| **Sorting** | ❌ 不載入（Viewer 為唯讀，不提供排序互動） |
+| **Filter** | ❌ 不載入（Viewer 顯示完整資料，不保留 Editor 的篩選狀態） |
 
 #### Code Snippet
 
@@ -1258,7 +1349,7 @@ interface ViewerProps {
 | Image | ✅ | 上傳 MinIO、resize handles、caption、alignment、lightbox |
 | Video | ✅ | 上傳 MinIO → NATS 轉檔 → HLS 播放、resize、不自動播放 |
 | Attachment | ✅ | 行內連結、file icon、file size |
-| Table | ✅ | 浮動工具列（Row/Col CRUD、Merge/Split、BG Color、Align、Header、Delete）、column resize、drag reorder、merge conflict guard + toast |
+| Table | ✅ | 浮動工具列（Row/Col CRUD、Merge/Split、BG Color、Align、Header、Delete）、column resize、drag reorder、merge conflict guard + toast、🔲 sticky header、🔲 freeze columns、🔲 sorting、🔲 filter |
 | Code Snippet | ✅ | Prism.js 14 語言、light theme、line numbers、copy、overlay highlight、escape 跳脫 |
 | Mermaid | ✅ | CodeMirror 6 portal editor、500ms debounce 即時預覽、resize |
 | Landmark | ✅ | Inline tag、portrait modal、台灣縣市邊界（taiwan-atlas）、世界地圖 + admin-1（Natural Earth） |
@@ -1295,6 +1386,7 @@ interface ViewerProps {
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 2.1 | 2026-04-10 | 新增 Table Sticky Header、Freeze Columns、Sorting、Filter 規格 |
 | 2.0 | 2026-04-02 | 更新 Tech Stack、Editor Interface (plugins config)、Media 上傳流程 (MinIO + NATS + HLS)、Landmark (inline tag + Taiwan map)、實作狀態總覽 |
 | 1.1 | 2026-03-21 | 新增 Copy-Paste 規格、Emoji Picker、Mermaid 寬高控制、React Best Practices |
 | 1.0 | 2026-03-12 | Initial PRD — Editor/Viewer 完整規格 |
