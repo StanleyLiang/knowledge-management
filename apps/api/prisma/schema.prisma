@@ -8,11 +8,12 @@ datasource db {
 }
 
 model Space {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   description String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  type        SpaceType @default(TEAM)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
   pages       Page[]
 
   @@map("spaces")
@@ -69,4 +70,10 @@ model PageTemplate {
 enum PageStatus {
   DRAFT
   PUBLISHED
+}
+
+enum SpaceType {
+  PERSONAL
+  TEAM
+  OFFICIAL
 }

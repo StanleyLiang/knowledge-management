@@ -1,7 +1,10 @@
+export type SpaceType = 'PERSONAL' | 'TEAM' | 'OFFICIAL'
+
 export interface Space {
   id: string
   name: string
   description: string | null
+  type: SpaceType
   createdAt: string
   updatedAt: string
   _count?: { pages: number }
@@ -49,6 +52,7 @@ export interface Page extends PageSummary {
 export interface CreateSpaceInput {
   name: string
   description?: string
+  type?: SpaceType
 }
 
 export interface UpdatePageInput {

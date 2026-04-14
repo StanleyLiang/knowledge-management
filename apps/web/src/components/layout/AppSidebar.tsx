@@ -3,12 +3,31 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Folder, FileText, ChevronRight, Plus } from 'lucide-react'
+import { User, Users, Building2, FileText, ChevronRight, Plus, ChevronsUpDown, Check } from 'lucide-react'
 import { useVirtualizer } from '@tanstack/react-virtual'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
-import type { SpaceWithPages, PageSummary } from '@/lib/types'
+import type { Space, SpaceType, SpaceWithPages, PageSummary } from '@/lib/types'
+
+// ── Space icon by type ──
+
+const SPACE_ICONS: Record<SpaceType, typeof User> = {
+  PERSONAL: User,
+  TEAM: Users,
+  OFFICIAL: Building2,
+}
+
+function SpaceIcon({ type, className }: { type?: SpaceType; className?: string }) {
+  const Icon = SPACE_ICONS[type ?? 'TEAM']
+  return <Icon className={className} />
+}
 
 // ── Tree building ──
 
@@ -39,7 +58,6 @@ function buildPageTree(pages: PageSummary[]): PageTreeNode[] {
 // ── Flat row for virtualizer ──
 
 interface FlatRow {
-  type: 'space' | 'page'
   id: string
   title: string
   depth: number
@@ -47,40 +65,13 @@ interface FlatRow {
   spaceId: string
 }
 
-function flattenTree(
-  spaces: SpaceWithPages[],
-  spaceTrees: Map<string, PageTreeNode[]>,
+function flattenPages(
+  tree: PageTreeNode[],
+  spaceId: string,
   expandedIds: Set<string>,
 ): FlatRow[] {
   const rows: FlatRow[] = []
-
-  for (const space of spaces) {
-    rows.push({
-      type: 'space',
-      id: space.id,
-      title: space.name,
-      depth: 0,
-      hasChildren: space.pages.length > 0,
-      spaceId: space.id,
-    })
-
-    if (expandedIds.has(space.id)) {
-      const tree = spaceTrees.get(space.id) ?? []
-      if (tree.length === 0) {
-        rows.push({
-          type: 'page',
-          id: `empty-${space.id}`,
-          title: 'No pages',
-          depth: 1,
-          hasChildren: false,
-          spaceId: space.id,
-        })
-      } else {
-        flattenNodes(tree, space.id, 1, expandedIds, rows)
-      }
-    }
-  }
-
+  flattenNodes(tree, spaceId, 0, expandedIds, rows)
   return rows
 }
 
@@ -93,7 +84,6 @@ function flattenNodes(
 ) {
   for (const node of nodes) {
     rows.push({
-      type: 'page',
       id: node.id,
       title: node.title,
       depth,
@@ -134,7 +124,9 @@ const ROW_HEIGHT = 32
 export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const [spaces, setSpaces] = useState<SpaceWithPages[]>([])
+  const [spaceList, setSpaceList] = useState<Space[]>([])
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null)
+  const [currentSpace, setCurrentSpace] = useState<SpaceWithPages | null>(null)
   const [loading, setLoading] = useState(true)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [creatingFor, setCreatingFor] = useState<string | null>(null)
@@ -145,76 +137,89 @@ export function AppSidebar() {
   const pageMatch = pathname.match(/\/pages\/([^/]+)/)
   const currentPageId = pageMatch?.[1]
 
-  // Fetch data
+  // Fetch space list (lightweight, no pages)
   useEffect(() => {
-    api.spaces.list().then(async (spaceList) => {
-      const spacesWithPages = await Promise.all(
-        spaceList.map(async (space) => {
-          try {
-            return await api.spaces.get(space.id)
-          } catch {
-            return { ...space, pages: [] } as SpaceWithPages
-          }
-        }),
-      )
-      setSpaces(spacesWithPages)
+    api.spaces.list().then((spaces) => {
+      setSpaceList(spaces)
+      if (spaces.length > 0 && !selectedSpaceId) {
+        setSelectedSpaceId(spaces[0].id)
+      }
       setLoading(false)
     })
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Refresh on pathname change
+  // Auto-select space from URL
   useEffect(() => {
-    if (loading) return
-    api.spaces.list().then(async (spaceList) => {
-      const spacesWithPages = await Promise.all(
-        spaceList.map(async (space) => {
-          try {
-            return await api.spaces.get(space.id)
-          } catch {
-            return { ...space, pages: [] } as SpaceWithPages
-          }
-        }),
-      )
-      setSpaces(spacesWithPages)
-    })
-  }, [pathname, loading])
+    if (spaceList.length === 0) return
 
-  // Auto-expand current space and ancestor pages
-  useEffect(() => {
-    if (spaces.length === 0) return
-    setExpandedIds((prev) => {
-      const next = new Set(prev)
-      // Expand current space
-      if (currentSpaceId) next.add(currentSpaceId)
-      // Expand space containing current page, and ancestor pages
-      if (currentPageId) {
-        for (const space of spaces) {
-          const page = space.pages.find((p) => p.id === currentPageId)
-          if (page) {
-            next.add(space.id)
-            const ancestors = collectAncestorIds(space.pages, currentPageId)
-            for (const id of ancestors) next.add(id)
-            break
+    if (currentSpaceId && spaceList.some((s) => s.id === currentSpaceId)) {
+      setSelectedSpaceId(currentSpaceId)
+      return
+    }
+
+    // If viewing a page, find which space it belongs to
+    if (currentPageId && currentSpace) {
+      const found = currentSpace.pages.find((p) => p.id === currentPageId)
+      if (found) return // already on the right space
+    }
+
+    // Try to find page in all spaces
+    if (currentPageId) {
+      Promise.all(spaceList.map((s) => api.spaces.get(s.id))).then((allSpaces) => {
+        for (const space of allSpaces) {
+          if (space.pages.some((p) => p.id === currentPageId)) {
+            setSelectedSpaceId(space.id)
+            setCurrentSpace(space)
+            return
           }
         }
-      }
-      return next
-    })
-  }, [spaces, currentSpaceId, currentPageId])
-
-  // Build trees
-  const spaceTrees = useMemo(() => {
-    const map = new Map<string, PageTreeNode[]>()
-    for (const space of spaces) {
-      map.set(space.id, buildPageTree(space.pages))
+      })
     }
-    return map
-  }, [spaces])
+  }, [currentSpaceId, currentPageId, spaceList]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch selected space's pages
+  useEffect(() => {
+    if (!selectedSpaceId) return
+    api.spaces.get(selectedSpaceId).then(setCurrentSpace)
+  }, [selectedSpaceId])
+
+  // Refresh current space on pathname change
+  useEffect(() => {
+    if (loading || !selectedSpaceId) return
+    api.spaces.get(selectedSpaceId).then(setCurrentSpace)
+  }, [pathname]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Refresh space list on pathname change (new spaces may have been created)
+  useEffect(() => {
+    if (loading) return
+    api.spaces.list().then(setSpaceList)
+  }, [pathname, loading])
+
+  // Auto-expand ancestor pages of current page
+  useEffect(() => {
+    if (!currentSpace || !currentPageId) return
+    const page = currentSpace.pages.find((p) => p.id === currentPageId)
+    if (!page) return
+    const ancestors = collectAncestorIds(currentSpace.pages, currentPageId)
+    if (ancestors.size > 0) {
+      setExpandedIds((prev) => {
+        const next = new Set(prev)
+        for (const id of ancestors) next.add(id)
+        return next
+      })
+    }
+  }, [currentSpace, currentPageId])
+
+  // Build tree for current space
+  const pageTree = useMemo(() => {
+    if (!currentSpace) return []
+    return buildPageTree(currentSpace.pages)
+  }, [currentSpace])
 
   // Flatten for virtualizer
   const flatRows = useMemo(
-    () => flattenTree(spaces, spaceTrees, expandedIds),
-    [spaces, spaceTrees, expandedIds],
+    () => (currentSpace ? flattenPages(pageTree, currentSpace.id, expandedIds) : []),
+    [pageTree, currentSpace, expandedIds],
   )
 
   const virtualizer = useVirtualizer({
@@ -252,6 +257,8 @@ export function AppSidebar() {
     [creatingFor, router],
   )
 
+  const selectedSpace = spaceList.find((s) => s.id === selectedSpaceId)
+
   if (loading) {
     return (
       <div className="w-60 border-r bg-white p-4 space-y-3">
@@ -266,138 +273,109 @@ export function AppSidebar() {
 
   return (
     <div className="w-60 border-r bg-white flex flex-col shrink-0">
+      {/* Space switcher dropdown */}
       <div className="px-3 py-3 border-b">
-        <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">
-          Spaces
-        </span>
-      </div>
-      <div ref={scrollRef} className="flex-1 overflow-auto">
-        <div
-          className="relative w-full p-2"
-          style={{ height: virtualizer.getTotalSize() }}
-        >
-          {virtualizer.getVirtualItems().map((virtualItem) => {
-            const row = flatRows[virtualItem.index]
-            const isExpanded = expandedIds.has(row.id)
-            const isEmpty = row.id.startsWith('empty-')
-
-            // Empty placeholder row
-            if (isEmpty) {
-              return (
-                <div
-                  key={virtualItem.key}
-                  className="absolute left-0 right-0"
-                  style={{
-                    height: virtualItem.size,
-                    transform: `translateY(${virtualItem.start}px)`,
-                  }}
-                >
-                  <div
-                    className="px-2 py-1.5 text-xs text-muted-foreground"
-                    style={{ paddingLeft: row.depth * 16 + 8 }}
-                  >
-                    No pages
-                  </div>
-                </div>
-              )
-            }
-
-            // Space row
-            if (row.type === 'space') {
-              return (
-                <div
-                  key={virtualItem.key}
-                  className="absolute left-0 right-0"
-                  style={{
-                    height: virtualItem.size,
-                    transform: `translateY(${virtualItem.start}px)`,
-                  }}
-                >
-                  <button
-                    onClick={() => toggleExpand(row.id)}
-                    className="flex items-center gap-1.5 w-full px-2 py-1.5 text-sm rounded-md hover:bg-gray-100"
-                  >
-                    <ChevronRight
-                      className={cn(
-                        'h-3.5 w-3.5 text-muted-foreground transition-transform',
-                        isExpanded && 'rotate-90',
-                      )}
-                    />
-                    <Folder className="h-4 w-4 text-blue-500 shrink-0" />
-                    <Link
-                      href={`/spaces/${row.id}`}
-                      className={cn(
-                        'truncate flex-1 text-left',
-                        row.id === currentSpaceId && !currentPageId && 'font-semibold',
-                      )}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {row.title}
-                    </Link>
-                  </button>
-                </div>
-              )
-            }
-
-            // Page row
-            return (
-              <div
-                key={virtualItem.key}
-                className="absolute left-0 right-0 group"
-                style={{
-                  height: virtualItem.size,
-                  transform: `translateY(${virtualItem.start}px)`,
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-md hover:bg-gray-100 outline-none">
+            <SpaceIcon type={selectedSpace?.type} className="h-4 w-4 text-blue-500 shrink-0" />
+            <span className="truncate flex-1 text-left font-medium">
+              {selectedSpace?.name ?? 'Select space'}
+            </span>
+            <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)]">
+            {spaceList.map((space) => (
+              <DropdownMenuItem
+                key={space.id}
+                onClick={() => {
+                  setSelectedSpaceId(space.id)
+                  router.push(`/spaces/${space.id}`)
                 }}
+                className="flex items-center gap-2"
               >
-                <div className="flex items-center" style={{ paddingLeft: row.depth * 16 }}>
-                  {row.hasChildren ? (
-                    <button
-                      onClick={() => toggleExpand(row.id)}
-                      className="flex items-center gap-1.5 flex-1 min-w-0 px-2 py-1.5 text-sm rounded-md hover:bg-gray-100"
-                    >
-                      <ChevronRight
-                        className={cn(
-                          'h-3 w-3 text-muted-foreground transition-transform shrink-0',
-                          isExpanded && 'rotate-90',
-                        )}
-                      />
-                      <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <SpaceIcon type={space.type} className="h-4 w-4 text-blue-500 shrink-0" />
+                <span className="truncate flex-1">{space.name}</span>
+                {space.id === selectedSpaceId && (
+                  <Check className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                )}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Virtualized page tree */}
+      <div ref={scrollRef} className="flex-1 overflow-auto">
+        {flatRows.length === 0 ? (
+          <div className="px-4 py-3 text-xs text-muted-foreground">No pages</div>
+        ) : (
+          <div
+            className="relative w-full p-2"
+            style={{ height: virtualizer.getTotalSize() }}
+          >
+            {virtualizer.getVirtualItems().map((virtualItem) => {
+              const row = flatRows[virtualItem.index]
+              const isExpanded = expandedIds.has(row.id)
+
+              return (
+                <div
+                  key={virtualItem.key}
+                  className="absolute left-0 right-0 group"
+                  style={{
+                    height: virtualItem.size,
+                    transform: `translateY(${virtualItem.start}px)`,
+                  }}
+                >
+                  <div className="flex items-center" style={{ paddingLeft: row.depth * 16 }}>
+                    {row.hasChildren ? (
+                      <button
+                        onClick={() => toggleExpand(row.id)}
+                        className="flex items-center gap-1.5 flex-1 min-w-0 px-2 py-1.5 text-sm rounded-md hover:bg-gray-100"
+                      >
+                        <ChevronRight
+                          className={cn(
+                            'h-3 w-3 text-muted-foreground transition-transform shrink-0',
+                            isExpanded && 'rotate-90',
+                          )}
+                        />
+                        <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <Link
+                          href={`/pages/${row.id}`}
+                          className={cn(
+                            'truncate flex-1 text-left',
+                            row.id === currentPageId && 'font-medium',
+                          )}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {row.title}
+                        </Link>
+                      </button>
+                    ) : (
                       <Link
                         href={`/pages/${row.id}`}
                         className={cn(
-                          'truncate flex-1 text-left',
-                          row.id === currentPageId && 'font-medium',
+                          'flex items-center gap-1.5 flex-1 min-w-0 px-2 py-1.5 text-sm rounded-md hover:bg-gray-100 truncate',
+                          row.id === currentPageId && 'bg-gray-100 font-medium',
                         )}
-                        onClick={(e) => e.stopPropagation()}
                       >
-                        {row.title}
+                        <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="truncate">{row.title}</span>
                       </Link>
-                    </button>
-                  ) : (
-                    <Link
-                      href={`/pages/${row.id}`}
-                      className={cn(
-                        'flex items-center gap-1.5 flex-1 min-w-0 px-2 py-1.5 text-sm rounded-md hover:bg-gray-100 truncate',
-                        row.id === currentPageId && 'bg-gray-100 font-medium',
-                      )}
+                    )}
+                    <button
+                      onClick={(e) => handleAddSubPage(e, row.spaceId, row.id)}
+                      disabled={creatingFor === row.id}
+                      className="hidden group-hover:flex items-center justify-center h-5 w-5 rounded hover:bg-gray-200 shrink-0 mr-1"
+                      title="Add sub-page"
                     >
-                      <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span className="truncate">{row.title}</span>
-                    </Link>
-                  )}
-                  <button
-                    onClick={(e) => handleAddSubPage(e, row.spaceId, row.id)}
-                    disabled={creatingFor === row.id}
-                    className="hidden group-hover:flex items-center justify-center h-5 w-5 rounded hover:bg-gray-200 shrink-0 mr-1"
-                    title="Add sub-page"
-                  >
-                    <Plus className="h-3 w-3 text-muted-foreground" />
-                  </button>
+                      <Plus className="h-3 w-3 text-muted-foreground" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )
