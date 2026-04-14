@@ -106,9 +106,69 @@ export function TableStickyHeaderPlugin() {
       clone.appendChild(cloneTable)
     }
 
+    // --- Sticky horizontal scrollbar ---
+    const scrollbars = new Map<HTMLElement, { proxy: HTMLDivElement; syncing: boolean }>()
+
+    function syncScrollbar(wrapper: HTMLElement) {
+      const wrapperRect = wrapper.getBoundingClientRect()
+      const hasHScroll = wrapper.scrollWidth > wrapper.clientWidth
+      const bottomBelowViewport = wrapperRect.bottom > window.innerHeight
+      const topAboveViewport = wrapperRect.top < window.innerHeight
+
+      const shouldShow = hasHScroll && bottomBelowViewport && topAboveViewport
+
+      let entry = scrollbars.get(wrapper)
+
+      if (!shouldShow) {
+        if (entry) {
+          entry.proxy.remove()
+          scrollbars.delete(wrapper)
+        }
+        return
+      }
+
+      if (!entry) {
+        const proxy = document.createElement('div')
+        proxy.className = 'le-table-sticky-scrollbar'
+        proxy.style.height = '12px'
+        const spacer = document.createElement('div')
+        spacer.style.height = '1px'
+        proxy.appendChild(spacer)
+        document.body.appendChild(proxy)
+
+        entry = { proxy, syncing: false }
+        scrollbars.set(wrapper, entry)
+
+        // Proxy → wrapper sync (user drags the sticky scrollbar)
+        proxy.addEventListener('scroll', () => {
+          if (entry!.syncing) return
+          entry!.syncing = true
+          wrapper.scrollLeft = proxy.scrollLeft
+          requestAnimationFrame(() => { entry!.syncing = false })
+        }, { passive: true })
+        // Wrapper → proxy sync is handled by updateAll() which sets
+        // proxy.scrollLeft = wrapper.scrollLeft on every scroll frame
+      }
+
+      // Position and size the proxy
+      entry.proxy.style.left = `${wrapperRect.left}px`
+      entry.proxy.style.width = `${wrapperRect.width}px`
+      // Update spacer width to match scroll content
+      const spacer = entry.proxy.firstElementChild as HTMLElement
+      spacer.style.width = `${wrapper.scrollWidth}px`
+      // Sync current scroll position (with loop prevention)
+      if (!entry.syncing) {
+        entry.syncing = true
+        entry.proxy.scrollLeft = wrapper.scrollLeft
+        requestAnimationFrame(() => { entry.syncing = false })
+      }
+    }
+
     function updateAll() {
       const rootEl = editor.getRootElement()
       if (!rootEl) return
+
+      // --- Sticky headers ---
       const tables = rootEl.querySelectorAll<HTMLTableElement>(
         'table[data-lexical-frozen-row]',
       )
@@ -123,6 +183,22 @@ export function TableStickyHeaderPlugin() {
         if (!activeTables.has(table)) {
           clone.remove()
           clones.delete(table)
+        }
+      }
+
+      // --- Sticky scrollbars ---
+      const wrappers = rootEl.querySelectorAll<HTMLElement>('.le-table-scrollable-wrapper')
+      const activeWrappers = new Set<HTMLElement>()
+
+      wrappers.forEach((wrapper) => {
+        activeWrappers.add(wrapper)
+        syncScrollbar(wrapper)
+      })
+
+      for (const [wrapper, entry] of scrollbars) {
+        if (!activeWrappers.has(wrapper)) {
+          entry.proxy.remove()
+          scrollbars.delete(wrapper)
         }
       }
     }
@@ -161,6 +237,9 @@ export function TableStickyHeaderPlugin() {
       requestAnimationFrame(updateAll)
     })
 
+    // Initial run after DOM is ready
+    requestAnimationFrame(updateAll)
+
     return () => {
       window.removeEventListener('scroll', scrollHandler)
       for (const [el, handler] of wrapperScrollHandlers) {
@@ -172,6 +251,10 @@ export function TableStickyHeaderPlugin() {
         clone.remove()
       }
       clones.clear()
+      for (const entry of scrollbars.values()) {
+        entry.proxy.remove()
+      }
+      scrollbars.clear()
     }
   }, [editor])
 

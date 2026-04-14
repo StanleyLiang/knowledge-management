@@ -125,6 +125,16 @@
   @apply mb-0;
 }
 
+/* Sticky Horizontal Scrollbar */
+.le-table-sticky-scrollbar {
+  position: fixed;
+  bottom: 0;
+  z-index: 35;
+  overflow-x: auto;
+  overflow-y: hidden;
+  @apply bg-white border-t border-gray-200;
+}
+
 /* Sticky Header — JS-based clone (see TableStickyHeaderPlugin) */
 .le-table-sticky-header-clone-wrapper th {
   word-break: break-word;
