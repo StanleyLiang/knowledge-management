@@ -10,8 +10,18 @@ import { PageActions } from '@/components/pages/PageActions'
 
 export const dynamic = 'force-dynamic'
 
+async function resolveSpaceId(slug: string) {
+  if (slug !== 'mySpace') return slug
+  const spaces = await api.spaces.list()
+  const personal = spaces.find((s) => s.type === 'PERSONAL')
+  if (personal) return personal.id
+  const newSpace = await api.spaces.create({ name: 'My Space', type: 'PERSONAL' })
+  return newSpace.id
+}
+
 export default async function SpaceDetailPage({ params }: { params: Promise<{ spaceId: string }> }) {
-  const { spaceId } = await params
+  const { spaceId: slug } = await params
+  const spaceId = await resolveSpaceId(slug)
   let space
   try {
     space = await api.spaces.get(spaceId)

@@ -152,6 +152,13 @@ export function AppSidebar() {
   useEffect(() => {
     if (spaceList.length === 0) return
 
+    // Resolve mySpace slug to actual PERSONAL space ID
+    if (currentSpaceId === 'mySpace') {
+      const personal = spaceList.find((s) => s.type === 'PERSONAL')
+      if (personal) setSelectedSpaceId(personal.id)
+      return
+    }
+
     if (currentSpaceId && spaceList.some((s) => s.id === currentSpaceId)) {
       setSelectedSpaceId(currentSpaceId)
       return
@@ -289,7 +296,7 @@ export function AppSidebar() {
                 key={space.id}
                 onClick={() => {
                   setSelectedSpaceId(space.id)
-                  router.push(`/spaces/${space.id}`)
+                  router.push(space.type === 'PERSONAL' ? '/spaces/mySpace' : `/spaces/${space.id}`)
                 }}
                 className="flex items-center gap-2"
               >
