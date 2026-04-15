@@ -220,6 +220,84 @@
   border-radius: 1px;
 }
 
+/* Table sort/filter */
+.le-table-sort-filter-icon {
+  @apply flex items-center justify-center w-5 h-5 rounded
+         text-gray-300 hover:text-gray-600 hover:bg-gray-200
+         transition-colors z-40 cursor-pointer;
+  /* position (absolute or fixed) is set inline for sticky header support */
+  border: none;
+  background: transparent;
+}
+.le-table-sort-filter-icon-active {
+  @apply text-blue-500 hover:text-blue-600;
+}
+.le-table-sort-filter-icon-filtered::after {
+  content: '';
+  @apply absolute top-0 right-0 w-1.5 h-1.5 bg-blue-500 rounded-full;
+}
+.le-table-row-hidden {
+  display: none !important;
+}
+.le-table-sort-filter-dropdown {
+  @apply absolute bg-white border border-gray-200 rounded-lg shadow-lg z-50;
+  width: 220px;
+}
+.le-table-sort-filter-section {
+  @apply px-1 py-1;
+}
+.le-table-sort-filter-btn {
+  @apply flex items-center gap-2 w-full text-left px-2 py-1.5 text-xs text-gray-700
+         rounded hover:bg-gray-100 transition-colors;
+  border: none;
+  background: transparent;
+}
+.le-table-sort-filter-btn-active {
+  @apply text-blue-600 bg-blue-50 hover:bg-blue-100;
+}
+.le-table-sort-filter-check {
+  @apply ml-auto text-blue-500;
+}
+.le-table-sort-filter-divider {
+  @apply h-px bg-gray-200 mx-1;
+}
+.le-table-sort-filter-filter-header {
+  @apply flex items-center justify-between px-2 py-1;
+}
+.le-table-sort-filter-filter-title {
+  @apply text-xs font-medium text-gray-500;
+}
+.le-table-sort-filter-filter-actions {
+  @apply flex items-center gap-2;
+}
+.le-table-sort-filter-link {
+  @apply text-xs text-blue-500 hover:text-blue-700 transition-colors;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.le-table-sort-filter-search {
+  @apply w-full px-2 py-1 text-xs border border-gray-200 rounded
+         outline-none focus:border-blue-400 mx-auto;
+  width: calc(100% - 8px);
+  margin: 2px 4px;
+}
+.le-table-sort-filter-values {
+  @apply overflow-y-auto;
+  max-height: 160px;
+}
+.le-table-sort-filter-value-item {
+  @apply flex items-center gap-2 px-2 py-1 text-xs text-gray-700
+         hover:bg-gray-50 cursor-pointer;
+}
+.le-table-sort-filter-value-item input[type='checkbox'] {
+  @apply w-3.5 h-3.5 rounded border-gray-300 text-blue-500
+         focus:ring-blue-400 focus:ring-1 cursor-pointer;
+}
+.le-table-sort-filter-no-values {
+  @apply px-2 py-2 text-xs text-gray-400 text-center;
+}
+
 /* Editor container */
 .le-editor-container {
   @apply relative w-full border border-gray-200 rounded-lg bg-white;

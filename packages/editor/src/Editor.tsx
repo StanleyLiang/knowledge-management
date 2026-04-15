@@ -36,6 +36,7 @@ import { CollapsibleHeadingPlugin } from './plugins/CollapsibleHeadingPlugin'
 import { TableActionPlugin } from './plugins/TableActionPlugin'
 import { TableFreezeColumnPlugin } from './plugins/TableFreezeColumnPlugin'
 import { TableStickyHeaderPlugin } from './plugins/TableStickyHeaderPlugin'
+import { TableSortFilterPlugin } from './plugins/TableSortFilterPlugin'
 import { SelectionActionMenuPlugin, type SelectionAction } from './plugins/SelectionActionMenuPlugin'
 import { TextToMermaidPlugin } from './plugins/TextToMermaidPlugin'
 import { GENERATE_MERMAID_COMMAND } from './plugins/InsertCommands'
@@ -181,6 +182,7 @@ export function Editor({
         <TableActionPlugin />
         <TableFreezeColumnPlugin />
         <TableStickyHeaderPlugin />
+        <TableSortFilterPlugin />
         <CustomNodesPlugin />
         <ImageUploadPlugin onUpload={upload?.onUpload} />
         <VideoUploadPlugin onUpload={upload?.onUpload} />
