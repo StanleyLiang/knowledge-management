@@ -1,5 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getSelection, $isRangeSelection, $isTextNode } from 'lexical'
+import { $patchStyleText } from '@lexical/selection'
+import { $getSelection, $isRangeSelection } from 'lexical'
 import { Palette, Highlighter } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Dropdown } from '../ui/dropdown'
@@ -53,16 +54,7 @@ export function TextColorPicker() {
     editor.update(() => {
       const selection = $getSelection()
       if (!$isRangeSelection(selection)) return
-      const nodes = selection.getNodes()
-      for (const node of nodes) {
-        if ($isTextNode(node)) {
-          const currentStyle = node.getStyle()
-          const newStyle = color
-            ? updateStyle(currentStyle, 'color', color)
-            : removeStyle(currentStyle, 'color')
-          node.setStyle(newStyle)
-        }
-      }
+      $patchStyleText(selection, { color })
     })
   }
 
@@ -90,16 +82,7 @@ export function TextBgColorPicker() {
     editor.update(() => {
       const selection = $getSelection()
       if (!$isRangeSelection(selection)) return
-      const nodes = selection.getNodes()
-      for (const node of nodes) {
-        if ($isTextNode(node)) {
-          const currentStyle = node.getStyle()
-          const newStyle = color
-            ? updateStyle(currentStyle, 'background-color', color)
-            : removeStyle(currentStyle, 'background-color')
-          node.setStyle(newStyle)
-        }
-      }
+      $patchStyleText(selection, { 'background-color': color })
     })
   }
 
@@ -118,32 +101,4 @@ export function TextBgColorPicker() {
       />
     </Dropdown>
   )
-}
-
-function updateStyle(existingStyle: string, property: string, value: string): string {
-  const styles = parseStyle(existingStyle)
-  styles[property] = value
-  return serializeStyle(styles)
-}
-
-function removeStyle(existingStyle: string, property: string): string {
-  const styles = parseStyle(existingStyle)
-  delete styles[property]
-  return serializeStyle(styles)
-}
-
-function parseStyle(styleStr: string): Record<string, string> {
-  const styles: Record<string, string> = {}
-  if (!styleStr) return styles
-  for (const part of styleStr.split(';')) {
-    const [key, val] = part.split(':').map((s) => s.trim())
-    if (key && val) styles[key] = val
-  }
-  return styles
-}
-
-function serializeStyle(styles: Record<string, string>): string {
-  return Object.entries(styles)
-    .map(([k, v]) => `${k}: ${v}`)
-    .join('; ')
 }
