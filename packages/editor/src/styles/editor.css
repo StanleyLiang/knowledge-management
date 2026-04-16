@@ -392,7 +392,7 @@
 /* ========== Toolbar ========== */
 .le-toolbar {
   @apply flex items-center gap-0.5 px-2 py-1 border-b border-gray-200 bg-gray-50
-         rounded-t-lg flex-wrap;
+         rounded-t-lg flex-wrap sticky top-0 z-40;
 }
 .le-toolbar-dropdown-trigger {
   @apply flex items-center gap-1;

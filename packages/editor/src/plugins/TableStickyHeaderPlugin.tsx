@@ -13,7 +13,14 @@ export function TableStickyHeaderPlugin() {
   useEffect(() => {
     const clones = new Map<HTMLTableElement, HTMLDivElement>()
 
-    function syncClone(table: HTMLTableElement) {
+    /** Compute the offset caused by the sticky toolbar (0 in viewer mode). */
+    function getStickyOffset(): number {
+      const rootEl = editor.getRootElement()
+      const toolbar = rootEl?.closest('.le-editor-container')?.querySelector('.le-toolbar')
+      return toolbar ? toolbar.getBoundingClientRect().height : 0
+    }
+
+    function syncClone(table: HTMLTableElement, stickyOffset: number) {
       const headerRow = table.querySelector('tr:first-of-type')
       if (!headerRow) return
       const ths = headerRow.querySelectorAll('th')
@@ -26,7 +33,7 @@ export function TableStickyHeaderPlugin() {
       const headerRect = headerRow.getBoundingClientRect()
       const tableRect = table.getBoundingClientRect()
 
-      const shouldShow = headerRect.bottom < 0 && tableRect.bottom > headerRect.height
+      const shouldShow = headerRect.bottom < stickyOffset && tableRect.bottom > headerRect.height + stickyOffset
 
       let clone = clones.get(table)
 
@@ -41,10 +48,13 @@ export function TableStickyHeaderPlugin() {
       if (!clone) {
         clone = document.createElement('div')
         clone.className = 'le-table-sticky-header-clone-wrapper'
-        clone.style.cssText = 'position:fixed;top:0;z-index:40;pointer-events:none;overflow:hidden;'
+        clone.style.cssText = `position:fixed;top:${stickyOffset}px;z-index:39;pointer-events:none;overflow:hidden;`
         document.body.appendChild(clone)
         clones.set(table, clone)
       }
+
+      // Update top in case toolbar height changed (e.g. flex-wrap)
+      clone.style.top = `${stickyOffset}px`
 
       clone.style.left = `${wrapperRect.left}px`
       clone.style.width = `${wrapperRect.width}px`
@@ -168,6 +178,8 @@ export function TableStickyHeaderPlugin() {
       const rootEl = editor.getRootElement()
       if (!rootEl) return
 
+      const stickyOffset = getStickyOffset()
+
       // --- Sticky headers ---
       const tables = rootEl.querySelectorAll<HTMLTableElement>(
         'table[data-lexical-frozen-row]',
@@ -176,7 +188,7 @@ export function TableStickyHeaderPlugin() {
 
       tables.forEach((table) => {
         activeTables.add(table)
-        syncClone(table)
+        syncClone(table, stickyOffset)
       })
 
       for (const [table, clone] of clones) {
