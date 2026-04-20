@@ -22,6 +22,7 @@ import { VideoUploadPlugin } from './plugins/VideoUploadPlugin'
 import { AttachmentUploadPlugin } from './plugins/AttachmentUploadPlugin'
 import { VideoConvertPlugin } from './plugins/VideoConvertPlugin'
 import { TableActionToolbar } from './components/editor/TableActionToolbar'
+import { TableCellActionMenuPlugin } from './plugins/TableCellActionMenuPlugin'
 import { TableColumnResizePlugin } from './plugins/TableColumnResizePlugin'
 import { TableDragReorderPlugin } from './plugins/TableDragReorderPlugin'
 import { SlashCommandPlugin } from './plugins/SlashCommandPlugin'
@@ -177,6 +178,7 @@ export function Editor({
         <LexicalTablePlugin hasHorizontalScroll />
         <TablePlugin />
         <TableActionToolbar />
+        <TableCellActionMenuPlugin />
         <TableColumnResizePlugin />
         <TableDragReorderPlugin />
         <TableActionPlugin />
