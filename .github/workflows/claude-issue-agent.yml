@@ -1,10 +1,11 @@
 name: Claude Issue Agent
 
+# Disabled for now — we're handling agent-ready issues via a local /loop
+# session (Claude Max subscription) instead of the hosted API. Re-enable by
+# restoring `issues: [labeled]` and `issue_comment: [created]` triggers once
+# API billing or a CLAUDE_CODE_OAUTH_TOKEN secret is configured.
 on:
-  issues:
-    types: [labeled]
-  issue_comment:
-    types: [created]
+  workflow_dispatch:
 
 permissions: {}
 
