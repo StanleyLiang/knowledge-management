@@ -1,0 +1,68 @@
+name: Claude Issue Agent
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+jobs:
+  agent:
+    name: Run Claude on labeled issue
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Only run when:
+    #   - an issue is labeled `agent-ready` by a trusted sender, OR
+    #   - a trusted sender comments `/agent` (retry/nudge) on an issue (not a PR).
+    # Sender-association guard blocks random contributors from burning API credits.
+    if: |
+      (
+        github.event_name == 'issues'
+        && github.event.action == 'labeled'
+        && github.event.label.name == 'agent-ready'
+        && github.event.issue.pull_request == null
+      )
+      || (
+        github.event_name == 'issue_comment'
+        && github.event.action == 'created'
+        && startsWith(github.event.comment.body, '/agent')
+        && github.event.issue.pull_request == null
+        && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+      )
+
+    concurrency:
+      group: agent-issue-${{ github.event.issue.number }}
+      cancel-in-progress: true
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          label_trigger: agent-ready
+          base_branch: main
+          branch_prefix: agent/issue-
+          # Forbid write users from being bypassed. The action already requires
+          # write permission by default; leaving allowed_non_write_users empty
+          # keeps that guard in place.
+          allowed_non_write_users: ""
+          claude_args: |
+            --append-system-prompt "You are running inside a GitHub Action triggered by an issue label. Before doing anything else, read .github/agent-instructions.md and follow every rule in it. Open the pull request as a draft."
+            --max-turns 40

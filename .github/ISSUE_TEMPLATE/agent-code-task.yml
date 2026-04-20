@@ -1,0 +1,75 @@
+name: Code task for agent
+description: Ask Claude to make a code change (feature, fix, refactor).
+title: "[code] "
+labels: ["type:code"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        File this issue to have the agent modify code.
+        A maintainer will add the `agent-ready` label to trigger the run.
+        The agent reads `.github/agent-instructions.md` before starting and will open a **draft PR**.
+
+  - type: dropdown
+    id: target
+    attributes:
+      label: Target package / app
+      options:
+        - packages/editor
+        - apps/demo
+        - apps/web
+        - apps/api
+        - tools/video-converter
+        - repo root / multiple
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What change is needed and why?
+      placeholder: "Add a `disabled` prop to <Editor> so embedders can render it read-only without using the Viewer component."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Concrete, checkable outcomes.
+      placeholder: |
+        - `disabled` prop is documented in the package README
+        - When `disabled={true}`, toolbar is hidden and content is not editable
+        - Existing demo still renders correctly
+    validations:
+      required: true
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: Explicitly list things the agent should NOT touch.
+      placeholder: |
+        - Do not change the <Viewer> component
+        - Do not add new dependencies
+    validations:
+      required: true
+
+  - type: textarea
+    id: test_plan
+    attributes:
+      label: Test plan
+      description: How should the change be verified?
+      placeholder: |
+        - `npm run lint` clean
+        - Manual: open apps/demo, verify no regression
+        - Unit test for the new prop
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: Relevant files / prior art
+      description: Files the agent should read first.
