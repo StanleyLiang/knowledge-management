@@ -7,33 +7,19 @@ import {
 } from 'lexical'
 import {
   $isTableCellNode,
-  $isTableRowNode,
   $isTableSelection,
   $findTableNode,
   $findCellNode,
-  $insertTableRow__EXPERIMENTAL,
-  $insertTableColumn__EXPERIMENTAL,
-  $deleteTableRow__EXPERIMENTAL,
-  $deleteTableColumn__EXPERIMENTAL,
   $mergeCells,
   $unmergeCell,
-  TableCellHeaderStates,
   type TableCellNode,
   type TableNode,
 } from '@lexical/table'
-import { toast } from '../ui/toast'
 import {
-  checkRowOperation,
-  checkColumnOperation,
-} from '../../utils/tableMergeGuard'
-import {
-  Rows3,
-  Columns3,
   Trash2,
   ChevronDown,
   Merge,
   SplitSquareHorizontal,
-  Paintbrush,
   AlignLeft,
   PanelLeft,
 } from 'lucide-react'
@@ -167,116 +153,6 @@ export function TableActionToolbar() {
     })
   }, [editor])
 
-  /** Run guard check inside read() to keep node access in valid scope */
-  const guardedRowOp = useCallback(
-    (op: 'insert' | 'delete', fn: () => void) => {
-      let blocked: string | null = null
-      editor.getEditorState().read(() => {
-        const selection = $getSelection()
-        let cellNode: TableCellNode | null = null
-        if ($isRangeSelection(selection)) {
-          cellNode = $findCellNode(selection.anchor.getNode()) as TableCellNode | null
-        } else if ($isTableSelection(selection)) {
-          const first = selection.getNodes().find((n) => $isTableCellNode(n))
-          if (first) cellNode = first as TableCellNode
-        }
-        if (!cellNode) return
-        const tableNode = $findTableNode(cellNode) as TableNode | null
-        if (!tableNode) return
-        const row = cellNode.getParent()
-        if (!$isTableRowNode(row)) return
-        const rowIndex = tableNode.getChildren().indexOf(row)
-        blocked = checkRowOperation(tableNode, rowIndex, op)
-      })
-      if (blocked) { toast.warning(blocked); return }
-      fn()
-    },
-    [editor],
-  )
-
-  const guardedColOp = useCallback(
-    (op: 'insert' | 'delete', fn: () => void) => {
-      let blocked: string | null = null
-      editor.getEditorState().read(() => {
-        const selection = $getSelection()
-        let cellNode: TableCellNode | null = null
-        if ($isRangeSelection(selection)) {
-          cellNode = $findCellNode(selection.anchor.getNode()) as TableCellNode | null
-        } else if ($isTableSelection(selection)) {
-          const first = selection.getNodes().find((n) => $isTableCellNode(n))
-          if (first) cellNode = first as TableCellNode
-        }
-        if (!cellNode) return
-        const tableNode = $findTableNode(cellNode) as TableNode | null
-        if (!tableNode) return
-        const row = cellNode.getParent()
-        if (!$isTableRowNode(row)) return
-        const colIndex = row.getChildren().indexOf(cellNode)
-        blocked = checkColumnOperation(tableNode, colIndex, op)
-      })
-      if (blocked) { toast.warning(blocked); return }
-      fn()
-    },
-    [editor],
-  )
-
-  const insertRowAbove = useCallback(() => {
-    guardedRowOp('insert', () => editor.update(() => $insertTableRow__EXPERIMENTAL(false)))
-  }, [editor, guardedRowOp])
-
-  const insertRowBelow = useCallback(() => {
-    guardedRowOp('insert', () => editor.update(() => $insertTableRow__EXPERIMENTAL(true)))
-  }, [editor, guardedRowOp])
-
-  const deleteRow = useCallback(() => {
-    guardedRowOp('delete', () => editor.update(() => $deleteTableRow__EXPERIMENTAL()))
-  }, [editor, guardedRowOp])
-
-  const insertColumnLeft = useCallback(() => {
-    guardedColOp('insert', () => editor.update(() => $insertTableColumn__EXPERIMENTAL(false)))
-  }, [editor, guardedColOp])
-
-  const insertColumnRight = useCallback(() => {
-    guardedColOp('insert', () => editor.update(() => $insertTableColumn__EXPERIMENTAL(true)))
-  }, [editor, guardedColOp])
-
-  const deleteColumn = useCallback(() => {
-    guardedColOp('delete', () => editor.update(() => $deleteTableColumn__EXPERIMENTAL()))
-  }, [editor, guardedColOp])
-
-  const toggleHeader = useCallback(() => {
-    editor.update(() => {
-      const selection = $getSelection()
-      if (!$isRangeSelection(selection)) return
-      const cellNode = $findCellNode(selection.anchor.getNode())
-      if (!cellNode) return
-      const tableNode = $findTableNode(cellNode)
-      if (!tableNode) return
-
-      const firstRow = tableNode.getFirstChild()
-      if (!$isTableRowNode(firstRow)) return
-
-      const cells = firstRow.getChildren()
-      const isCurrentlyHeader =
-        cells.length > 0 &&
-        $isTableCellNode(cells[0]) &&
-        cells[0].getHeaderStyles() === TableCellHeaderStates.ROW
-
-      for (const cell of cells) {
-        if ($isTableCellNode(cell)) {
-          ;(cell as TableCellNode).setHeaderStyles(
-            isCurrentlyHeader
-              ? TableCellHeaderStates.NO_STATUS
-              : TableCellHeaderStates.ROW,
-          )
-        }
-      }
-
-      // Sync frozen row state for sticky header
-      ;(tableNode as TableNode).setFrozenRows(isCurrentlyHeader ? 0 : 1)
-    })
-  }, [editor])
-
   const mergeCells = useCallback(() => {
     editor.update(() => {
       const selection = $getSelection()
@@ -294,25 +170,6 @@ export function TableActionToolbar() {
       $unmergeCell()
     })
   }, [editor])
-
-  const setCellBgColor = useCallback(
-    (color: string) => {
-      editor.update(() => {
-        const selection = $getSelection()
-        let cells: TableCellNode[] = []
-        if ($isTableSelection(selection)) {
-          cells = selection.getNodes().filter((n) => $isTableCellNode(n)) as TableCellNode[]
-        } else if ($isRangeSelection(selection)) {
-          const cell = $findCellNode(selection.anchor.getNode())
-          if (cell) cells = [cell as TableCellNode]
-        }
-        for (const cell of cells) {
-          cell.setBackgroundColor(color)
-        }
-      })
-    },
-    [editor],
-  )
 
   const setCellAlign = useCallback(
     (align: 'left' | 'center' | 'right') => {
@@ -383,25 +240,6 @@ export function TableActionToolbar() {
         }
       }}
     >
-      <ToolbarDropdown
-        icon={Rows3}
-        label="Row"
-        items={[
-          { label: 'Insert Row Above', action: insertRowAbove },
-          { label: 'Insert Row Below', action: insertRowBelow },
-          { label: 'Delete Row', action: deleteRow },
-        ]}
-      />
-      <ToolbarDropdown
-        icon={Columns3}
-        label="Column"
-        items={[
-          { label: 'Insert Column Left', action: insertColumnLeft },
-          { label: 'Insert Column Right', action: insertColumnRight },
-          { label: 'Delete Column', action: deleteColumn },
-        ]}
-      />
-      <div className="le-table-toolbar-sep" />
       {canMerge && (
         <button className="le-table-toolbar-btn" onClick={mergeCells} title="Merge Cells">
           <Merge size={14} />
@@ -416,19 +254,6 @@ export function TableActionToolbar() {
       )}
       {(canMerge || canSplit) && <div className="le-table-toolbar-sep" />}
       <ToolbarDropdown
-        icon={Paintbrush}
-        label="BG"
-        items={[
-          { label: '⬜ None', action: () => setCellBgColor('') },
-          { label: '🔵 Blue', action: () => setCellBgColor('#dbeafe') },
-          { label: '🟢 Green', action: () => setCellBgColor('#dcfce7') },
-          { label: '🟡 Yellow', action: () => setCellBgColor('#fef9c3') },
-          { label: '🔴 Red', action: () => setCellBgColor('#fee2e2') },
-          { label: '🟣 Purple', action: () => setCellBgColor('#f3e8ff') },
-          { label: '⚫ Gray', action: () => setCellBgColor('#f3f4f6') },
-        ]}
-      />
-      <ToolbarDropdown
         icon={AlignLeft}
         label="Align"
         items={[
@@ -438,9 +263,6 @@ export function TableActionToolbar() {
         ]}
       />
       <div className="le-table-toolbar-sep" />
-      <button className="le-table-toolbar-btn" onClick={toggleHeader} title="Toggle Header Row">
-        <span className="le-table-toolbar-btn-label">Header</span>
-      </button>
       <ToolbarDropdown
         icon={PanelLeft}
         label="Freeze"
