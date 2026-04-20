@@ -1,0 +1,58 @@
+name: Docs task for agent
+description: Ask Claude to write or update documentation (docs/, README, prd.md).
+title: "[docs] "
+labels: ["type:docs"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        File this issue to have the agent produce or update a Markdown document.
+        A maintainer will add the `agent-ready` label to trigger the run.
+        The agent reads `.github/agent-instructions.md` before starting.
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: One or two sentences describing what the doc should accomplish.
+      placeholder: "Document the video-conversion pipeline end-to-end for new contributors."
+    validations:
+      required: true
+
+  - type: textarea
+    id: targets
+    attributes:
+      label: Target files / paths
+      description: Which file(s) should be created or edited? Paths relative to repo root.
+      placeholder: |
+        - docs/video-pipeline.md (new)
+        - README.md (add link under "Architecture")
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: What must be true for this to be done?
+      placeholder: |
+        - Explains MinIO upload → NATS job → HLS output flow
+        - Includes a sequence diagram (Mermaid)
+        - Linked from README
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: Reference links / sources
+      description: Files, PRs, or URLs the agent should read first.
+      placeholder: |
+        - tools/video-converter/README.md
+        - apps/demo/app/api/upload/route.ts
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / constraints
+      description: Anything else — tone, audience, out-of-scope items.
