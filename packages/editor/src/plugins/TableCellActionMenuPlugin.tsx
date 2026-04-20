@@ -46,6 +46,20 @@ export function TableCellActionMenuPlugin() {
   const [open, setOpen] = useState<Section | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
+  const positionFor = useCallback(
+    (cellEl: HTMLElement) => {
+      const editorRoot = editor.getRootElement()
+      if (!editorRoot) return null
+      const cellRect = cellEl.getBoundingClientRect()
+      const rootRect = editorRoot.getBoundingClientRect()
+      return {
+        top: cellRect.top - rootRect.top + 6,
+        left: cellRect.right - rootRect.left - 28,
+      }
+    },
+    [editor],
+  )
+
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
       editorState.read(() => {
@@ -59,31 +73,53 @@ export function TableCellActionMenuPlugin() {
           if (first) cellNode = first as TableCellNode
         }
 
-        if (!cellNode) {
-          setShow(false)
-          setCellKey(null)
-          return
-        }
+        if (!cellNode) return
 
-        const cellEl = editor.getElementByKey(cellNode.getKey())
-        const editorRoot = editor.getRootElement()
-        if (!cellEl || !editorRoot) {
-          setShow(false)
-          return
-        }
+        const cellEl = editor.getElementByKey(cellNode.getKey()) as HTMLElement | null
+        if (!cellEl) return
 
-        const cellRect = cellEl.getBoundingClientRect()
-        const rootRect = editorRoot.getBoundingClientRect()
-
-        setPosition({
-          top: cellRect.top - rootRect.top + 4,
-          left: cellRect.right - rootRect.left - 24,
-        })
+        const pos = positionFor(cellEl)
+        if (!pos) return
+        setPosition(pos)
         setCellKey(cellNode.getKey())
         setShow(true)
       })
     })
-  }, [editor])
+  }, [editor, positionFor])
+
+  useEffect(() => {
+    const editorRoot = editor.getRootElement()
+    if (!editorRoot) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null
+      if (!target) return
+      if (menuRef.current && menuRef.current.contains(target)) return
+      const cellEl = target.closest('th, td') as HTMLElement | null
+      if (!cellEl || !editorRoot.contains(cellEl)) return
+      const pos = positionFor(cellEl)
+      if (!pos) return
+      setPosition(pos)
+      setCellKey(cellEl.getAttribute('data-lexical-key') || 'hover')
+      setShow(true)
+    }
+
+    const handleMouseLeave = (e: MouseEvent) => {
+      const related = e.relatedTarget as Node | null
+      if (menuRef.current && related && menuRef.current.contains(related)) return
+      if (open) return
+      const to = related as HTMLElement | null
+      if (to && to.closest && to.closest('th, td') && editorRoot.contains(to)) return
+      setShow(false)
+    }
+
+    editorRoot.addEventListener('mousemove', handleMouseMove)
+    editorRoot.addEventListener('mouseleave', handleMouseLeave)
+    return () => {
+      editorRoot.removeEventListener('mousemove', handleMouseMove)
+      editorRoot.removeEventListener('mouseleave', handleMouseLeave)
+    }
+  }, [editor, positionFor, open])
 
   useEffect(() => {
     if (!open) return
@@ -235,7 +271,7 @@ export function TableCellActionMenuPlugin() {
         title="Cell actions"
         onClick={() => setOpen(open ? null : 'row')}
       >
-        <ChevronDown size={12} />
+        <ChevronDown size={14} />
       </button>
       {open && (
         <div className="le-table-cell-action-menu">
