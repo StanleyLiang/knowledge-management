@@ -37,21 +37,31 @@ export async function embed(text: string): Promise<EmbeddingResult> {
   return { model: MODEL, vector: data.data[0].embedding }
 }
 
-// Deterministic 128-dim stub: hashed-trigram bag-of-words. Only used when
-// no API key is configured. Produces stable, content-dependent vectors so
-// that clustering still behaves meaningfully during local testing.
-const STUB_DIM = 128
+// Deterministic hashed bag-of-words stub. Only used when no API key is
+// configured. Counts unigrams (non-stopword) into hashed buckets, so two
+// documents about the same topic share vector mass in overlapping buckets
+// and produce a low cosine distance — enough for clustering to behave
+// meaningfully in local testing.
+const STUB_DIM = 256
+const STUB_STOPWORDS = new Set([
+  'a', 'an', 'the', 'and', 'or', 'but', 'if', 'of', 'in', 'on', 'to', 'for',
+  'with', 'as', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'by', 'at',
+  'this', 'that', 'these', 'those', 'it', 'its', 'we', 'our', 'you', 'your',
+  'they', 'their', 'them', 'he', 'she', 'his', 'her', 'from', 'into', 'per',
+  'not', 'no', 'so', 'do', 'does', 'did', 'have', 'has', 'had', 'can', 'will',
+  'would', 'should', 'may', 'might', 'one', 'two', 'three',
+])
 
 function stubEmbedding(text: string): number[] {
   const vec = new Array<number>(STUB_DIM).fill(0)
-  const tokens = text.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean)
-  for (let i = 0; i < tokens.length; i++) {
-    const gram = tokens.slice(i, i + 3).join(' ')
-    if (!gram) continue
-    const h = crypto.createHash('md5').update(gram).digest()
-    const idx = h.readUInt32BE(0) % STUB_DIM
-    const sign = (h[4] & 1) === 0 ? 1 : -1
-    vec[idx] += sign
+  const tokens = text
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter((t) => t.length > 2 && !STUB_STOPWORDS.has(t))
+  for (const token of tokens) {
+    const h = crypto.createHash('md5').update(token).digest()
+    vec[h.readUInt32BE(0) % STUB_DIM] += 1
   }
   const norm = Math.sqrt(vec.reduce((acc, v) => acc + v * v, 0)) || 1
   return vec.map((v) => v / norm)

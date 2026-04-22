@@ -9,7 +9,7 @@ import { embed, hashContent } from './embedding.js'
 import { dbscan } from './cluster.js'
 import { synthesize, type SynthesisInput } from './llm.js'
 
-const DEFAULT_EPS = 0.35
+const DEFAULT_EPS = 0.55
 const DEFAULT_MIN_POINTS = 3
 
 export interface EmbedReport {
