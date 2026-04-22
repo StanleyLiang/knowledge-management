@@ -1,4 +1,4 @@
-import type { Space, SpaceWithPages, PageSummary, Page, PageVersion, PageVersionSummary, PageTemplate, CreateSpaceInput, UpdatePageInput, SearchResult } from './types'
+import type { Space, SpaceWithPages, PageSummary, Page, PageVersion, PageVersionSummary, PageTemplate, CreateSpaceInput, UpdatePageInput, SearchResult, Synthesis, SynthesisStatus, EmbedReport, GenerateReport, UpdateSynthesisInput } from './types'
 
 const BASE_URL = typeof window === 'undefined'
   ? (process.env.API_URL || 'http://localhost:3001') + '/api'
@@ -51,5 +51,24 @@ export const api = {
     request<SearchResult[]>(`/search?q=${encodeURIComponent(query)}`),
   templates: {
     list: () => request<PageTemplate[]>('/templates'),
+  },
+  syntheses: {
+    list: (spaceId: string, status?: SynthesisStatus) => {
+      const qs = new URLSearchParams({ spaceId })
+      if (status) qs.set('status', status)
+      return request<Synthesis[]>(`/syntheses?${qs.toString()}`)
+    },
+    get: (id: string) => request<Synthesis>(`/syntheses/${id}`),
+    update: (id: string, data: UpdateSynthesisInput) =>
+      request<Synthesis>(`/syntheses/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+    delete: (id: string) =>
+      request<{ success: boolean }>(`/syntheses/${id}`, { method: 'DELETE' }),
+    embed: (spaceId: string) =>
+      request<EmbedReport>(`/spaces/${spaceId}/syntheses/embed`, { method: 'POST' }),
+    generate: (spaceId: string, opts?: { eps?: number; minPoints?: number }) =>
+      request<GenerateReport>(`/spaces/${spaceId}/syntheses/generate`, {
+        method: 'POST',
+        body: JSON.stringify(opts ?? {}),
+      }),
   },
 }

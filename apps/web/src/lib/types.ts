@@ -78,3 +78,47 @@ export interface SearchResult {
   createdAt: string
   updatedAt: string
 }
+
+export type SynthesisStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'EDITED'
+
+export interface SynthesisSource {
+  synthesisId: string
+  pageId: string
+  snippet: string | null
+  page: { id: string; title: string; spaceId: string }
+}
+
+export interface Synthesis {
+  id: string
+  spaceId: string
+  title: string
+  summary: string
+  contradictions: string
+  openQuestions: string
+  clusterKey: string
+  status: SynthesisStatus
+  sources: SynthesisSource[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface EmbedReport {
+  total: number
+  embedded: number
+  skipped: number
+}
+
+export interface GenerateReport {
+  pagesConsidered: number
+  clusters: number
+  syntheses: number
+  skippedExisting: number
+}
+
+export interface UpdateSynthesisInput {
+  title?: string
+  summary?: string
+  contradictions?: string
+  openQuestions?: string
+  status?: SynthesisStatus
+}
