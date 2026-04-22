@@ -8,32 +8,35 @@ datasource db {
 }
 
 model Space {
-  id          String    @id @default(cuid())
+  id          String      @id @default(cuid())
   name        String
   description String?
-  type        SpaceType @default(TEAM)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  type        SpaceType   @default(TEAM)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
   pages       Page[]
+  syntheses   Synthesis[]
 
   @@map("spaces")
 }
 
 model Page {
-  id                 String        @id @default(cuid())
-  title              String        @default("Untitled")
-  content            Json?         @db.JsonB
-  status             PageStatus    @default(DRAFT)
+  id                 String              @id @default(cuid())
+  title              String              @default("Untitled")
+  content            Json?               @db.JsonB
+  status             PageStatus          @default(DRAFT)
   author             String?
-  publishedVersionId String?       @map("published_version_id")
-  spaceId            String        @map("space_id")
-  space              Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
-  parentId           String?       @map("parent_id")
-  parent             Page?         @relation("PageChildren", fields: [parentId], references: [id], onDelete: Cascade)
-  children           Page[]        @relation("PageChildren")
+  publishedVersionId String?             @map("published_version_id")
+  spaceId            String              @map("space_id")
+  space              Space               @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  parentId           String?             @map("parent_id")
+  parent             Page?               @relation("PageChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children           Page[]              @relation("PageChildren")
   versions           PageVersion[]
-  createdAt          DateTime      @default(now()) @map("created_at")
-  updatedAt          DateTime      @updatedAt @map("updated_at")
+  embedding          PageEmbedding?
+  synthesisSources   SynthesisSource[]
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
 
   @@index([spaceId])
   @@index([parentId])
@@ -52,6 +55,49 @@ model PageVersion {
 
   @@index([pageId])
   @@map("page_versions")
+}
+
+model PageEmbedding {
+  pageId    String   @id @map("page_id")
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  model     String
+  contentHash String @map("content_hash")
+  vector    Float[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("page_embeddings")
+}
+
+model Synthesis {
+  id               String            @id @default(cuid())
+  spaceId          String            @map("space_id")
+  space            Space             @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  title            String
+  summary          String
+  contradictions   String
+  openQuestions    String            @map("open_questions")
+  clusterKey       String            @map("cluster_key")
+  status           SynthesisStatus   @default(PENDING)
+  sources          SynthesisSource[]
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  @@index([spaceId])
+  @@index([clusterKey])
+  @@map("syntheses")
+}
+
+model SynthesisSource {
+  synthesisId String    @map("synthesis_id")
+  synthesis   Synthesis @relation(fields: [synthesisId], references: [id], onDelete: Cascade)
+  pageId      String    @map("page_id")
+  page        Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  snippet     String?
+
+  @@id([synthesisId, pageId])
+  @@index([pageId])
+  @@map("synthesis_sources")
 }
 
 model PageTemplate {
@@ -76,4 +122,11 @@ enum SpaceType {
   PERSONAL
   TEAM
   OFFICIAL
+}
+
+enum SynthesisStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EDITED
 }
