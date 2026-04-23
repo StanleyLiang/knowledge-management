@@ -17,8 +17,8 @@ const instrumentSerif = Instrument_Serif({
 const jetMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' })
 
 export const metadata: Metadata = {
-  title: 'Knowledge Base',
-  description: 'Knowledge Base powered by Lexical Editor',
+  title: 'Keeptio',
+  description: 'Keeptio — kept within reach',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -33,7 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="flex items-center gap-6">
                 <Link href="/spaces" className="flex items-center gap-2 font-bold text-lg">
                   <BookOpen className="h-5 w-5" />
-                  Knowledge Base
+                  Keeptio
                 </Link>
                 <Link
                   href="/syntheses"

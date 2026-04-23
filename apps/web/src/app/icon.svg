@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <rect x="0" y="0" width="120" height="120" rx="22" fill="oklch(0.66 0.14 40)"/>
+  <path d="M 40 22 L 40 98" stroke="oklch(0.95 0.045 85)" stroke-width="16" stroke-linecap="round" fill="none"/>
+  <g fill="none" stroke-linecap="round">
+    <g transform="translate(60 46) rotate(-28)">
+      <rect x="-20" y="-10" width="40" height="20" rx="10" stroke="oklch(0.52 0.09 70)" stroke-width="8"/>
+    </g>
+    <g transform="translate(60 74) rotate(28)">
+      <rect x="-20" y="-10" width="40" height="20" rx="10" stroke="oklch(0.74 0.10 75)" stroke-width="8"/>
+    </g>
+  </g>
+  <path d="M 40 36 L 40 84" stroke="oklch(0.95 0.045 85)" stroke-width="16" stroke-linecap="round" fill="none"/>
+</svg>

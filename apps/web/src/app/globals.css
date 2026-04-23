@@ -74,7 +74,7 @@
 }
 
 /* ==========================================================================
-   Atelier prose — overrides for body blocks when rendered inside a
+   Keeptio prose — overrides for body blocks when rendered inside a
    .prose-atelier wrapper (Viewer + Editor). Scoped so the shared editor.css
    defaults stay intact for demo / rsbuild consumers.
    ========================================================================== */
