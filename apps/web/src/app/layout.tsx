@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, Sparkles } from 'lucide-react'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppSidebar } from '@/components/layout/AppSidebar'
 import { SearchInput } from '@/components/layout/SearchInput'
@@ -18,10 +18,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <TooltipProvider delayDuration={300}>
           <nav className="bg-white border-b border-gray-200 px-6 py-3 sticky top-0 z-40">
             <div className="flex items-center justify-between">
-              <Link href="/spaces" className="flex items-center gap-2 font-bold text-lg">
-                <BookOpen className="h-5 w-5" />
-                Knowledge Base
-              </Link>
+              <div className="flex items-center gap-6">
+                <Link href="/spaces" className="flex items-center gap-2 font-bold text-lg">
+                  <BookOpen className="h-5 w-5" />
+                  Knowledge Base
+                </Link>
+                <Link
+                  href="/syntheses"
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Syntheses
+                </Link>
+              </div>
               <SearchInput />
             </div>
           </nav>
