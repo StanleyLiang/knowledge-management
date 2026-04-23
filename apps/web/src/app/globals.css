@@ -78,6 +78,16 @@
    .prose-atelier wrapper (Viewer + Editor). Scoped so the shared editor.css
    defaults stay intact for demo / rsbuild consumers.
    ========================================================================== */
+/* Surface parity between read + edit: both live on the app paper tone,
+   no card chrome. Edit mode's sticky toolbar supplies its own rule.
+   Unlayered so it beats the unlayered defaults in packages/editor/src/styles/editor.css. */
+.prose-atelier .le-viewer-container,
+.prose-atelier .le-editor-container {
+  background-color: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
 @layer base {
   .prose-atelier .le-paragraph {
     font-size: 16.5px;
