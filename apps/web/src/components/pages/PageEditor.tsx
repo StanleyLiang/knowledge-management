@@ -183,7 +183,7 @@ export function PageEditor({ pageId }: { pageId: string }) {
           </Button>
         </div>
       </div>
-      <div className="border rounded-lg bg-white">
+      <div className="border rounded-lg bg-white prose-atelier">
         <Editor
           title={title}
           onTitleChange={handleTitleChange}

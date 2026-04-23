@@ -436,11 +436,32 @@
 
 /* ========== Toolbar ========== */
 .le-toolbar {
-  @apply flex items-center gap-0.5 px-2 py-1 border-b border-gray-200 bg-gray-50
-         rounded-t-lg flex-wrap sticky top-0 z-40;
+  @apply flex items-center gap-0.5 px-2.5 py-[7px] border-b border-gray-200
+         bg-white/90 flex-wrap sticky top-0 z-40;
+  backdrop-filter: saturate(180%) blur(10px);
+  -webkit-backdrop-filter: saturate(180%) blur(10px);
 }
 .le-toolbar-dropdown-trigger {
   @apply flex items-center gap-1;
+}
+.le-toolbar-insert {
+  @apply inline-flex items-center gap-1.5 rounded-[8px] px-[10px] py-[5px]
+         text-[12.5px] font-medium mr-1.5;
+  background: oklch(0.94 0.03 40);
+  color: oklch(0.38 0.1 30);
+}
+.le-toolbar-insert:hover {
+  background: oklch(0.91 0.04 40);
+}
+.le-toolbar-insert-kbd {
+  @apply font-mono text-[10.5px] opacity-70 ml-0.5;
+}
+.le-toolbar-saved {
+  @apply ml-auto flex items-center gap-1.5 text-[11px] text-gray-500 pr-1;
+}
+.le-toolbar-saved-dot {
+  @apply inline-block h-1.5 w-1.5 rounded-full;
+  background: oklch(0.75 0.12 150);
 }
 /* ========== Custom Nodes ========== */
 

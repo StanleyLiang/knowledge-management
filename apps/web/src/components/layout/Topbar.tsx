@@ -1,14 +1,14 @@
 import Link from 'next/link'
 import {
-  History,
   Share2,
-  Globe,
   Eye,
   Pencil,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SpaceGlyph } from '@/components/atoms/SpaceGlyph'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { VersionHistoryButton } from '@/components/pages/VersionHistoryButton'
+import { PublishButton } from '@/components/pages/PublishButton'
 import type { Page, Space } from '@/lib/types'
 
 function getInitials(name: string) {
@@ -23,7 +23,7 @@ function getInitials(name: string) {
 
 interface TopbarProps {
   space: Pick<Space, 'id' | 'name' | 'type'>
-  page: Pick<Page, 'id' | 'title' | 'status' | 'author' | 'publishedVersion'>
+  page: Pick<Page, 'id' | 'title' | 'status' | 'author' | 'publishedVersion' | 'publishedVersionId'>
   mode: 'read' | 'edit'
 }
 
@@ -96,13 +96,11 @@ export function Topbar({ space, page, mode }: TopbarProps) {
         </div>
       )}
 
-      <Link
-        href={`/pages/${page.id}/history`}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-[11px] py-[5px] text-[12.5px] text-ink-2 hover:text-foreground transition-colors"
-      >
-        <History className="h-3.5 w-3.5" />
-        History
-      </Link>
+      <VersionHistoryButton
+        pageId={page.id}
+        pageTitle={page.title}
+        publishedVersionId={page.publishedVersionId}
+      />
 
       <button
         type="button"
@@ -112,24 +110,12 @@ export function Topbar({ space, page, mode }: TopbarProps) {
         Share
       </button>
 
-      {isPublished ? (
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 rounded-lg bg-sage-soft px-[11px] py-[5px] text-[12.5px] font-medium text-sage-ink"
-        >
-          <span aria-hidden="true" className="inline-block h-1.5 w-1.5 rounded-full bg-sage" />
-          Live
-          {versionLabel && <span className="mono text-[11px] opacity-70">· {versionLabel}</span>}
-        </button>
-      ) : (
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-[11px] py-[5px] text-[12.5px] font-medium text-background hover:opacity-90 transition-opacity"
-        >
-          <Globe className="h-3.5 w-3.5" />
-          Publish
-        </button>
-      )}
+      <PublishButton
+        pageId={page.id}
+        isPublished={isPublished}
+        nextVersion={(page.publishedVersion?.version ?? 0) + 1}
+        versionLabel={versionLabel}
+      />
     </header>
   )
 }
