@@ -23,9 +23,7 @@ export default async function ViewPagePage({
   return (
     <div className="-mx-6 -mt-8">
       <Topbar space={space} page={page} mode="read" />
-      <div className="px-6 pt-6 pb-8">
-        <PageViewer page={page} />
-      </div>
+      <PageViewer page={page} />
     </div>
   )
 }
