@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import {
-  History,
   Share2,
   Globe,
   Eye,
@@ -9,6 +8,7 @@ import {
 import { cn } from '@/lib/utils'
 import { SpaceGlyph } from '@/components/atoms/SpaceGlyph'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { VersionHistoryButton } from '@/components/pages/VersionHistoryButton'
 import type { Page, Space } from '@/lib/types'
 
 function getInitials(name: string) {
@@ -23,7 +23,7 @@ function getInitials(name: string) {
 
 interface TopbarProps {
   space: Pick<Space, 'id' | 'name' | 'type'>
-  page: Pick<Page, 'id' | 'title' | 'status' | 'author' | 'publishedVersion'>
+  page: Pick<Page, 'id' | 'title' | 'status' | 'author' | 'publishedVersion' | 'publishedVersionId'>
   mode: 'read' | 'edit'
 }
 
@@ -96,13 +96,11 @@ export function Topbar({ space, page, mode }: TopbarProps) {
         </div>
       )}
 
-      <Link
-        href={`/pages/${page.id}/history`}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-[11px] py-[5px] text-[12.5px] text-ink-2 hover:text-foreground transition-colors"
-      >
-        <History className="h-3.5 w-3.5" />
-        History
-      </Link>
+      <VersionHistoryButton
+        pageId={page.id}
+        pageTitle={page.title}
+        publishedVersionId={page.publishedVersionId}
+      />
 
       <button
         type="button"
