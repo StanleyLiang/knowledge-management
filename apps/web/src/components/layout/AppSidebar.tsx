@@ -25,6 +25,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SpaceGlyph } from '@/components/atoms/SpaceGlyph'
+import { KeeptioMark } from '@/components/brand/KeeptioMark'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 import type { Space, SpaceWithPages, PageSummary } from '@/lib/types'
@@ -307,20 +308,14 @@ export function AppSidebar() {
     <aside className="w-[268px] flex-shrink-0 flex flex-col border-r border-border bg-gradient-to-b from-[oklch(0.975_0.014_78)] to-[oklch(0.955_0.018_78)]">
       {/* Brand block */}
       <div className="px-3 pt-3 pb-2 flex items-center gap-2.5">
-        <span
-          aria-hidden="true"
-          className="inline-flex items-center justify-center h-[26px] w-[26px] rounded-lg text-background serif text-[17px] leading-none"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 30% 30%, oklch(0.78 0.10 40), oklch(0.50 0.16 40))',
-          }}
-        >
-          A
-        </span>
+        <KeeptioMark
+          size={26}
+          className="rounded-lg shadow-[0_1px_1px_oklch(0.3_0.05_40/0.18)]"
+        />
         <span className="flex flex-col leading-tight min-w-0">
-          <span className="serif text-[17px] text-foreground">Atelier</span>
+          <span className="serif text-[17px] text-foreground">Keeptio</span>
           <span className="text-[10px] uppercase tracking-[0.08em] text-ink-3">
-            Knowledge base
+            Kept within reach
           </span>
         </span>
       </div>
