@@ -127,7 +127,7 @@ export function PageViewer({ page }: { page: Page }) {
         </div>
       </header>
 
-      <div className="pt-8">
+      <div className="pt-8 prose-atelier">
         {hasContent ? (
           <Viewer initialEditorState={JSON.stringify(displayContent)} />
         ) : (

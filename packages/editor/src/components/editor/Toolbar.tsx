@@ -40,6 +40,7 @@ import {
   Link,
   MoreHorizontal,
   ChevronDown,
+  Plus,
   Type,
   Heading1,
   Heading2,
@@ -223,8 +224,30 @@ export function Toolbar() {
     })
   }
 
+  const triggerSlashPopover = () => {
+    editor.focus()
+    editor.update(() => {
+      const selection = $getSelection()
+      if (!$isRangeSelection(selection)) return
+      selection.insertText('/')
+    })
+  }
+
   return (
     <div className="le-toolbar">
+      {/* Prominent Insert button — opens slash-command popover */}
+      <Tooltip content={t('toolbar.insert', { defaultValue: 'Insert' })}>
+        <button
+          type="button"
+          className="le-toolbar-insert"
+          onClick={triggerSlashPopover}
+        >
+          <Plus size={14} />
+          {t('toolbar.insert', { defaultValue: 'Insert' })}
+          <span className="le-toolbar-insert-kbd">/</span>
+        </button>
+      </Tooltip>
+
       {/* Hidden file inputs for upload */}
       <input
         ref={imageInputRef}
