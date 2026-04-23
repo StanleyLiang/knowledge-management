@@ -5,6 +5,7 @@ import { BookOpen, Sparkles } from 'lucide-react'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppSidebar } from '@/components/layout/AppSidebar'
 import { SearchInput } from '@/components/layout/SearchInput'
+import { CommandPalette } from '@/components/CommandPalette'
 import './globals.css'
 
 const interTight = Inter_Tight({ subsets: ['latin'], variable: '--font-sans' })
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="max-w-5xl mx-auto py-8 px-6">{children}</div>
             </main>
           </div>
+          <CommandPalette />
         </TooltipProvider>
       </body>
     </html>
