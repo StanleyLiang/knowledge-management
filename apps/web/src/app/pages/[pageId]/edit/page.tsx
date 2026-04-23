@@ -1,9 +1,6 @@
-import Link from 'next/link'
-import { Eye } from 'lucide-react'
+import { notFound } from 'next/navigation'
 import { api } from '@/lib/api'
-import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
+import { Topbar } from '@/components/layout/Topbar'
 import { PageEditor } from '@/components/pages/PageEditor'
 
 export default async function EditPagePage({
@@ -19,41 +16,15 @@ export default async function EditPagePage({
     page = await api.pages.get(pageId)
     space = await api.spaces.get(page.spaceId)
   } catch {
-    space = null
-    page = null
+    notFound()
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild><Link href="/spaces">Spaces</Link></BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild><Link href={`/spaces/${page?.spaceId ?? ''}`}>{space?.name ?? 'Space'}</Link></BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Editing</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link href={`/pages/${pageId}`}>
-              <Button variant="outline" size="sm">
-                <Eye className="h-4 w-4" />
-                View
-              </Button>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent>View published page</TooltipContent>
-        </Tooltip>
+    <div className="-mx-6 -mt-8">
+      <Topbar space={space} page={page} mode="edit" />
+      <div className="px-6 pt-6 pb-8">
+        <PageEditor pageId={pageId} />
       </div>
-      <PageEditor pageId={pageId} />
     </div>
   )
 }
